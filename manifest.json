@@ -1,0 +1,14 @@
+{
+    "name": "Hello Figma",
+    "id": "com.example.hello-figma-new",
+    "api": "1.0.0",
+    "editorType": ["figma"],
+    "main": "dist/code.js",
+    "ui": "dist/ui.html",
+    "relaunchButtons": [{ "command": "open", "name": "Hello Figma" }],
+    
+    "networkAccess": {
+    "allowedDomains": ["*"],
+    "reasoning": "Allow the plugin UI to call user-supplied AI APIs (e.g., OpenAI) from the client."
+    } 
+  }

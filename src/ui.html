@@ -1,0 +1,122 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>
+  :root { --bg:#fff; --muted:#f5f5f7; --line:#e6e6e6; --primary:#007aff; }
+  body { font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:var(--bg); }
+  .tabs { display:flex; border-bottom:1px solid var(--line); }
+  .tab { flex:1; text-align:center; padding:10px 12px; cursor:pointer; user-select:none; }
+  .tab.active { color:var(--primary); border-bottom:2px solid var(--primary); font-weight:600; }
+  .panel { padding:12px; display:none; }
+  .panel.active { display:block; }
+  label { display:block; margin:8px 0 4px; }
+  textarea, input[type="text"] { width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-family:inherit; }
+  button { margin-top:8px; padding:8px 10px; border:0; border-radius:6px; background:var(--primary); color:#fff; cursor:pointer; }
+  #result { margin-top:12px; padding:10px; border:1px solid var(--line); border-radius:6px; background:var(--muted); white-space:pre-wrap; }
+  .row { display:flex; gap:8px; align-items:center; }
+</style>
+
+<div class="tabs">
+  <div id="tab-rewrite" class="tab active">rewrite</div>
+  <div id="tab-settings" class="tab">settings</div>
+</div>
+
+<div id="panel-rewrite" class="panel active">
+  <label>enter your copy</label>
+  <textarea id="inputText" rows="4" placeholder="Write something to rewrite..."></textarea>
+  <button id="rewrite">Rewrite</button>
+  <div id="result"></div>
+</div>
+
+<div id="panel-settings" class="panel">
+  <label>API key (Gemini)</label>
+  <input id="apikey" type="text" placeholder="AIza...">
+  <div class="row">
+    <button id="saveKey">Save key</button>
+    <button id="loadKey">Load key</button>
+  </div>
+  <div id="saveStatus" style="margin-top:8px;color:#555;"></div>
+</div>
+
+<script>
+  // tab switching
+  const tabs = {
+    rewrite: { tab: document.getElementById("tab-rewrite"), panel: document.getElementById("panel-rewrite") },
+    settings:{ tab: document.getElementById("tab-settings"), panel: document.getElementById("panel-settings") },
+  };
+  function activate(name){
+    Object.values(tabs).forEach(({tab,panel})=>{
+      tab.classList.remove("active"); panel.classList.remove("active");
+    });
+    tabs[name].tab.classList.add("active"); tabs[name].panel.classList.add("active");
+  }
+  tabs.rewrite.tab.onclick=()=>activate("rewrite");
+  tabs.settings.tab.onclick=()=>activate("settings");
+
+  // rewrite flow
+  const btnRewrite = document.getElementById("rewrite");
+  const result = document.getElementById("result");
+  btnRewrite.onclick = async () => {
+    result.textContent = "Thinking...";
+    // try to read key from the settings input first; if empty, ask main to load saved key
+    const keyInput = document.getElementById("apikey");
+    let key = keyInput ? keyInput.value.trim() : "";
+    const text = document.getElementById("inputText").value.trim();
+    if (!text) { alert("Please enter some text."); return; }
+
+    if (!key) {
+      parent.postMessage({ pluginMessage: { type: "load-key" } }, "*");
+      result.textContent = "Loading saved key...";
+      window.__pendingText = text; // stash text while loading
+      return;
+    }
+    parent.postMessage({ pluginMessage: { type: "rewrite", key, text } }, "*");
+  };
+
+  // settings save/load
+  const saveStatus = document.getElementById("saveStatus");
+  document.getElementById("saveKey").onclick = () => {
+    const key = document.getElementById("apikey").value.trim();
+    parent.postMessage({ pluginMessage: { type: "save-key", key } }, "*");
+    saveStatus.textContent = "Saving…";
+  };
+  document.getElementById("loadKey").onclick = () => {
+    parent.postMessage({ pluginMessage: { type: "load-key" } }, "*");
+    saveStatus.textContent = "Loading…";
+  };
+
+  // messages from main
+  onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+
+    if (msg?.type === "key-saved") {
+      saveStatus.textContent = msg.error ? ("Save failed: " + msg.error) : "Key saved.";
+      return;
+    }
+    if (msg?.type === "key-loaded") {
+      if (msg.error) saveStatus.textContent = "Load failed: " + msg.error;
+      const field = document.getElementById("apikey");
+      if (field) field.value = msg.key || "";
+      saveStatus.textContent = "Key loaded.";
+      // if user pressed Rewrite and was missing a key, resume the call
+      if (window.__pendingText && msg.key) {
+        const text = window.__pendingText;
+        delete window.__pendingText;
+        parent.postMessage({ pluginMessage: { type: "rewrite", key: msg.key, text } }, "*");
+        result.textContent = "Thinking...";
+      }
+      return;
+    }
+    if (msg?.type === "rewrite-done") {
+      result.textContent = msg.output || "No response.";
+      // optional: switch back to rewrite tab
+      activate("rewrite");
+      return;
+    }
+  };
+
+  // auto-load key when opening settings
+  tabs.settings.tab.addEventListener("click", ()=> {
+    parent.postMessage({ pluginMessage: { type: "load-key" } }, "*");
+    saveStatus.textContent = "Loading…";
+  });
+</script>

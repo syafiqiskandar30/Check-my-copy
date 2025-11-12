@@ -1,0 +1,20 @@
+{
+  "name": "figma-hello",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild src/code.ts --bundle --outfile=dist/code.js",
+    "copy:ui": "mkdir -p dist && cp src/ui.html dist/ui.html",
+    "dev": "npm run copy:ui && npm run build -- --watch",
+   "start": "npm run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.119.0",
+    "esbuild": "^0.27.0",
+    "typescript": "^5.9.3"
+  }
+}
