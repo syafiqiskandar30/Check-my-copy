@@ -1,18 +1,216 @@
 <!doctype html>
 <meta charset="utf-8" />
 <style>
-  :root { --bg:#fff; --muted:#f5f5f7; --line:#e6e6e6; --primary:#007aff; }
-  body { font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:var(--bg); }
-  .tabs { display:flex; border-bottom:1px solid var(--line); }
-  .tab { flex:1; text-align:center; padding:10px 12px; cursor:pointer; user-select:none; }
-  .tab.active { color:var(--primary); border-bottom:2px solid var(--primary); font-weight:600; }
-  .panel { padding:12px; display:none; }
-  .panel.active { display:block; }
-  label { display:block; margin:8px 0 4px; }
-  textarea, input[type="text"] { width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-family:inherit; }
-  button { margin-top:8px; padding:8px 10px; border:0; border-radius:6px; background:var(--primary); color:#fff; cursor:pointer; }
-  #result { margin-top:12px; padding:10px; border:1px solid var(--line); border-radius:6px; background:var(--muted); white-space:pre-wrap; }
-  .row { display:flex; gap:8px; align-items:center; }
+  :root {
+    --bg: #fff;
+    --muted: #f5f5f7;
+    --line: #e6e6e6;
+    --primary: #7f56d9;
+    --text: #111827;
+    --subtle: #6b7280;
+    --chip-bg: #fff;
+    --chip-border: #d1d5db;
+  }
+  body {
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    font-weight: 600;
+  }
+  .panel {
+    padding: 12px;
+    display: none;
+  }
+  .panel.active {
+    display: block;
+  }
+  .field-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--subtle);
+  }
+  textarea,
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  textarea::placeholder {
+    color: #94a3b8;
+  }
+  .chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .chip {
+    border: 1px solid var(--chip-border);
+    background: var(--chip-bg);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .chip.is-selected {
+    background: #ede9fe;
+    border-color: #c4b5fd;
+    color: #5b21b6;
+    font-weight: 600;
+  }
+  .chip:focus-visible {
+    outline: 2px solid var(--primary);
+  }
+  .rewrite-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #cbd5f5, #dcd7f8);
+    color: #4b5563;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .rewrite-btn:disabled {
+    cursor: default;
+    opacity: 0.65;
+  }
+  .sparkles {
+    font-size: 14px;
+  }
+  .suggestions {
+    margin-top: 18px;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+  .suggestions-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .suggestion-body {
+    min-height: 0;
+    padding: 0;
+    color: var(--subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .suggestion-body.centered {
+    padding: 16px;
+    min-height: 140px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 12px;
+    background: var(--muted);
+  }
+  .suggestion-body.error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  .suggestion-body.centered .empty-arrow {
+    font-size: 30px;
+    color: #d1d5db;
+  }
+  .suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .suggestion-card {
+    border-radius: 12px;
+    border: 1px solid #f1f1f3;
+    background: #f8f8fa;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: #1f2933;
+  }
+  .suggestion-card p {
+    margin: 0;
+    font-size: 14px;
+  }
+  .suggestion-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .score-pill {
+    background: #d1fae5;
+    color: #0f5132;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .info-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  .suggestion-footer {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .suggestion-footer a {
+    color: #7c3aed;
+    text-decoration: none;
+  }
+  .suggestion-footer a:hover {
+    text-decoration: underline;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .status-text {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--subtle);
+  }
+  .muted-text {
+    font-size: 12px;
+    color: var(--subtle);
+  }
 </style>
 
 <div class="tabs">
@@ -21,15 +219,35 @@
 </div>
 
 <div id="panel-rewrite" class="panel active">
-  <label>enter your copy</label>
-  <textarea id="inputText" rows="4" placeholder="Write something to rewrite..."></textarea>
-  <button id="rewrite">Rewrite</button>
-  <div id="result"></div>
+  <label class="field-label">enter your copy</label>
+  <textarea
+    id="inputText"
+    rows="4"
+    placeholder="Type your copy or select a text layer in Figma"
+  ></textarea>
+
+  <div class="chips">
+    <button class="chip" type="button">Tone</button>
+    <button class="chip" type="button">Length</button>
+    <button class="chip" type="button">Element</button>
+    <button class="chip" type="button">Case</button>
+    <button class="chip" type="button">Custom</button>
+  </div>
+
+  <button id="rewrite" class="rewrite-btn" disabled>
+    <span class="sparkles">✧</span>
+    Rewrite
+  </button>
+
+  <section class="suggestions">
+    <div class="suggestions-title">Suggestions</div>
+    <div id="suggestionBody" class="suggestion-body centered"></div>
+  </section>
 </div>
 
 <div id="panel-settings" class="panel">
   <label>API key (Gemini)</label>
-  <input id="apikey" type="text" placeholder="AIza...">
+  <input id="apikey" type="text" placeholder="AIza..." />
   <div class="row">
     <button id="saveKey">Save key</button>
     <button id="loadKey">Load key</button>
@@ -50,37 +268,229 @@
     tabs[name].tab.classList.add("active"); tabs[name].panel.classList.add("active");
   }
   tabs.rewrite.tab.onclick=()=>activate("rewrite");
-  tabs.settings.tab.onclick=()=>activate("settings");
+  tabs.settings.tab.onclick=()=>{
+    activate("settings");
+  };
 
   // rewrite flow
   const btnRewrite = document.getElementById("rewrite");
-  const result = document.getElementById("result");
-  btnRewrite.onclick = async () => {
-    result.textContent = "Thinking...";
-    // try to read key from the settings input first; if empty, ask main to load saved key
-    const keyInput = document.getElementById("apikey");
-    let key = keyInput ? keyInput.value.trim() : "";
-    const text = document.getElementById("inputText").value.trim();
-    if (!text) { alert("Please enter some text."); return; }
+  const suggestionBody = document.getElementById("suggestionBody");
+  const inputField = document.getElementById("inputText");
+  const toneFallbacks = [
+    ["Engaging", "Friendly"],
+    ["Warm", "Appreciative"],
+    ["Enthusiastic", "Encouraging"],
+    ["Upbeat", "Supportive"],
+  ];
 
-    if (!key) {
-      parent.postMessage({ pluginMessage: { type: "load-key" } }, "*");
-      result.textContent = "Loading saved key...";
-      window.__pendingText = text; // stash text while loading
+  const geminiKeyInput = document.getElementById("apikey");
+  const saveKeyBtn = document.getElementById("saveKey");
+  const loadKeyBtn = document.getElementById("loadKey");
+  const saveStatus = document.getElementById("saveStatus");
+
+  const fallbackGuideline = Object.freeze({
+    name: "Warm lower-case headings",
+    instructions:
+      "Write 2-6 word lower-case headings with a warm, appreciative, enthusiastic tone. Keep copy mobile friendly and avoid emojis unless explicitly requested.",
+    examples: [
+      "thanks for being here",
+      "we love having you",
+      "you're in great company",
+    ],
+  });
+
+  let guidelineReference = null;
+  const getGuidelinePayload = () => guidelineReference || fallbackGuideline;
+
+  const resolveTargetOrigin = () => {
+    try {
+      const ref = document.referrer;
+      if (ref && ref !== "null") {
+        return new URL(ref).origin;
+      }
+    } catch (err) {
+      console.warn("Could not parse parent origin:", err);
+    }
+    return "https://www.figma.com";
+  };
+
+  const targetOrigin = resolveTargetOrigin();
+
+  const postToPlugin = (pluginMessage) => {
+    if (!window.parent || window.parent === window) {
+      console.warn("Figma host unavailable; skipping postMessage", pluginMessage);
       return;
     }
-    parent.postMessage({ pluginMessage: { type: "rewrite", key, text } }, "*");
+    window.parent.postMessage({ pluginMessage }, targetOrigin);
   };
 
+  const renderEmptyState = () => {
+    suggestionBody.className = "suggestion-body centered";
+    suggestionBody.innerHTML = `
+      <div class="empty-arrow">↑</div>
+      <p>Select a text layer in Figma and click Rewrite to generate copy suggestions</p>
+    `;
+  };
+
+  const renderStatus = (text) => {
+    suggestionBody.className = "suggestion-body centered";
+    suggestionBody.innerHTML = `<p>${text}</p>`;
+  };
+
+  const renderError = (text) => {
+    suggestionBody.className = "suggestion-body centered error";
+    suggestionBody.innerHTML = `<p>${text || "Something went wrong. Try again in a bit."}</p>`;
+  };
+
+  const renderSuggestions = (items) => {
+    if (!items.length) {
+      renderStatus("No response.");
+      return;
+    }
+
+    const cards = items
+      .map(
+        (item) => `
+        <article class="suggestion-card">
+          <p>${item.text}</p>
+          <div class="suggestion-meta">
+            <span class="score-pill">${item.score}%</span>
+            <span>${item.tones.join(", ")}</span>
+            <span class="info-icon" title="Score confidence">i</span>
+          </div>
+        </article>`
+      )
+      .join("");
+
+    suggestionBody.className = "suggestion-body";
+    suggestionBody.innerHTML = `
+      <div class="suggestions-list">${cards}</div>
+      <div class="suggestion-footer">
+        Suggestions aren't helpful? <a href="https://forms.gle/" target="_blank" rel="noopener">Let us know</a>
+      </div>
+    `;
+  };
+
+  const stripFormatting = (line) =>
+    line
+      .replace(/[*_`]/g, "")
+      .replace(/^\d+[\.)-]*\s*/, "")
+      .replace(/^[-•*]+\s*/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const looksLikeMeta = (line) => {
+    const lower = line.toLowerCase();
+    if (!lower) return true;
+    if (lower.length <= 2) return true;
+    const metaPrefixes = [
+      "here are",
+      "here's",
+      "these are",
+      "please note",
+      "okay, i'm",
+      "alright, i'm",
+      "i'm ready",
+      "let me",
+      "i will",
+      "i can",
+      "remember:",
+      "for reference",
+      "guideline:",
+      "dialog:",
+      "instruction:",
+    ];
+    if (metaPrefixes.some((p) => lower.startsWith(p))) return true;
+    if (/^option\s*\d+/i.test(lower)) return true;
+    if (lower.startsWith("option ") || lower.startsWith("option:")) return true;
+    if (lower.includes("option ") && lower.endsWith(":")) return true;
+    if (lower.includes("dialog") || lower.includes("instruction")) return true;
+    if (lower.endsWith(":") && (lower.includes("requirement") || lower.includes("suggestion"))) return true;
+    if (lower.includes("i've provided") || lower.includes("i have provided")) return true;
+    if (lower.includes("below are") || lower.includes("as requested")) return true;
+    return false;
+  };
+
+  const expandNumberedItems = (text) => {
+    if (!/\d+[\.)-]/.test(text)) return null;
+    const segments = text
+      .split(/\d+[\.)-]\s*/g)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    return segments.length >= 2 ? segments : null;
+  };
+
+  const buildSuggestions = (raw) => {
+    if (!raw) return [];
+
+    const expandedRaw = raw.replace(/(\d+[\.)-])/g, "\n$1");
+    let blocks = expandedRaw.split(/\n{2,}/);
+    if (blocks.length === 1) {
+      blocks = expandedRaw.split(/\n+/);
+    }
+
+    const normalized = blocks
+      .map((block) => stripFormatting(block))
+      .filter(Boolean)
+      .filter((block) => !looksLikeMeta(block));
+
+    const flattened = normalized.flatMap((text) => {
+      const expanded = expandNumberedItems(text);
+      return expanded && expanded.length ? expanded : [text];
+    });
+
+    return flattened.map((text, idx) => ({
+      text,
+      score: Math.max(80, 95 - idx * 2),
+      tones: toneFallbacks[idx % toneFallbacks.length],
+    }));
+  };
+
+  const applySelectionText = (text) => {
+    if (!text) return;
+    inputField.value = text;
+    inputField.dispatchEvent(new Event("input"));
+  };
+
+  btnRewrite.onclick = async () => {
+    renderStatus("Thinking...");
+    const text = inputField.value.trim();
+    const guidelinePayload = getGuidelinePayload();
+    if (!text) {
+      alert("Please enter some text.");
+      renderEmptyState();
+      return;
+    }
+
+    const key = geminiKeyInput ? geminiKeyInput.value.trim() : "";
+    if (!key) {
+      postToPlugin({ type: "load-key" });
+      renderStatus("Loading saved key...");
+      window.__pendingText = text;
+      window.__pendingGuideline = guidelinePayload;
+      return;
+    }
+
+    delete window.__pendingGuideline;
+    postToPlugin({ type: "rewrite", key, text, guideline: guidelinePayload });
+  };
+
+  inputField.addEventListener("input", () => {
+    const hasText = Boolean(inputField.value.trim());
+    btnRewrite.disabled = !hasText;
+    if (!hasText && !window.__pendingText) {
+      renderEmptyState();
+    }
+  });
+
   // settings save/load
-  const saveStatus = document.getElementById("saveStatus");
-  document.getElementById("saveKey").onclick = () => {
-    const key = document.getElementById("apikey").value.trim();
-    parent.postMessage({ pluginMessage: { type: "save-key", key } }, "*");
+  saveKeyBtn.onclick = () => {
+    const key = geminiKeyInput.value.trim();
+    postToPlugin({ type: "save-key", key });
     saveStatus.textContent = "Saving…";
   };
-  document.getElementById("loadKey").onclick = () => {
-    parent.postMessage({ pluginMessage: { type: "load-key" } }, "*");
+  loadKeyBtn.onclick = () => {
+    postToPlugin({ type: "load-key" });
     saveStatus.textContent = "Loading…";
   };
 
@@ -88,27 +498,82 @@
   onmessage = (event) => {
     const msg = event.data.pluginMessage;
 
+    if (msg?.type === "guideline-default") {
+      guidelineReference = msg.guideline || null;
+      return;
+    }
+
     if (msg?.type === "key-saved") {
       saveStatus.textContent = msg.error ? ("Save failed: " + msg.error) : "Key saved.";
+      if (!msg.error && typeof msg.key === "string") {
+        geminiKeyInput.value = msg.key;
+      }
       return;
     }
     if (msg?.type === "key-loaded") {
-      if (msg.error) saveStatus.textContent = "Load failed: " + msg.error;
-      const field = document.getElementById("apikey");
-      if (field) field.value = msg.key || "";
-      saveStatus.textContent = "Key loaded.";
-      // if user pressed Rewrite and was missing a key, resume the call
-      if (window.__pendingText && msg.key) {
-        const text = window.__pendingText;
-        delete window.__pendingText;
-        parent.postMessage({ pluginMessage: { type: "rewrite", key: msg.key, text } }, "*");
-        result.textContent = "Thinking...";
+      if (msg.error) {
+        saveStatus.textContent = "Load failed: " + msg.error;
+        if (window.__pendingText) {
+          renderStatus("Couldn't load your API key. Add it in Settings to try again.");
+          delete window.__pendingText;
+          delete window.__pendingGuideline;
+          activate("settings");
+        }
+        return;
+      }
+
+      const loadedKeyRaw = typeof msg.key === "string" ? msg.key : "";
+      const loadedKey = loadedKeyRaw.trim();
+
+      geminiKeyInput.value = loadedKeyRaw;
+      saveStatus.textContent = loadedKey ? "Key loaded." : "No key saved yet.";
+
+      if (window.__pendingText) {
+        if (loadedKey) {
+          const text = window.__pendingText;
+          const guide = window.__pendingGuideline || getGuidelinePayload();
+          delete window.__pendingText;
+          delete window.__pendingGuideline;
+          postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide });
+          renderStatus("Thinking...");
+        } else {
+          renderStatus("Add your Gemini API key in Settings to generate copy suggestions.");
+          delete window.__pendingText;
+          delete window.__pendingGuideline;
+          activate("settings");
+        }
+      }
+      return;
+    }
+    if (msg?.type === "error") {
+      const errText =
+        typeof msg.error === "string"
+          ? msg.error
+          : msg && msg.error && msg.error.message
+          ? String(msg.error.message)
+          : "Unknown error.";
+      console.error("Gemini rewrite error:", msg.error);
+      renderStatus("Generation failed: " + errText);
+      return;
+    }
+    if (msg?.type === "selection-text") {
+      if (typeof msg.text === "string" && msg.text.length) {
+        applySelectionText(msg.text);
       }
       return;
     }
     if (msg?.type === "rewrite-done") {
-      result.textContent = msg.output || "No response.";
-      // optional: switch back to rewrite tab
+      const output = typeof msg.output === "string" ? msg.output.trim() : "";
+      if (msg.error) {
+        renderError(output);
+      } else {
+        const suggestions = buildSuggestions(output);
+        if (suggestions.length) {
+          renderSuggestions(suggestions);
+        } else {
+          renderStatus(output || "No response.");
+        }
+      }
       activate("rewrite");
       return;
     }
@@ -116,7 +581,10 @@
 
   // auto-load key when opening settings
   tabs.settings.tab.addEventListener("click", ()=> {
-    parent.postMessage({ pluginMessage: { type: "load-key" } }, "*");
+    postToPlugin({ type: "load-key" });
     saveStatus.textContent = "Loading…";
   });
+
+  renderEmptyState();
+  postToPlugin({ type: "request-guideline" });
 </script>
