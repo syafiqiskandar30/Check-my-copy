@@ -59,6 +59,103 @@
   .panel.active {
     display: block;
   }
+  .rewrite-screen {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .rewrite-screen.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .rewrite-screen[hidden] {
+    display: none !important;
+  }
+  .rewrite-screen.loading-screen {
+    display: flex;
+  }
+  .loading-screen {
+    min-height: 320px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    padding: 32px 16px;
+  }
+  .loading-screen p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 22px;
+    color: #111827;
+    font-weight: 500;
+    white-space: pre-line;
+  }
+  .loading-illustration {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    background: #e3f2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .loading-illustration svg {
+    width: 90px;
+    height: 90px;
+    display: block;
+  }
+  .back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 999px;
+  }
+  .back-button svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+  .back-button:focus-visible {
+    outline: 2px solid #7f56d9;
+    outline-offset: 2px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  .suggestions-screen {
+    padding: 16px 0 16px;
+  }
+  .suggestions-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .suggestions-header h2 {
+    margin: 0;
+    color: #000;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 27px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
   .field-header {
     display: flex;
     align-items: flex-end;
@@ -345,13 +442,9 @@
     opacity: 0.65;
   }
   .suggestions {
-    margin-top: 32px;
-    border-top: 1px solid var(--line);
-    padding-top: 12px;
-  }
-  .suggestions-title {
-    font-weight: 600;
-    margin-bottom: 10px;
+    margin-top: 0;
+    border: 0;
+    padding-top: 0;
   }
   .suggestion-body {
     min-height: 0;
@@ -400,13 +493,18 @@
   }
   .suggestion-meta {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: #6b7280;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
+    color: #788494;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
   }
-  .suggestion-char {
-    color: #4b5563;
+  .suggestion-dot {
+    color: inherit;
   }
   .score-pill {
     background: #d1fae5;
@@ -415,30 +513,6 @@
     padding: 2px 8px;
     font-weight: 600;
     font-size: 12px;
-  }
-  .info-icon {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 1px solid #d1d5db;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: #9ca3af;
-  }
-  .suggestion-footer {
-    margin-top: 12px;
-    text-align: center;
-    font-size: 12px;
-    color: #6b7280;
-  }
-  .suggestion-footer a {
-    color: #7c3aed;
-    text-decoration: none;
-  }
-  .suggestion-footer a:hover {
-    text-decoration: underline;
   }
   .row {
     display: flex;
@@ -491,52 +565,85 @@
   <div id="tab-settings" class="tab">Settings</div>
 </div>
 
-  <div id="panel-rewrite" class="panel active">
-  <div class="field-header">
-    <label class="field-label" for="inputText">Enter copy</label>
-    <div id="inputCharCount" class="char-counter">0 characters</div>
-  </div>
-  <input
-    id="inputText"
-    type="text"
-    placeholder="Type your copy or select a text layer in figma"
-  />
-  <section class="tone-section">
-    <div class="tone-title">Select tone</div>
-    <div id="toneOptionList" class="tone-options"></div>
-  </section>
-  <section class="length-section">
-    <div class="length-header">
-      <span>Text length</span>
-      <span id="lengthValue" class="length-value">0 characters</span>
-    </div>
-    <div class="length-slider">
-      <div class="length-slider-track">
-        <div id="lengthFill" class="length-slider-fill" style="width:0%;"></div>
+<div id="panel-rewrite" class="panel active">
+  <div class="rewrite-screen-container">
+    <div id="rewriteHome" class="rewrite-screen active">
+      <div class="field-header">
+        <label class="field-label" for="inputText">Enter copy</label>
+        <div id="inputCharCount" class="char-counter">0 characters</div>
       </div>
-      <input type="range" id="lengthSlider" min="12" max="160" value="40" step="1" />
+      <textarea
+        id="inputText"
+        class="auto-textarea"
+        rows="2"
+        placeholder="Type your copy or select a text layer in figma"
+      ></textarea>
+      <section class="tone-section">
+        <div class="tone-title">Select tone</div>
+        <div id="toneOptionList" class="tone-options"></div>
+      </section>
+      <section class="length-section">
+        <div class="length-header">
+          <span>Text length</span>
+          <span id="lengthValue" class="length-value">0 characters</span>
+        </div>
+        <div class="length-slider">
+          <div class="length-slider-track">
+            <div id="lengthFill" class="length-slider-fill" style="width:0%;"></div>
+          </div>
+          <input type="range" id="lengthSlider" min="12" max="160" value="40" step="1" />
+        </div>
+      </section>
+      <section class="element-section">
+        <div class="element-title">Select usage</div>
+        <div id="elementOptionList" class="element-options"></div>
+      </section>
+      <div class="context-field">
+        <label for="usageContextInput">Context and custom instructions</label>
+        <textarea
+          id="usageContextInput"
+          class="context-area auto-textarea"
+          rows="2"
+          placeholder="Use on fuelling flow.&#10;Do not use word &ldquo;free&rdquo;."
+        ></textarea>
+      </div>
+
+      <button id="rewrite" class="rewrite-btn" disabled>Rewrite</button>
     </div>
-  </section>
-  <section class="element-section">
-    <div class="element-title">Select usage</div>
-    <div id="elementOptionList" class="element-options"></div>
-  </section>
-  <div class="context-field">
-    <label for="usageContextInput">Context and custom instructions</label>
-    <textarea
-      id="usageContextInput"
-      class="context-area"
-      rows="2"
-      placeholder="Use on fuelling flow.&#10;Do not use word &ldquo;free&rdquo;."
-    ></textarea>
+
+    <div id="rewriteLoading" class="rewrite-screen loading-screen" aria-live="polite" hidden>
+      <div class="loading-illustration" aria-hidden="true">
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="32" fill="#dff1ff"/>
+          <path d="M22 36L27 22L36 34" fill="#c9dafe"/>
+          <path d="M58 36L53 22L44 34" fill="#c9dafe"/>
+          <circle cx="40" cy="44" r="24" fill="#f5f8ff"/>
+          <path d="M24 38C24 30 32 28 32 28H48C48 28 56 30 56 38V44C56 52 50 58 42 58H38C30 58 24 52 24 44V38Z" fill="#2f3b5c"/>
+          <rect x="32" y="38" width="16" height="20" rx="4" fill="#005c83"/>
+          <circle cx="42" cy="42" r="2.5" fill="#0f172a" opacity="0.4"/>
+          <path d="M30 48C31 50 33 52 36 52" stroke="#f5f8ff" stroke-width="3" stroke-linecap="round"/>
+          <path d="M50 48C49 50 47 52 44 52" stroke="#f5f8ff" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p id="loadingMessage">Hang tight,
+we're putting your copy together!</p>
+    </div>
+
+    <div id="suggestionsScreen" class="rewrite-screen suggestions-screen" hidden>
+      <div class="suggestions-header">
+        <button type="button" id="backToForm" class="back-button" aria-label="Back to rewrite form">
+          <span class="sr-only">Back</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <path d="M15.5303 4.46967C15.2641 4.2034 14.8474 4.1792 14.5538 4.39705L14.4697 4.46967L7.46967 11.4697C7.2034 11.7359 7.1792 12.1526 7.39705 12.4462L7.46967 12.5303L14.4697 19.5303C14.7626 19.8232 15.2374 19.8232 15.5303 19.5303C15.7966 19.2641 15.8208 18.8474 15.6029 18.5538L15.5303 18.4697L9.061 12L15.5303 5.53033C15.7966 5.26406 15.8208 4.8474 15.6029 4.55379L15.5303 4.46967Z" fill="#2d333a"/>
+          </svg>
+        </button>
+        <h2>Suggestions</h2>
+      </div>
+      <section class="suggestions">
+        <div id="suggestionBody" class="suggestion-body centered"></div>
+      </section>
+    </div>
   </div>
-
-  <button id="rewrite" class="rewrite-btn" disabled>Rewrite</button>
-
-  <section class="suggestions">
-    <div class="suggestions-title">Suggestions</div>
-    <div id="suggestionBody" class="suggestion-body centered"></div>
-  </section>
 </div>
 
 <div id="panel-settings" class="panel">
@@ -573,6 +680,52 @@
   // rewrite flow
   const btnRewrite = document.getElementById("rewrite");
   const suggestionBody = document.getElementById("suggestionBody");
+  const rewriteHomeScreen = document.getElementById("rewriteHome");
+  const rewriteLoadingScreen = document.getElementById("rewriteLoading");
+  const suggestionsScreen = document.getElementById("suggestionsScreen");
+  const backToFormBtn = document.getElementById("backToForm");
+  const loadingMessageEl = document.getElementById("loadingMessage");
+  const screenViews = {
+    home: rewriteHomeScreen,
+    loading: rewriteLoadingScreen,
+    suggestions: suggestionsScreen,
+  };
+  const SCREEN_FADE_MS = 250;
+  const showScreen = (name) => {
+    const target = screenViews[name];
+    if (!target) return;
+    if (target.classList.contains("active")) return;
+    Object.entries(screenViews).forEach(([key, view]) => {
+      if (!view) return;
+      const isActive = key === name;
+      if (isActive) {
+        view.hidden = false;
+        requestAnimationFrame(() => view.classList.add("active"));
+      } else if (view.classList.contains("active")) {
+        view.classList.remove("active");
+        const handleTransitionEnd = () => {
+          view.hidden = true;
+          view.removeEventListener("transitionend", handleTransitionEnd);
+        };
+        view.addEventListener("transitionend", handleTransitionEnd);
+        setTimeout(() => {
+          if (!view.classList.contains("active")) {
+            view.hidden = true;
+          }
+        }, SCREEN_FADE_MS + 75);
+      } else {
+        view.classList.remove("active");
+        view.hidden = true;
+      }
+    });
+  };
+  const showHomeScreen = () => showScreen("home");
+  const showLoadingScreen = () => showScreen("loading");
+  const showSuggestionsScreen = () => showScreen("suggestions");
+  backToFormBtn?.addEventListener("click", () => {
+    showHomeScreen();
+  });
+  showHomeScreen();
   const inputField = document.getElementById("inputText");
   const inputCharCounter = document.getElementById("inputCharCount");
   const MIN_SUGGESTIONS = 5;
@@ -583,6 +736,16 @@
     ["Upbeat", "Supportive"],
     ["Confident", "Empowering"],
   ];
+  const MIN_INPUT_HEIGHT = 52;
+  const autoResizeTextarea = (element, minHeight = MIN_INPUT_HEIGHT) => {
+    if (!element) return;
+    element.style.height = "auto";
+    const nextHeight = Math.max(element.scrollHeight, minHeight);
+    element.style.height = `${nextHeight}px`;
+  };
+  const resizeRewriteInput = () => {
+    autoResizeTextarea(inputField, MIN_INPUT_HEIGHT);
+  };
 
   const geminiKeyInput = document.getElementById("apikey");
   const saveKeyBtn = document.getElementById("saveKey");
@@ -591,6 +754,10 @@
   const guidelineStatus = document.getElementById("guidelineStatus");
   const guidelineStatusText = guidelineStatus?.querySelector(".guideline-text");
   const usageContextInput = document.getElementById("usageContextInput");
+  const MIN_CONTEXT_HEIGHT = 72;
+  const resizeContextInput = () => {
+    autoResizeTextarea(usageContextInput, MIN_CONTEXT_HEIGHT);
+  };
   let usageContextValue = "";
   const formatCharCount = (count) => `${count} character${count === 1 ? "" : "s"}`;
   const updateInputCharCount = () => {
@@ -845,6 +1012,11 @@
     `;
   };
 
+  const renderLoading = (text = "Hang tight,\nwe're putting your copy together!") => {
+    if (!loadingMessageEl) return;
+    loadingMessageEl.textContent = text;
+  };
+
   const renderStatus = (text) => {
     suggestionBody.className = "suggestion-body centered";
     suggestionBody.innerHTML = `<p>${text}</p>`;
@@ -867,22 +1039,16 @@
         <article class="suggestion-card">
           <p>${item.text}</p>
           <div class="suggestion-meta">
-            <span class="score-pill">${item.score}%</span>
             <span>${item.tones.join(", ")}</span>
+            <span class="suggestion-dot" aria-hidden="true">·</span>
             <span class="suggestion-char">${formatCharCount(item.text.length)}</span>
-            <span class="info-icon" title="Score confidence">i</span>
           </div>
         </article>`
       )
       .join("");
 
     suggestionBody.className = "suggestion-body";
-    suggestionBody.innerHTML = `
-      <div class="suggestions-list">${cards}</div>
-      <div class="suggestion-footer">
-        Suggestions aren't helpful? <a href="https://forms.gle/" target="_blank" rel="noopener">Let us know</a>
-      </div>
-    `;
+    suggestionBody.innerHTML = `<div class="suggestions-list">${cards}</div>`;
   };
 
   const stripFormatting = (line) =>
@@ -987,22 +1153,23 @@
 
   usageContextInput?.addEventListener("input", () => {
     usageContextValue = usageContextInput.value.trim();
+    resizeContextInput();
   });
 
   btnRewrite.onclick = async () => {
-    renderStatus("Thinking...");
     const text = inputField.value.trim();
-    const guidelinePayload = buildGuidelinePayload();
     if (!text) {
       alert("Please enter some text.");
-      renderEmptyState();
       return;
     }
+    const guidelinePayload = buildGuidelinePayload();
+    showLoadingScreen();
+    renderLoading();
 
     const key = geminiKeyInput ? geminiKeyInput.value.trim() : "";
     if (!key) {
       postToPlugin({ type: "load-key" });
-      renderStatus("Loading saved key...");
+      renderLoading("Loading saved key...");
       window.__pendingText = text;
       window.__pendingGuideline = guidelinePayload;
       return;
@@ -1016,6 +1183,7 @@
     const hasText = Boolean(inputField.value.trim());
     btnRewrite.disabled = !hasText;
     updateInputCharCount();
+    resizeRewriteInput();
     if (!hasText && !window.__pendingText) {
       renderEmptyState();
     }
@@ -1061,6 +1229,7 @@
       if (msg.error) {
         saveStatus.textContent = "Load failed: " + msg.error;
         if (window.__pendingText) {
+          showSuggestionsScreen();
           renderStatus("Couldn't load your API key. Add it in Settings to try again.");
           delete window.__pendingText;
           delete window.__pendingGuideline;
@@ -1082,8 +1251,10 @@
           delete window.__pendingText;
           delete window.__pendingGuideline;
           postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide });
-          renderStatus("Thinking...");
+          showLoadingScreen();
+          renderLoading();
         } else {
+          showSuggestionsScreen();
           renderStatus("Add your Gemini API key in Settings to generate copy suggestions.");
           delete window.__pendingText;
           delete window.__pendingGuideline;
@@ -1100,7 +1271,9 @@
           ? String(msg.error.message)
           : "Unknown error.";
       console.error("Gemini rewrite error:", msg.error);
-      renderStatus("Generation failed: " + errText);
+      activate("rewrite");
+      showSuggestionsScreen();
+      renderError("Generation failed: " + errText);
       return;
     }
     if (msg?.type === "selection-text") {
@@ -1111,6 +1284,7 @@
     }
     if (msg?.type === "rewrite-done") {
       const output = typeof msg.output === "string" ? msg.output.trim() : "";
+      showSuggestionsScreen();
       if (msg.error) {
         renderError(output);
       } else {
@@ -1137,6 +1311,8 @@
   });
 
   updateInputCharCount();
+  resizeRewriteInput();
+  resizeContextInput();
   renderEmptyState();
   postToPlugin({ type: "request-guideline" });
 </script>
