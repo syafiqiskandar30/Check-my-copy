@@ -11,11 +11,20 @@
     --chip-bg: #fff;
     --chip-border: #d1d5db;
   }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html,
   body {
     font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     margin: 0;
+    width: 100%;
+    max-width: 100%;
     background: var(--bg);
     color: var(--text);
+    overflow-x: hidden;
   }
   .tabs {
     display: flex;
@@ -56,14 +65,43 @@
     font-size: 14px;
     box-sizing: border-box;
   }
+  textarea {
+    resize: none;
+  }
   textarea::placeholder {
     color: #94a3b8;
+  }
+  .guideline-status {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--subtle);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .guideline-status .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #d1d5db;
+  }
+  .guideline-status.loaded .status-dot {
+    background: #34d399;
+  }
+  .guideline-status.fallback .status-dot {
+    background: #fbbf24;
+  }
+  .guideline-status.error .status-dot {
+    background: #f87171;
   }
   .chips {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 10px;
+  }
+  .chip-dropdown {
+    position: relative;
   }
   .chip {
     border: 1px solid var(--chip-border);
@@ -165,6 +203,9 @@
     font-size: 12px;
     color: #6b7280;
   }
+  .suggestion-char {
+    color: #4b5563;
+  }
   .score-pill {
     background: #d1fae5;
     color: #0f5132;
@@ -202,6 +243,84 @@
     gap: 8px;
     align-items: center;
   }
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .dropdown {
+    position: relative;
+  }
+  .dropdown-trigger {
+    border: 1px solid var(--chip-border);
+    background: var(--chip-bg);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dropdown-trigger.is-selected {
+    background: #ede9fe;
+    border-color: #c4b5fd;
+    color: #5b21b6;
+    font-weight: 600;
+  }
+  .dropdown-trigger:focus-visible {
+    outline: 2px solid var(--primary);
+  }
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid #c4b5fd;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 20;
+  }
+  .dropdown.open .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .tone-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .dropdown-list {
+    max-height: 220px;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .dropdown-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .dropdown-item:hover,
+  .dropdown-item.selected {
+    background: #ede9fe;
+    color: #4c1d95;
+  }
   .status-text {
     margin-top: 8px;
     font-size: 12px;
@@ -211,6 +330,57 @@
     font-size: 12px;
     color: var(--subtle);
   }
+  .context-field {
+    margin-top: 12px;
+  }
+  .context-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--subtle);
+  }
+  .context-helper {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--subtle);
+  }
+  .char-counter {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--subtle);
+    text-align: right;
+  }
+  .custom-trigger .custom-clear {
+    display: none;
+    margin-left: 6px;
+    font-size: 12px;
+  }
+  .custom-trigger.is-selected .custom-clear {
+    display: inline;
+  }
+  .custom-requirements {
+    margin-top: 10px;
+    display: none;
+    animation: fadeIn 0.15s ease;
+  }
+  .custom-requirements.is-visible {
+    display: block;
+  }
+  .custom-helper {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--subtle);
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 </style>
 
 <div class="tabs">
@@ -218,20 +388,33 @@
   <div id="tab-settings" class="tab">settings</div>
 </div>
 
-<div id="panel-rewrite" class="panel active">
-  <label class="field-label">enter your copy</label>
-  <textarea
-    id="inputText"
-    rows="4"
-    placeholder="Type your copy or select a text layer in Figma"
-  ></textarea>
-
-  <div class="chips">
-    <button class="chip" type="button">Tone</button>
-    <button class="chip" type="button">Length</button>
-    <button class="chip" type="button">Element</button>
-    <button class="chip" type="button">Case</button>
-    <button class="chip" type="button">Custom</button>
+  <div id="panel-rewrite" class="panel active">
+ 	  <label class="field-label">enter your copy</label>
+ 	  <textarea
+ 	    id="inputText"
+ 	    rows="4"
+ 	    placeholder="Type your copy or select a text layer in Figma"
+ 	  ></textarea>
+  <div id="inputCharCount" class="char-counter">0 characters</div>
+  <div id="filterControls" class="filter-row"></div>
+  <div id="customInputWrapper" class="custom-requirements" aria-hidden="true">
+    <textarea
+      id="customInput"
+      rows="4"
+      placeholder="- Start with...
+- Phrase as...
+- Do not use..."
+    ></textarea>
+    <p class="custom-helper">Add bespoke requirements, banned words, or formatting notes.</p>
+  </div>
+  <div class="context-field">
+    <label for="usageContextInput">where will this copy be used?</label>
+    <input
+      id="usageContextInput"
+      type="text"
+      placeholder="e.g. Push notification for failed payment"
+    />
+    <p class="context-helper">Helps tailor tone, urgency, and format to the exact surface.</p>
   </div>
 
   <button id="rewrite" class="rewrite-btn" disabled>
@@ -246,6 +429,10 @@
 </div>
 
 <div id="panel-settings" class="panel">
+  <div id="guidelineStatus" class="guideline-status fallback">
+    <span class="status-dot"></span>
+    <span class="guideline-text">Loading style guide…</span>
+  </div>
   <label>API key (Gemini)</label>
   <input id="apikey" type="text" placeholder="AIza..." />
   <div class="row">
@@ -276,17 +463,34 @@
   const btnRewrite = document.getElementById("rewrite");
   const suggestionBody = document.getElementById("suggestionBody");
   const inputField = document.getElementById("inputText");
+  const inputCharCounter = document.getElementById("inputCharCount");
+  const MIN_SUGGESTIONS = 5;
   const toneFallbacks = [
     ["Engaging", "Friendly"],
     ["Warm", "Appreciative"],
     ["Enthusiastic", "Encouraging"],
     ["Upbeat", "Supportive"],
+    ["Confident", "Empowering"],
   ];
 
   const geminiKeyInput = document.getElementById("apikey");
   const saveKeyBtn = document.getElementById("saveKey");
   const loadKeyBtn = document.getElementById("loadKey");
   const saveStatus = document.getElementById("saveStatus");
+  const guidelineStatus = document.getElementById("guidelineStatus");
+  const guidelineStatusText = guidelineStatus?.querySelector(".guideline-text");
+  const filterControls = document.getElementById("filterControls");
+  const customInputWrapper = document.getElementById("customInputWrapper");
+  const customInput = document.getElementById("customInput");
+  const usageContextInput = document.getElementById("usageContextInput");
+  let customTrigger = null;
+  let usageContextValue = "";
+  const formatCharCount = (count) => `${count} character${count === 1 ? "" : "s"}`;
+  const updateInputCharCount = () => {
+    if (!inputCharCounter) return;
+    const value = inputField?.value || "";
+    inputCharCounter.textContent = formatCharCount(value.length);
+  };
 
   const fallbackGuideline = Object.freeze({
     name: "Warm lower-case headings",
@@ -299,8 +503,140 @@
     ],
   });
 
+  const filterConfigs = [
+    {
+      key: "tone",
+      label: "Tone",
+      searchable: true,
+      options: [
+        "Apologetic",
+        "Casual",
+        "Catchy",
+        "Confident",
+        "Conversational",
+        "Convincing",
+        "Crisp",
+        "Empathetic",
+        "Engaging",
+        "Enthusiastic",
+        "Exciting",
+        "Formal",
+        "Friendly",
+        "Funny",
+        "Happy",
+        "Helpful",
+        "Inclusive",
+        "Informative",
+        "Intelligent",
+        "Inviting",
+        "Kind",
+        "Playful",
+        "Polite",
+        "Positive",
+        "Professional",
+        "Upbeat",
+        "Warm",
+        "Witty",
+      ],
+    },
+    {
+      key: "length",
+      label: "Length",
+      options: ["Short (≤40 chars)", "Medium (41-80 chars)", "Long (81+ chars)"],
+    },
+    {
+      key: "element",
+      label: "Element",
+      options: ["Heading", "Body copy", "CTA button", "Tooltip", "Empty state"],
+    },
+    {
+      key: "case",
+      label: "Case",
+      options: ["Sentence case", "Title Case", "lowercase", "UPPERCASE"],
+    },
+    {
+      key: "custom",
+      label: "Custom",
+      options: ["No contractions", "Add emoji", "Reassure user", "Add urgency"],
+    },
+  ];
+  const filterSelections = {};
+  const dropdownRefs = new Map();
+
+  const toneChip = document.getElementById("toneChip");
+  const toneDropdown = document.getElementById("toneDropdown");
+  const toneSearch = document.getElementById("toneSearch");
+  const toneListEl = document.getElementById("toneList");
+  const toneOptions = [
+    "Apologetic",
+    "Casual",
+    "Catchy",
+    "Confident",
+    "Conversational",
+    "Convincing",
+    "Crisp",
+    "Empathetic",
+    "Engaging",
+    "Enthusiastic",
+    "Exciting",
+    "Formal",
+    "Friendly",
+    "Funny",
+    "Happy",
+    "Helpful",
+    "Inclusive",
+    "Informative",
+    "Intelligent",
+    "Inviting",
+    "Kind",
+    "Playful",
+    "Polite",
+    "Positive",
+    "Professional",
+    "Upbeat",
+    "Warm",
+    "Witty",
+  ];
+
+  const setGuidelineIndicator = (state, text) => {
+    if (!guidelineStatus || !guidelineStatusText) return;
+    guidelineStatus.classList.remove("loaded", "fallback", "error");
+    guidelineStatus.classList.add(state);
+    guidelineStatusText.textContent = text;
+  };
+
   let guidelineReference = null;
-  const getGuidelinePayload = () => guidelineReference || fallbackGuideline;
+  const getGuidelinePayload = () => {
+    if (guidelineReference) return guidelineReference;
+    setGuidelineIndicator("fallback", "Using fallback style guide.");
+    return fallbackGuideline;
+  };
+  const buildGuidelinePayload = () => {
+    const base = getGuidelinePayload();
+    const payload = base && typeof base === "object" ? { ...base } : {};
+    const tone = filterSelections.tone;
+    if (tone) {
+      payload.tonePreference = tone;
+    } else {
+      delete payload.tonePreference;
+    }
+    const otherFilters = Object.entries(filterSelections).reduce((acc, [key, value]) => {
+      if (value) acc[key] = value;
+      return acc;
+    }, {});
+    if (Object.keys(otherFilters).length) {
+      payload.styleFilters = otherFilters;
+    } else {
+      delete payload.styleFilters;
+    }
+    if (usageContextValue) {
+      payload.usageContext = usageContextValue;
+    } else {
+      delete payload.usageContext;
+    }
+    return payload;
+  };
+  setGuidelineIndicator("fallback", "Loading style guide…");
 
   const resolveTargetOrigin = () => {
     try {
@@ -356,6 +692,7 @@
           <div class="suggestion-meta">
             <span class="score-pill">${item.score}%</span>
             <span>${item.tones.join(", ")}</span>
+            <span class="suggestion-char">${formatCharCount(item.text.length)}</span>
             <span class="info-icon" title="Score confidence">i</span>
           </div>
         </article>`
@@ -439,7 +776,19 @@
       return expanded && expanded.length ? expanded : [text];
     });
 
-    return flattened.map((text, idx) => ({
+    const unique = [];
+    const seen = new Set();
+    flattened.forEach((text) => {
+      const clean = stripFormatting(text);
+      if (!clean) return;
+      const key = clean.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(clean);
+      }
+    });
+
+    return unique.slice(0, MIN_SUGGESTIONS).map((text, idx) => ({
       text,
       score: Math.max(80, 95 - idx * 2),
       tones: toneFallbacks[idx % toneFallbacks.length],
@@ -452,10 +801,166 @@
     inputField.dispatchEvent(new Event("input"));
   };
 
+  const renderDropdownOptions = (key, query = "") => {
+    const ref = dropdownRefs.get(key);
+    if (!ref) return;
+    const search = query.trim().toLowerCase();
+    const options = ref.config.options.filter((option) =>
+      option.toLowerCase().includes(search)
+    );
+    if (!options.length) {
+      ref.list.innerHTML = `<li class="dropdown-item" style="color:#94a3b8;cursor:default;">No matches</li>`;
+      return;
+    }
+    ref.list.innerHTML = options
+      .map(
+        (option) =>
+          `<li class="dropdown-item${filterSelections[key] === option ? " selected" : ""}" data-value="${option}">${option}</li>`
+      )
+      .join("");
+  };
+
+  const closeAllDropdowns = () => {
+    dropdownRefs.forEach(({ wrapper }) => wrapper.classList.remove("open"));
+  };
+
+  const toggleDropdown = (key) => {
+    const ref = dropdownRefs.get(key);
+    if (!ref) return;
+    const isOpen = ref.wrapper.classList.contains("open");
+    closeAllDropdowns();
+    if (!isOpen) {
+      ref.wrapper.classList.add("open");
+      if (ref.searchInput) {
+        ref.searchInput.value = "";
+        renderDropdownOptions(key);
+        requestAnimationFrame(() => ref.searchInput?.focus());
+      } else {
+        renderDropdownOptions(key);
+      }
+    }
+  };
+
+  const createDropdowns = () => {
+    if (!filterControls) return;
+    filterConfigs.forEach((config) => {
+      if (config.key === "custom") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "dropdown";
+        wrapper.dataset.key = config.key;
+
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "dropdown-trigger custom-trigger";
+        trigger.innerHTML = `<span>${config.label}</span><span class="custom-clear" aria-hidden="true">×</span>`;
+        wrapper.appendChild(trigger);
+        filterControls.appendChild(wrapper);
+        customTrigger = trigger;
+
+        trigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          closeAllDropdowns();
+          if (!customInputWrapper) return;
+          const shouldShow = !customInputWrapper.classList.contains("is-visible");
+          customInputWrapper.classList.toggle("is-visible", shouldShow);
+          customInputWrapper.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+          if (shouldShow) {
+            trigger.classList.add("is-selected");
+            requestAnimationFrame(() => customInput?.focus());
+          } else {
+            trigger.classList.remove("is-selected");
+            if (customInput) {
+              customInput.value = "";
+            }
+            delete filterSelections.custom;
+          }
+        });
+        return;
+      }
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "dropdown";
+      wrapper.dataset.key = config.key;
+
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "dropdown-trigger";
+      trigger.textContent = config.label;
+      wrapper.appendChild(trigger);
+
+      const menu = document.createElement("div");
+      menu.className = "dropdown-menu";
+
+      let searchInput = null;
+      if (config.searchable) {
+        searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = `Search ${config.label.toLowerCase()}...`;
+        searchInput.className = "tone-search";
+        menu.appendChild(searchInput);
+      }
+
+      const list = document.createElement("ul");
+      list.className = "dropdown-list";
+      menu.appendChild(list);
+
+      wrapper.appendChild(menu);
+      filterControls.appendChild(wrapper);
+
+      dropdownRefs.set(config.key, { wrapper, trigger, menu, list, searchInput, config });
+
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleDropdown(config.key);
+      });
+
+      searchInput?.addEventListener("input", (event) => {
+        const value = event.target.value;
+        renderDropdownOptions(config.key, value);
+      });
+
+      list.addEventListener("click", (event) => {
+        const target = event.target.closest(".dropdown-item");
+        if (!target) return;
+        const value = target.getAttribute("data-value");
+        if (!value || value === "No matches") return;
+        filterSelections[config.key] = value;
+        trigger.textContent = value;
+        trigger.classList.add("is-selected");
+        renderDropdownOptions(config.key, searchInput ? searchInput.value : "");
+        closeAllDropdowns();
+      });
+    });
+  };
+
+  createDropdowns();
+
+  customInput?.addEventListener("input", () => {
+    const value = customInput.value.trim();
+    if (value) {
+      filterSelections.custom = value;
+    } else {
+      delete filterSelections.custom;
+    }
+  });
+
+  customInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && customInputWrapper?.classList.contains("is-visible")) {
+      event.preventDefault();
+      customTrigger?.click();
+    }
+  });
+
+  usageContextInput?.addEventListener("input", () => {
+    usageContextValue = usageContextInput.value.trim();
+  });
+
+  document.addEventListener("click", () => closeAllDropdowns());
+
   btnRewrite.onclick = async () => {
     renderStatus("Thinking...");
     const text = inputField.value.trim();
-    const guidelinePayload = getGuidelinePayload();
+    const guidelinePayload = buildGuidelinePayload();
     if (!text) {
       alert("Please enter some text.");
       renderEmptyState();
@@ -478,6 +983,7 @@
   inputField.addEventListener("input", () => {
     const hasText = Boolean(inputField.value.trim());
     btnRewrite.disabled = !hasText;
+    updateInputCharCount();
     if (!hasText && !window.__pendingText) {
       renderEmptyState();
     }
@@ -499,7 +1005,16 @@
     const msg = event.data.pluginMessage;
 
     if (msg?.type === "guideline-default") {
-      guidelineReference = msg.guideline || null;
+      if (msg.error) {
+        guidelineReference = null;
+        setGuidelineIndicator("error", "Couldn't load style guide. Using fallback.");
+      } else if (msg.guideline) {
+        guidelineReference = msg.guideline;
+        setGuidelineIndicator("loaded", "Using structured style guide.");
+      } else {
+        guidelineReference = null;
+        setGuidelineIndicator("fallback", "Using fallback style guide.");
+      }
       return;
     }
 
@@ -531,7 +1046,7 @@
       if (window.__pendingText) {
         if (loadedKey) {
           const text = window.__pendingText;
-          const guide = window.__pendingGuideline || getGuidelinePayload();
+          const guide = window.__pendingGuideline || buildGuidelinePayload();
           delete window.__pendingText;
           delete window.__pendingGuideline;
           postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide });
@@ -568,10 +1083,14 @@
         renderError(output);
       } else {
         const suggestions = buildSuggestions(output);
-        if (suggestions.length) {
+        if (suggestions.length >= MIN_SUGGESTIONS) {
           renderSuggestions(suggestions);
         } else {
-          renderStatus(output || "No response.");
+          renderError(
+            suggestions.length
+              ? `Only ${suggestions.length}/${MIN_SUGGESTIONS} suggestions returned. Please try again.`
+              : output || "No response."
+          );
         }
       }
       activate("rewrite");
@@ -585,6 +1104,7 @@
     saveStatus.textContent = "Loading…";
   });
 
+  updateInputCharCount();
   renderEmptyState();
   postToPlugin({ type: "request-guideline" });
 </script>

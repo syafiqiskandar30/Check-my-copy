@@ -14,8 +14,23 @@ const describeGuideline = (guide: unknown) => {
   }
 };
 
+const buildRewriteInstructions = (guide: any) => {
+  if (!guide || typeof guide !== "object") return "You are a UX writing assistant.";
+  const promptCfg = (guide as any).rewritePrompt || {};
+  const overview = typeof promptCfg.overview === "string" && promptCfg.overview.trim().length
+    ? promptCfg.overview.trim()
+    : "You are a UX writing assistant.";
+  const requirements: string[] = Array.isArray(promptCfg.requirements)
+    ? promptCfg.requirements.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+  const joinedRequirements = requirements.length
+    ? requirements.map((req) => "- " + req.trim()).join("\n") + "\n\n"
+    : "\n";
+  return overview + "\n" + joinedRequirements;
+};
+
 figma.on("run", () => {
-  figma.showUI(__html__, { width: 360, height: 420 });
+  figma.showUI(__html__, { width: 400, height: 600 });
   figma.ui.postMessage({
     type: "guideline-default",
     guideline: guidelineReference,
@@ -98,8 +113,10 @@ figma.on("run", () => {
             encodeURIComponent(key);
 
           const guidelineText = describeGuideline(guideline);
+          const rewriteInstructions = buildRewriteInstructions(guideline);
           const prompt =
-            "You are a UX writing assistant. Rewrite the following copy into 3 short, mobile-friendly headings in lower case (2–6 words each). Tone: warm, appreciative, enthusiastic. Avoid emojis unless asked.\n\n" +
+            rewriteInstructions +
+            "Return exactly five unique variants as a numbered list (1.-5.) with no extra commentary.\n\n" +
             (guidelineText ? "Writing guideline:\n" + guidelineText + "\n\n" : "") +
             "User copy:\n" +
             text;
