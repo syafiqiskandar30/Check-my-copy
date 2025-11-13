@@ -177,55 +177,85 @@
     line-height: 20px;
     font-weight: 500;
   }
-  .tone-options {
+  .tone-options,
+  .element-options {
     margin-top: 12px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
   }
-  .tone-chip {
+  .tone-chip,
+  .element-chip {
     border: 1px dashed #f5f5f5;
     border-radius: 12px;
     background: #fff;
-    padding: 12px;
-    display: flex;
-    justify-content: center;
+    padding: 10px 14px;
+    min-width: 112px;
+    display: inline-flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     cursor: pointer;
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
     line-height: 17px;
-    font-weight: 400;
+    font-weight: 500;
     color: #788494;
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    text-align: center;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   }
-  .tone-chip-icon {
-    width: 16px;
-    height: 16px;
+  .tone-chip-icon,
+  .element-chip-icon {
+    width: 20px;
+    height: 20px;
     display: inline-block;
     flex-shrink: 0;
   }
-  .tone-chip.is-selected {
+  .tone-chip-label,
+  .element-chip-label {
+    color: inherit;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 17px;
+    text-align: center;
+    flex: 1 1 auto;
+  }
+  .tone-chip.is-selected,
+  .element-chip.is-selected {
     border-style: solid;
     border-color: transparent;
+    border-radius: 12px;
     background: rgba(0, 176, 255, 0.1);
     color: #00b0ff;
   }
-  .tone-chip:focus-visible {
+  .tone-chip:focus-visible,
+  .element-chip:focus-visible {
     outline: 2px solid #00b0ff;
     outline-offset: 2px;
   }
-  .tone-chip:disabled {
+  .tone-chip:disabled,
+  .element-chip:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    border-style: dashed;
-    border-color: #f5f5f5;
+    border-color: #f0f2f7;
     background: #fff;
-    color: #94a3b8;
+    color: #c0c7d4;
   }
-  .tone-chip:disabled .tone-chip-icon {
+  .tone-chip:disabled .tone-chip-icon,
+  .element-chip:disabled .element-chip-icon {
     opacity: 0.5;
+  }
+  .element-chip {
+    min-width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 6px;
+  }
+  .element-chip .element-chip-label {
+    text-align: left;
   }
   .element-section {
     margin-top: 32px;
@@ -312,38 +342,6 @@
     font-size: 14px;
     line-height: 20px;
     font-weight: 500;
-  }
-  .element-options {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .element-chip {
-    border: 1px dashed #f5f5f5;
-    border-radius: 12px;
-    background: #fff;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #788494;
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 14px;
-    line-height: 17px;
-    font-weight: 400;
-    cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-  }
-  .element-chip.is-selected {
-    border-style: solid;
-    border-color: transparent;
-    background: rgba(0, 176, 255, 0.1);
-    color: #00b0ff;
-  }
-  .element-chip:focus-visible {
-    outline: 2px solid #00b0ff;
-    outline-offset: 2px;
   }
   textarea,
   input[type="text"] {
@@ -755,6 +753,48 @@ we're putting your copy together!</p>
   const guidelineStatusText = guidelineStatus?.querySelector(".guideline-text");
   const usageContextInput = document.getElementById("usageContextInput");
   const MIN_CONTEXT_HEIGHT = 72;
+  const CONTEXT_LINE_HEIGHT = 20;
+  const CONTEXT_VERTICAL_PADDING = 24;
+  const DEFAULT_CONTEXT_PLACEHOLDER = "";
+  const DEFAULT_PLACEHOLDER_LINES = 1;
+  let contextPlaceholderSizer = null;
+  const updateContextPlaceholder = (text, lineCount = DEFAULT_PLACEHOLDER_LINES) => {
+    if (!usageContextInput) return;
+    usageContextInput.placeholder = text;
+    const totalLines = Math.max(lineCount, DEFAULT_PLACEHOLDER_LINES);
+    let minHeight = Math.max(
+      MIN_CONTEXT_HEIGHT,
+      CONTEXT_VERTICAL_PADDING + totalLines * CONTEXT_LINE_HEIGHT
+    );
+    if (!contextPlaceholderSizer) {
+      contextPlaceholderSizer = document.createElement("div");
+      contextPlaceholderSizer.setAttribute("aria-hidden", "true");
+      contextPlaceholderSizer.style.position = "absolute";
+      contextPlaceholderSizer.style.visibility = "hidden";
+      contextPlaceholderSizer.style.whiteSpace = "pre-wrap";
+      contextPlaceholderSizer.style.wordBreak = "break-word";
+      contextPlaceholderSizer.style.top = "-9999px";
+      contextPlaceholderSizer.style.left = "-9999px";
+      contextPlaceholderSizer.style.pointerEvents = "none";
+      contextPlaceholderSizer.style.boxSizing = "border-box";
+      document.body.appendChild(contextPlaceholderSizer);
+    }
+    const computed = getComputedStyle(usageContextInput);
+    contextPlaceholderSizer.style.font = computed.font || "";
+    contextPlaceholderSizer.style.lineHeight = computed.lineHeight || "";
+    contextPlaceholderSizer.style.padding = computed.padding || "";
+    contextPlaceholderSizer.style.width = `${usageContextInput.clientWidth}px`;
+    contextPlaceholderSizer.textContent = text;
+    const measuredHeight = contextPlaceholderSizer.scrollHeight;
+    minHeight = Math.max(minHeight, measuredHeight);
+    usageContextInput.style.minHeight = `${minHeight}px`;
+    if (!usageContextInput.value.trim().length) {
+      usageContextInput.style.height = `${minHeight}px`;
+    }
+  };
+  if (usageContextInput) {
+    updateContextPlaceholder(DEFAULT_CONTEXT_PLACEHOLDER, DEFAULT_PLACEHOLDER_LINES);
+  }
   const resizeContextInput = () => {
     autoResizeTextarea(usageContextInput, MIN_CONTEXT_HEIGHT);
   };
@@ -783,6 +823,8 @@ we're putting your copy together!</p>
   const lengthSlider = document.getElementById("lengthSlider");
   const lengthValueEl = document.getElementById("lengthValue");
   const lengthFill = document.getElementById("lengthFill");
+  const lengthPresetMarkers = document.getElementById("lengthPresetMarkers");
+  const lengthPresetLabels = document.getElementById("lengthPresetLabels");
   const getToneSelections = () => {
     const tones = filterSelections.tone;
     if (Array.isArray(tones)) return tones;
@@ -797,57 +839,363 @@ we're putting your copy together!</p>
     }
   };
 
-  const toneOptionList = document.getElementById("toneOptionList");
-  const TONE_ICONS = Object.freeze({
-    add: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggMTZDMTIuNDE4MyAxNiAxNiAxMi40MTgzIDE2IDhDMTYgMy41ODE3MiAxMi40MTgzIDAgOCAwQzMuNTgxNzIgMCAwIDMuNTgxNzIgMCA4QzAgMTIuNDE4MyAzLjU4MTcyIDE2IDggMTZaIiBmaWxsPSIjMDBCMEZGIi8+CjxwYXRoIGQ9Ik0xMS40Mjg3IDkuMTM4NjlDMTIuMDU5OSA5LjEzODY5IDEyLjU3MTYgOC42MjcwMSAxMi41NzE2IDcuOTk1ODNDMTIuNTcxNiA3LjM2NDY1IDEyLjA1OTkgNi44NTI5NyAxMS40Mjg3IDYuODUyOTdMOS4xNDI5MSA2Ljg1Mjk3VjQuNTY3MTdDOS4xNDI5MSAzLjkzNTk5IDguNjMxMjQgMy40MjQzMiA4LjAwMDA1IDMuNDI0MzJDNy4zNjg4NyAzLjQyNDMyIDYuODU3MiAzLjkzNTk5IDYuODU3MiA0LjU2NzE3VjYuODUyOTdINC41NzE1N0MzLjk0MDM5IDYuODUyOTcgMy40Mjg3MSA3LjM2NDY1IDMuNDI4NzEgNy45OTU4M0MzLjQyODcxIDguNjI3MDEgMy45NDAzOSA5LjEzODY5IDQuNTcxNTcgOS4xMzg2OUg2Ljg1NzJWMTEuNDI0M0M2Ljg1NzIgMTIuMDU1NSA3LjM2ODg3IDEyLjU2NzIgOC4wMDAwNSAxMi41NjcyQzguNjMxMjQgMTIuNTY3MiA5LjE0MjkxIDEyLjA1NTUgOS4xNDI5MSAxMS40MjQzVjkuMTM4NjlIMTEuNDI4N1oiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=",
-    remove: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgOEMwIDEyLjQxODMgMy41ODE3MiAxNiA4IDE2QzEyLjQxODMgMTYgMTYgMTIuNDE4MyAxNiA4QzE2IDMuNTgxNzIgMTIuNDE4MyAwIDggMEMzLjU4MTcyIDAgMCAzLjU4MTcyIDAgOFoiIGZpbGw9IiMwMEIwRkYiLz4KPHBhdGggZD0iTTkuNjIwNTUgMTEuMjMyNkMxMC4wNjY5IDExLjY3ODkgMTAuNzkwNSAxMS42Nzg5IDExLjIzNjggMTEuMjMyNkMxMS42ODMxIDEwLjc4NjMgMTEuNjgzMSAxMC4wNjI3IDExLjIzNjggOS42MTYzNkw5LjYyMDQ5IDguMDAwMDVMMTEuMjM2OCA2LjM4Mzc1QzExLjY4MzEgNS45Mzc0NCAxMS42ODMxIDUuMjEzODIgMTEuMjM2OCA0Ljc2NzVDMTAuNzkwNSA0LjMyMTE5IDEwLjA2NjkgNC4zMjExOSA5LjYyMDU1IDQuNzY3NUw4LjAwNDI1IDYuMzgzODFMNi4zODgwNyA0Ljc2NzYzQzUuOTQxNzUgNC4zMjEzMSA1LjIxODE0IDQuMzIxMzEgNC43NzE4MiA0Ljc2NzYzQzQuMzI1NTEgNS4yMTM5NCA0LjMyNTUxIDUuOTM3NTYgNC43NzE4MiA2LjM4Mzg3TDYuMzg4MDEgOC4wMDAwNUw0Ljc3MTgyIDkuNjE2MjRDNC4zMjU1MSAxMC4wNjI2IDQuMzI1NTEgMTAuNzg2MiA0Ljc3MTgyIDExLjIzMjVDNS4yMTgxNCAxMS42Nzg4IDUuOTQxNzUgMTEuNjc4OCA2LjM4ODA3IDExLjIzMjVMOC4wMDQyNSA5LjYxNjNMOS42MjA1NSAxMS4yMzI2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==",
+  const TONE_RENAME_MAP = Object.freeze({
+    "friendly and conversational": "Warm",
+    "professional and authoritative": "Firm",
+    "persuasive and compelling": "Bold",
+    "empathetic and reassuring": "Caring",
+    "playful and humourous": "Fun",
+    "playful and humorous": "Fun",
+    "inspirational and motivational": "Inspire",
+    "informative and neutral": "Clear",
+    "urgent and action-oriented": "Urgent",
+    "luxurious and exclusive": "Exclusive",
+    "analytical and technical": "Factual",
   });
-  const toneOptions = [
-    "Apologetic",
-    "Casual",
-    "Catchy",
-    "Confident",
-    "Conversational",
-    "Convincing",
-    "Crisp",
-    "Empathetic",
-    "Engaging",
-    "Enthusiastic",
-    "Exciting",
-    "Formal",
-    "Friendly",
-    "Funny",
-    "Happy",
-    "Helpful",
-    "Inclusive",
-    "Informative",
-    "Intelligent",
-    "Inviting",
-    "Kind",
-    "Playful",
-    "Polite",
-    "Positive",
-    "Professional",
-    "Upbeat",
+  const SIMPLE_TONE_LABELS = Object.freeze([
     "Warm",
-    "Witty",
+    "Firm",
+    "Bold",
+    "Caring",
+    "Fun",
+    "Inspire",
+    "Clear",
+    "Urgent",
+    "Exclusive",
+    "Factual",
+  ]);
+  const FALLBACK_TONE_DATA = SIMPLE_TONE_LABELS.map((label) => ({
+    value: label,
+    label,
+  }));
+  const USAGE_RENAME_PAIRS = [
+    ["web (feature pages) copy", "Web features"],
+    ["web (features pages) copy", "Web features"],
+    ["web (promo pages) copy", "Web promotions"],
+    ["meta title and description", "Transactional"],
+    ["meta details", "Transactional"],
+    ["email (transactional)", "Transactional"],
+    ["push notification and app inbox (transactional)", "Transactional"],
+    ["push notifications and app inbox (transactional)", "Transactional"],
+    ["push notification and app inbox (promo and nurturing)", "Promotional"],
+    ["push notifications and app inbox (promo and nurturing)", "Promotional"],
+    ["frequently asked questions/help centre articles (product)", "FAQs"],
+    ["frequently asked questions (promotions)", "FAQs"],
+    ["branding (taglines, unique selling points/usp)", "USP"],
   ];
+  const USAGE_RENAME_MAP = Object.freeze(
+    USAGE_RENAME_PAIRS.reduce((acc, [source, target]) => {
+      const key = typeof source === "string" ? source.trim().toLowerCase() : "";
+      if (key && typeof target === "string" && target.trim().length) {
+        acc[key] = target.trim();
+      }
+      return acc;
+    }, {})
+  );
+  const RAW_FALLBACK_USAGE_OPTIONS = [
+    {
+      value: "Heading",
+      label: "Heading",
+      description: "Short hero or section title that primes the message.",
+      focus: ["Grab attention", "Frame the benefit"],
+    },
+    {
+      value: "Description",
+      label: "Description",
+      description: "One to two sentences that explain the value.",
+      focus: ["Give context", "Highlight differentiator"],
+    },
+    {
+      value: "CTA Button",
+      label: "CTA button",
+      description: "Action-driven label that finishes the sentence “I want to…”.",
+      focus: ["Use verbs", "Set expectations"],
+    },
+    {
+      value: "Body",
+      label: "Body",
+      description: "Longer supporting copy for cards, modals, or pages.",
+      focus: ["Structure info", "Keep it scannable"],
+    },
+    {
+      value: "Tooltip",
+      label: "Tooltip",
+      description: "Quick clarification tucked behind an icon.",
+      focus: ["Stay concise", "Address confusion"],
+    },
+    {
+      value: "Empty state",
+      label: "Empty state",
+      description: "Friendly message that guides users when nothing is there yet.",
+      focus: ["Acknowledge state", "Offer next step"],
+    },
+    {
+      value: "Toast",
+      label: "Toast",
+      description: "Short confirmation or error banner.",
+      focus: ["Confirm outcome", "Offer undo if possible"],
+    },
+    {
+      value: "Label",
+      label: "Label",
+      description: "Short name that makes inputs and toggles clear.",
+      focus: ["Be specific", "Avoid jargon"],
+    },
+  ];
+  const guidelineMeta = {
+    rewriteOverview: "",
+    rewriteRequirements: [],
+  };
+  const LENGTH_PRESETS = [
+    { label: "Short", value: 32 },
+    { label: "Medium", value: 64 },
+    { label: "Long", value: 106 },
+  ];
+
+  const escapeHtml = (text = "") =>
+    String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  const simplifyToneLabel = (tone) => {
+    const raw = typeof tone === "string" ? tone.trim() : "";
+    if (!raw) return "";
+    const mapped = TONE_RENAME_MAP[raw.toLowerCase()];
+    return mapped || raw;
+  };
+  const simplifyUsageLabel = (label) => {
+    const raw = typeof label === "string" ? label.trim() : "";
+    if (!raw) return "";
+    const mapped = USAGE_RENAME_MAP[raw.toLowerCase()];
+    return mapped || raw;
+  };
+  const normalizeUsageOption = (option) => {
+    if (!option || typeof option !== "object") return null;
+    const baseLabel =
+      (typeof option.label === "string" && option.label.trim()) ||
+      (typeof option.value === "string" && option.value.trim()) ||
+      "";
+    const label = simplifyUsageLabel(baseLabel);
+    if (!label) return null;
+    return {
+      ...option,
+      value: label,
+      label,
+    };
+  };
+  const FALLBACK_USAGE_OPTIONS = RAW_FALLBACK_USAGE_OPTIONS.map(normalizeUsageOption).filter(Boolean);
+  let toneOptionData = [...FALLBACK_TONE_DATA];
+  let usageOptionData = [...FALLBACK_USAGE_OPTIONS];
+
+  const deriveToneOptions = (guide) => {
+    const playbooks = guide?.structuredGuide?.tonePlaybooks;
+    if (!Array.isArray(playbooks)) return [];
+    return playbooks
+      .map((entry) => {
+        const tone = typeof entry?.tone === "string" ? entry.tone.trim() : "";
+        if (!tone) return null;
+        const label = simplifyToneLabel(tone);
+        if (!label) return null;
+        const impact = typeof entry.impact === "string" ? entry.impact.trim() : "";
+        const bestFor = Array.isArray(entry.bestFor)
+          ? entry.bestFor
+              .map((item) => (typeof item === "string" ? item.trim() : ""))
+              .filter(Boolean)
+              .slice(0, 3)
+          : [];
+        return {
+          value: label,
+          label,
+          impact,
+          bestFor,
+        };
+      })
+      .filter(Boolean);
+  };
+
+  const deriveUsageOptions = (guide) => {
+    if (!guide) return [];
+    const structured = guide?.structuredGuide?.usagePlaybooks;
+    if (Array.isArray(structured) && structured.length) {
+      return structured
+        .map((entry) => {
+          const label = typeof entry?.label === "string" ? entry.label.trim() : "";
+          const value = typeof entry?.value === "string" ? entry.value.trim() : label;
+          if (!value) return null;
+          return normalizeUsageOption({
+            value,
+            label: label || value,
+            description: typeof entry.description === "string" ? entry.description.trim() : "",
+            focus: Array.isArray(entry.focus)
+              ? entry.focus
+                  .map((item) => (typeof item === "string" ? item.trim() : ""))
+                  .filter(Boolean)
+              : [],
+          });
+        })
+        .filter(Boolean);
+    }
+    const collected = [];
+    const visit = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (node.materials && typeof node.materials === "object") {
+        Object.values(node.materials).forEach((group) => {
+          if (!Array.isArray(group)) return;
+          group.forEach((item) => {
+            if (!item || typeof item.material !== "string") return;
+            const label = item.material.trim();
+            if (!label) return;
+            const normalized = normalizeUsageOption({
+              value: label,
+              label,
+              description: typeof item.definition === "string" ? item.definition.trim() : "",
+              focus: Array.isArray(item.purpose)
+                ? item.purpose
+                    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+                    .filter(Boolean)
+                : [],
+            });
+            if (normalized) {
+              collected.push(normalized);
+            }
+          });
+        });
+      }
+      if (Array.isArray(node.children)) {
+        node.children.forEach(visit);
+      }
+    };
+    visit(guide);
+    return collected;
+  };
+
+  const mergeUsageOptions = (derived) => {
+    const combined = [];
+    const pushUnique = (option) => {
+      const normalized = normalizeUsageOption(option);
+      if (!normalized || typeof normalized.value !== "string") return;
+      const value = normalized.value.trim();
+      if (!value) return;
+      const key = value.toLowerCase();
+      if (combined.some((item) => item.value.toLowerCase() === key)) return;
+      combined.push({
+        value,
+        label: normalized.label || value,
+        description: normalized.description || "",
+        focus: Array.isArray(normalized.focus) ? normalized.focus.filter(Boolean) : [],
+      });
+    };
+    derived.forEach(pushUnique);
+    FALLBACK_USAGE_OPTIONS.forEach(pushUnique);
+    return combined.slice(0, 12);
+  };
+
+  const ensureToneSelectionValidity = () => {
+    const current = getToneSelections();
+    if (!current.length) return;
+    const allowed = new Set(toneOptionData.map((item) => item.value));
+    const filtered = current.filter((tone) => allowed.has(tone));
+    if (filtered.length !== current.length) {
+      setToneSelections(filtered);
+    }
+  };
+
+  const ensureUsageSelectionValidity = () => {
+    if (!filterSelections.element) return;
+    const allowed = new Set(usageOptionData.map((item) => item.value));
+    if (!allowed.has(filterSelections.element)) {
+      delete filterSelections.element;
+    }
+  };
+
+  const getToneMetaByValue = (value) =>
+    toneOptionData.find((item) => item.value === value) || null;
+  const getUsageMetaByValue = (value) =>
+    usageOptionData.find((item) => item.value === value) || null;
+
+  const shortenHelperText = (text) => {
+    const clean = String(text || "").trim();
+    if (!clean) return "";
+    const withoutLead = clean
+      .replace(
+        /^(Use|Keep|Explain|Provide|Offer|Make|Add|Focus on|Highlight|Remember|Ensure|Avoid|Encourage|Maintain|Share|Deliver|Emphasize|Support)\b[\s,:-]*/i,
+        ""
+      )
+      .trim();
+    const tightened = withoutLead
+      .replace(/\b(make sure to|be sure to|try to|aim to|you should|you must)\b/gi, "")
+      .replace(/\b(please|really|just)\b/gi, "")
+      .replace(/\b(your|their)\s+(users?|audience|customers?)\b/gi, "$2")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+    const candidate = tightened || withoutLead || clean;
+    return candidate.replace(/[.:;]+$/, "").trim();
+  };
+
+  const updateContextHints = () => {
+    if (!usageContextInput) return;
+    const selectedUsage = getUsageMetaByValue(filterSelections.element);
+    const selectedTone = getToneMetaByValue(getToneSelections()[0]);
+
+    const helperChunks = [];
+    const addHelper = (value) => {
+      const clean = shortenHelperText(value);
+      if (clean) {
+        helperChunks.push(clean);
+      }
+    };
+
+    addHelper(selectedUsage?.description);
+    if (selectedUsage?.focus?.length) {
+      addHelper(selectedUsage.focus.slice(0, 2).join(", "));
+    }
+    addHelper(selectedTone?.impact);
+    const reminders = (guidelineMeta.rewriteRequirements || [])
+      .map((req) => shortenHelperText(req))
+      .filter(Boolean)
+      .slice(0, 3);
+    if (reminders.length) {
+      helperChunks.push(reminders.join(" · "));
+    }
+
+    const helperLines = helperChunks.slice(0, 3);
+    if (!helperLines.length) {
+      updateContextPlaceholder(DEFAULT_CONTEXT_PLACEHOLDER, DEFAULT_PLACEHOLDER_LINES);
+      return;
+    }
+    updateContextPlaceholder(helperLines.join("\n"), helperLines.length);
+  };
+
+  const toneOptionList = document.getElementById("toneOptionList");
+  const CHIP_ICONS = Object.freeze({
+    add: "data:image/svg+xml,%3Csvg%20width%3D%2716%27%20height%3D%2716%27%20viewBox%3D%270%200%2016%2016%27%20fill%3D%27none%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M8%2016C12.4183%2016%2016%2012.4183%2016%208C16%203.58172%2012.4183%200%208%200C3.58172%200%200%203.58172%200%208C0%2012.4183%203.58172%2016%208%2016Z%27%20fill%3D%27%2300B0FF%27/%3E%3Cpath%20d%3D%27M11.4287%209.13869C12.0599%209.13869%2012.5716%208.62701%2012.5716%207.99583C12.5716%207.36465%2012.0599%206.85297%2011.4287%206.85297L9.14291%206.85297V4.56717C9.14291%203.93599%208.63124%203.42432%208.00005%203.42432C7.36887%203.42432%206.8572%203.93599%206.8572%204.56717V6.85297H4.57157C3.94039%206.85297%203.42871%207.36465%203.42871%207.99583C3.42871%208.62701%203.94039%209.13869%204.57157%209.13869H6.8572V11.4243C6.8572%2012.0555%207.36887%2012.5672%208.00005%2012.5672C8.63124%2012.5672%209.14291%2012.0555%209.14291%2011.4243V9.13869H11.4287Z%27%20fill%3D%27white%27/%3E%3C/svg%3E",
+    remove: "data:image/svg+xml,%3Csvg%20width%3D%2716%27%20height%3D%2716%27%20viewBox%3D%270%200%2016%2016%27%20fill%3D%27none%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M0%208C0%2012.4183%203.58172%2016%208%2016C12.4183%2016%2016%2012.4183%2016%208C16%203.58172%2012.4183%200%208%200C3.58172%200%200%203.58172%200%208Z%27%20fill%3D%27%2300B0FF%27/%3E%3Cpath%20d%3D%27M9.62055%2011.2326C10.0669%2011.6789%2010.7905%2011.6789%2011.2368%2011.2326C11.6831%2010.7863%2011.6831%2010.0627%2011.2368%209.61636L9.62049%208.00005L11.2368%206.38375C11.6831%205.93744%2011.6831%205.21382%2011.2368%204.7675C10.7905%204.32119%2010.0669%204.32119%209.62055%204.7675L8.00425%206.38381L6.38807%204.76763C5.94175%204.32131%205.21814%204.32131%204.77182%204.76763C4.32551%205.21394%204.32551%205.93756%204.77182%206.38387L6.38801%208.00005L4.77182%209.61624C4.32551%2010.0626%204.32551%2010.7862%204.77182%2011.2325C5.21814%2011.6788%205.94175%2011.6788%206.38807%2011.2325L8.00425%209.6163L9.62055%2011.2326Z%27%20fill%3D%27white%27/%3E%3C/svg%3E",
+  });
+
   const renderToneChips = () => {
     if (!toneOptionList) return;
     const selectedTones = getToneSelections();
-    toneOptionList.innerHTML = toneOptions
+    const optionsToRender = toneOptionData.slice(0, 12);
+    toneOptionList.innerHTML = optionsToRender
       .map((tone) => {
-        const isSelected = selectedTones.includes(tone);
+        if (!tone?.value) return "";
+        const value = tone.value;
+        const label = tone.label || value;
+        const isSelected = selectedTones.includes(value);
         const isDisabled = !isSelected && selectedTones.length >= MAX_TONE_SELECTIONS;
-        const iconSrc = isSelected ? TONE_ICONS.remove : TONE_ICONS.add;
-        return `<button type="button" class="tone-chip${isSelected ? " is-selected" : ""}" data-tone="${tone}" aria-pressed="${isSelected}" ${
-          isDisabled ? "disabled" : ""
-        }>
-          <span class="tone-chip-label">${tone}</span>
+        const iconSrc = isSelected ? CHIP_ICONS.remove : CHIP_ICONS.add;
+        return `<button type="button" class="tone-chip${isSelected ? " is-selected" : ""}" data-tone="${escapeHtml(
+          value
+        )}" aria-pressed="${isSelected}" ${isDisabled ? "disabled" : ""}>
+          <span class="tone-chip-label">${escapeHtml(label)}</span>
           <img class="tone-chip-icon" src="${iconSrc}" alt="" aria-hidden="true" />
         </button>`;
       })
+      .filter(Boolean)
       .join("");
+    updateContextHints();
   };
 
   toneOptionList?.addEventListener("click", (event) => {
@@ -865,26 +1213,25 @@ we're putting your copy together!</p>
     renderToneChips();
   });
 
-  const elementOptions = [
-    "Heading",
-    "Description",
-    "CTA Button",
-    "Body",
-    "Tooltip",
-    "Empty state",
-    "Toast",
-    "Label",
-  ];
   const renderElementChips = () => {
     if (!elementOptionList) return;
     const selected = filterSelections.element || "";
-    elementOptionList.innerHTML = elementOptions
-      .map(
-        (element) => `<button type="button" class="element-chip${selected === element ? " is-selected" : ""}" data-element="${element}">
-            ${element}
-          </button>`
-      )
+    const optionsToRender = usageOptionData.slice(0, 12);
+    elementOptionList.innerHTML = optionsToRender
+      .map((option) => {
+        if (!option?.value) return "";
+        const value = option.value;
+        const label = option.label || value;
+        const isSelected = selected === value;
+        return `<button type="button" class="element-chip${isSelected ? " is-selected" : ""}" data-element="${escapeHtml(
+          value
+        )}" aria-pressed="${isSelected}">
+          <span class="element-chip-label">${escapeHtml(label)}</span>
+        </button>`;
+      })
+      .filter(Boolean)
       .join("");
+    updateContextHints();
   };
   elementOptionList?.addEventListener("click", (event) => {
     const chip = event.target.closest(".element-chip");
@@ -898,16 +1245,94 @@ we're putting your copy together!</p>
     renderElementChips();
   });
 
+  const applyGuidelineMeta = (guide) => {
+    const toneData = deriveToneOptions(guide);
+    toneOptionData = toneData.length ? toneData : [...FALLBACK_TONE_DATA];
+    const usageData = mergeUsageOptions(deriveUsageOptions(guide));
+    usageOptionData = usageData.length ? usageData : [...FALLBACK_USAGE_OPTIONS];
+    const rewritePrompt = guide?.rewritePrompt || {};
+    guidelineMeta.rewriteOverview =
+      typeof rewritePrompt.overview === "string" ? rewritePrompt.overview.trim() : "";
+    guidelineMeta.rewriteRequirements = Array.isArray(rewritePrompt.requirements)
+      ? rewritePrompt.requirements
+          .map((item) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean)
+      : [];
+    ensureToneSelectionValidity();
+    ensureUsageSelectionValidity();
+    renderToneChips();
+    renderElementChips();
+    updateContextHints();
+  };
+
   const LENGTH_MIN = Number(lengthSlider?.min ?? 12);
   const LENGTH_MAX = Number(lengthSlider?.max ?? 160);
   const LENGTH_THUMB_SIZE = 32;
+  const LENGTH_SNAP_THRESHOLD = 8;
+  const findLengthPreset = (value) => {
+    if (!Array.isArray(LENGTH_PRESETS) || !LENGTH_PRESETS.length) return null;
+    let closest = LENGTH_PRESETS[0];
+    let diff = Math.abs(value - closest.value);
+    for (let i = 1; i < LENGTH_PRESETS.length; i += 1) {
+      const candidate = LENGTH_PRESETS[i];
+      const distance = Math.abs(value - candidate.value);
+      if (distance < diff) {
+        closest = candidate;
+        diff = distance;
+      }
+    }
+    return closest;
+  };
+
+  const getSnappedLengthValue = (value) => {
+    const preset = findLengthPreset(value);
+    if (!preset) return null;
+    const distance = Math.abs(value - preset.value);
+    if (distance <= LENGTH_SNAP_THRESHOLD) return preset.value;
+    return null;
+  };
+
+  const renderLengthPresetMarkers = () => {
+    if (!lengthSlider || !lengthPresetMarkers) return;
+    const min = LENGTH_MIN;
+    const max = LENGTH_MAX;
+    lengthPresetMarkers.innerHTML = LENGTH_PRESETS.map((preset) => {
+      const percent = Math.min(Math.max((preset.value - min) / (max - min), 0), 1) * 100;
+      return `<button type="button" class="length-preset" data-value="${preset.value}" style="left:${percent}%">
+        <span class="sr-only">${preset.label}</span>
+      </button>`;
+    }).join("");
+  };
+
+  const renderLengthPresetLabels = () => {
+    if (!lengthPresetLabels) return;
+    lengthPresetLabels.innerHTML = LENGTH_PRESETS.map(
+      (preset) => `<span data-value="${preset.value}">${preset.label}</span>`
+    ).join("");
+  };
+
+  const updateLengthPresetActiveStates = (value) => {
+    const markers = lengthPresetMarkers?.querySelectorAll(".length-preset");
+    const labels = lengthPresetLabels?.querySelectorAll("span");
+    markers?.forEach((marker) => {
+      const markerValue = Number(marker.getAttribute("data-value"));
+      marker.classList.toggle("active", markerValue === value);
+    });
+    labels?.forEach((label) => {
+      const labelValue = Number(label.getAttribute("data-value"));
+      label.classList.toggle("active", labelValue === value);
+    });
+  };
+
   const updateLengthUI = (value) => {
     if (value < 12 && lengthSlider) {
       lengthSlider.value = "12";
       value = 12;
     }
     if (lengthValueEl) {
-      lengthValueEl.textContent = `${value} characters`;
+      const preset = findLengthPreset(value);
+      const suffix = preset ? ` · ${preset.label}` : "";
+      lengthValueEl.textContent = `${value} characters${suffix}`;
     }
     if (!lengthSlider || !lengthFill) return;
     const percent = Math.min(
@@ -924,15 +1349,52 @@ we're putting your copy together!</p>
     const knobCenter = knobRadius + availableWidth * percent;
     const fillWidth = knobCenter + knobRadius;
     lengthFill.style.width = `${Math.min(fillWidth, trackWidth)}px`;
+    updateLengthPresetActiveStates(findLengthPreset(value)?.value || NaN);
+  };
+  const setLengthPresetValue = (value) => {
+    if (!lengthSlider) return;
+    lengthSlider.value = String(value);
+    filterSelections.length = value;
+    updateLengthUI(value);
   };
   lengthSlider?.addEventListener("input", (event) => {
     const value = Number(event.target.value);
-    updateLengthUI(value);
     filterSelections.length = value;
+    updateLengthUI(value);
+  });
+  const commitLengthSliderValue = () => {
+    if (!lengthSlider) return;
+    const value = Number(lengthSlider.value);
+    if (Number.isNaN(value)) return;
+    const snappedValue = getSnappedLengthValue(value);
+    if (snappedValue !== null) {
+      setLengthPresetValue(snappedValue);
+      return;
+    }
+    filterSelections.length = value;
+    updateLengthUI(value);
+  };
+  lengthSlider?.addEventListener("change", commitLengthSliderValue);
+  lengthPresetMarkers?.addEventListener("click", (event) => {
+    const button = event.target.closest(".length-preset");
+    if (!button) return;
+    const value = Number(button.getAttribute("data-value"));
+    if (Number.isNaN(value)) return;
+    setLengthPresetValue(value);
+  });
+  lengthPresetLabels?.addEventListener("click", (event) => {
+    const label = event.target.closest("span[data-value]");
+    if (!label) return;
+    const value = Number(label.getAttribute("data-value"));
+    if (Number.isNaN(value)) return;
+    setLengthPresetValue(value);
   });
   window.addEventListener("resize", () => {
     if (lengthSlider) {
       updateLengthUI(Number(lengthSlider.value));
+    }
+    if (usageContextInput && !usageContextInput.value.trim().length) {
+      updateContextHints();
     }
   });
 
@@ -1146,6 +1608,9 @@ we're putting your copy together!</p>
 
   renderToneChips();
   renderElementChips();
+  renderLengthPresetMarkers();
+  renderLengthPresetLabels();
+  updateContextHints();
   if (lengthSlider) {
     updateLengthUI(Number(lengthSlider.value));
     filterSelections.length = Number(lengthSlider.value);
@@ -1154,6 +1619,7 @@ we're putting your copy together!</p>
   usageContextInput?.addEventListener("input", () => {
     usageContextValue = usageContextInput.value.trim();
     resizeContextInput();
+    updateContextHints();
   });
 
   btnRewrite.onclick = async () => {
@@ -1208,12 +1674,27 @@ we're putting your copy together!</p>
       if (msg.error) {
         guidelineReference = null;
         setGuidelineIndicator("error", "Couldn't load style guide. Using fallback.");
+        toneOptionData = [...FALLBACK_TONE_DATA];
+        usageOptionData = [...FALLBACK_USAGE_OPTIONS];
+        guidelineMeta.rewriteOverview = "";
+        guidelineMeta.rewriteRequirements = [];
+        renderToneChips();
+        renderElementChips();
+        updateContextHints();
       } else if (msg.guideline) {
         guidelineReference = msg.guideline;
         setGuidelineIndicator("loaded", "Using structured style guide.");
+        applyGuidelineMeta(msg.guideline);
       } else {
         guidelineReference = null;
         setGuidelineIndicator("fallback", "Using fallback style guide.");
+        toneOptionData = [...FALLBACK_TONE_DATA];
+        usageOptionData = [...FALLBACK_USAGE_OPTIONS];
+        guidelineMeta.rewriteOverview = "";
+        guidelineMeta.rewriteRequirements = [];
+        renderToneChips();
+        renderElementChips();
+        updateContextHints();
       }
       return;
     }

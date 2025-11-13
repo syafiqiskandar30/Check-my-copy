@@ -1,0 +1,150 @@
+Data flow in the Frontitude plugin
+
+User selects design text. In Figma, a designer selects a text layer or frame. The plugin’s main code uses the Figma Plugin API to read the text content and gather design context (component name, page name, etc.).
+
+Style guide rules are loaded from the Voice Center. Frontitude’s Voice Center feature lets teams upload a PDF style guide, which the system analyzes and turns into structured voice, tone, terminology and component rules
+frontitude.com
+. These rules are stored in the Frontitude backend and made available to the plugin.
+
+UI collects input and sends a request. The plugin’s UI prompts the user to choose an action (rewrite, shorten, expand, brainstorm or simplify) and optional tone. It sends a message to the main code, which packages the selected text and design context and sends an HTTP request to Frontitude’s servers along with relevant style‑guide rules.
+
+Backend generates suggestions. Frontitude uses a custom large language model (LLM) trained for UX writing tasks. The company states that the LLM interprets uploaded guidelines and design context to produce suggestions; user data is used only to generate suggestions and is not stored for model training
+write.frontitude.com
+. The infrastructure runs on AWS with industry‑standard security
+write.frontitude.com
+.
+
+UI displays suggestions. The backend returns multiple suggestions. Each suggestion includes:
+
+Rewritten text in the requested tone.
+
+Compliance score (0–100) indicating how closely the suggestion follows the team’s style guide
+frontitude.com
+.
+
+Rationale – a short explanation highlighting which style‑guide rules were followed or violated
+frontitude.com
+.
+
+Additional metadata such as suggestion type (e.g., “shorten”, “simplify”).
+
+The plugin UI presents these options, and the user can apply the chosen suggestion back to the design by sending a message to the main code, which then modifies the text layer.
+
+Audit feature. For copy reviews, the Audit function scans one or more frames and compares each text layer against the style‑guide rules. It returns a list of violations, categorized by rule type (tone, terminology, components, etc.), and offers fixes
+frontitude.com
+.
+
+Saving copy to the library and adding metadata. When the designer finalizes content, the plugin can save it as a copy component in Frontitude. At this stage the AI metadata engine automatically generates:
+
+Unique key: a persistent ID for each copy item; keys follow workspace conventions and are reused if similar patterns are detected
+frontitude.com
+.
+
+Component name and category: based on the function and design context; categories can be nested up to three levels
+frontitude.com
+.
+
+Design context: a written description of where the text appears in the design (e.g., button label, tooltip), exported to help translators
+frontitude.com
+.
+
+Tags: AI‑generated tags based on content patterns and design context to aid filtering
+frontitude.com
+.
+
+This metadata is stored at the instance level and appears in exports.
+
+2 – Back‑end & AI model
+
+Frontitude describes its assistant as a custom LLM trained for UX writing tasks. The model interprets the company’s voice and tone guidelines and uses design context to generate copy suggestions
+write.frontitude.com
+. According to their data collection statement, user‑provided content is not used to train or improve the model
+write.frontitude.com
+. The AI system runs on AWS and follows industry security practices
+write.frontitude.com
+.
+
+3 – Output structure and export formats
+In‑plugin outputs
+
+Rewrite suggestions: For each selected text, the plugin displays multiple rewritten versions with a compliance score and a rationale describing adherence to style‑guide rules
+frontitude.com
+. The user can accept or discard suggestions.
+
+Audit results: The Audit feature returns a list of detected violations, grouped by rule type (tone, terminology, component) and provides recommended fixes
+frontitude.com
+.
+
+These outputs are presented in the plugin UI and are not stored locally unless the user saves the content to the Frontitude library.
+
+Metadata generated for copy components
+
+When content is saved to the library, Frontitude attaches AI‑generated metadata that describes the content and its context. The AI Metadata guide lists the fields:
+
+Field	Description
+Unique key	A persistent identifier for the copy; generated using workspace conventions or reused from existing keys
+frontitude.com
+.
+Component name & category	AI categorizes the component into existing or new categories (supports nested categories up to three levels) and suggests a descriptive name
+frontitude.com
+.
+Design context	Written context extracted from the design file describing where and how the text is used; included in exports to help translators and other stakeholders
+frontitude.com
+.
+Tags	Three tags generated per component based on content patterns and design context; helps filter and manage content
+frontitude.com
+.
+
+This metadata is stored in Frontitude and appears in export files.
+
+JSON export structure
+
+Frontitude’s developer documentation shows how copy data and metadata are structured when exporting projects as JSON. Three formats are supported:
+
+Flat JSON: keys and strings are stored in a single level – for example: { "info_tooltip.title": "No worries, you won’t be charged" }
+developer.frontitude.com
+.
+
+Nested JSON: keys are nested in a hierarchical structure – for example: { "info_tooltip": { "title": "No worries…", "paragraph": "You can review…" } }
+developer.frontitude.com
+.
+
+Metadata JSON: extends the flat format by including metadata for each copy item. Each key maps to an object containing:
+
+value – the string content.
+
+status – content status (New, Draft, Review or Final)
+developer.frontitude.com
+.
+
+tags – an array of tags
+developer.frontitude.com
+.
+
+isMixedStyle – indicates whether multiple text styles were applied within the layer
+developer.frontitude.com
+.
+
+note – notes from writers or designers
+developer.frontitude.com
+.
+
+Timestamps (createdAt, updatedAt) and lastEditedBy
+developer.frontitude.com
+.
+
+frontitudeLink – a URL back to the copy item in Frontitude
+developer.frontitude.com
+.
+
+This metadata format provides a full history for each string and simplifies hand‑off to developers and translators. The CLI also supports exporting translations in a single file or separate language‑specific files
+developer.frontitude.com
+.
+
+4 – Summary
+
+Frontitude’s UX Writing Assistant Figma plugin follows Figma’s architectural requirements by splitting the plugin into sandboxed code that interacts with the Figma document and a separate UI rendered in an iframe. The plugin uses the Figma API to extract selected text and design context and then communicates with a custom AI service hosted on AWS. The service interprets design context and voice‑guide rules to generate copy suggestions, each accompanied by a compliance score and rationale. An Audit feature scans designs for rule violations, and AI Metadata generation produces unique keys, component categories, design context and tags when saving content. Exported JSON files can be flat or nested, and an extended metadata format includes values, statuses, tags, notes, timestamps and links back to Frontitude for each copy item
+developer.frontitude.com
+.
+
+Frontitude has not open‑sourced its plugin code, but publicly available guides and developer documentation provide insight into how the assistant works and how it structures its output.

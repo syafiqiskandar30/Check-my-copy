@@ -17,15 +17,68 @@ const describeGuideline = (guide: unknown) => {
 const buildRewriteInstructions = (guide: any) => {
   if (!guide || typeof guide !== "object") return "You are a UX writing assistant.";
   const promptCfg = (guide as any).rewritePrompt || {};
-  const overview = typeof promptCfg.overview === "string" && promptCfg.overview.trim().length
-    ? promptCfg.overview.trim()
-    : "You are a UX writing assistant.";
+  const overview =
+    typeof promptCfg.overview === "string" && promptCfg.overview.trim().length
+      ? promptCfg.overview.trim()
+      : "You are a UX writing assistant.";
+
   const requirements: string[] = Array.isArray(promptCfg.requirements)
-    ? promptCfg.requirements.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0)
+    ? promptCfg.requirements.filter(
+        (item: unknown): item is string => typeof item === "string" && item.trim().length > 0
+      )
     : [];
-  const joinedRequirements = requirements.length
-    ? requirements.map((req) => "- " + req.trim()).join("\n") + "\n\n"
+
+  const enrichedRequirements: string[] = [];
+  const pushRequirement = (value?: string) => {
+    if (!value) return;
+    const trimmed = value.trim();
+    if (trimmed.length) enrichedRequirements.push(trimmed);
+  };
+
+  const tonePreference = (guide as any).tonePreference;
+  const toneList = Array.isArray(tonePreference)
+    ? tonePreference
+    : typeof tonePreference === "string" && tonePreference.trim().length
+    ? [tonePreference]
+    : [];
+  const normalizedTones = toneList
+    .map((tone) => (typeof tone === "string" ? tone.trim() : ""))
+    .filter((tone): tone is string => Boolean(tone));
+  if (normalizedTones.length) {
+    pushRequirement(`Match these tones: ${normalizedTones.join(", ")}.`);
+  }
+
+  const styleFilters = (guide as any).styleFilters || {};
+  if (styleFilters && typeof styleFilters === "object") {
+    const elementName =
+      typeof styleFilters.element === "string" && styleFilters.element.trim().length
+        ? styleFilters.element.trim()
+        : "";
+    if (elementName) {
+      pushRequirement(`This copy is for a ${elementName.toLowerCase()} use case.`);
+    }
+    if (typeof styleFilters.length === "number" && !Number.isNaN(styleFilters.length)) {
+      const idealLength = Math.max(5, Math.round(styleFilters.length));
+      const tolerance = Math.max(4, Math.round(idealLength * 0.1));
+      const minLength = Math.max(5, idealLength - tolerance);
+      const maxLength = idealLength + tolerance;
+      pushRequirement(
+        `Each variant must be between ${minLength} and ${maxLength} characters (spaces included). Prioritize staying within this range over preserving the original wording.`
+      );
+    }
+  }
+
+  const usageContext =
+    typeof (guide as any).usageContext === "string" ? (guide as any).usageContext.trim() : "";
+  if (usageContext) {
+    pushRequirement(`Follow this context and custom guidance: ${usageContext}`);
+  }
+
+  const finalRequirements = [...requirements, ...enrichedRequirements];
+  const joinedRequirements = finalRequirements.length
+    ? finalRequirements.map((req) => "- " + req).join("\n") + "\n\n"
     : "\n";
+
   return overview + "\n" + joinedRequirements;
 };
 

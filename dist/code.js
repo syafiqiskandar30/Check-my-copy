@@ -3,6 +3,287 @@
   // src/guideline.json
   var guideline_default = {
     title: "Setel Content Style Guide",
+    rewritePrompt: {
+      overview: "You are Setel's UX writing assistant. Draft or edit product copy that feels warm, friendly, and caring while remaining informed, trustworthy, and easy to understand.",
+      requirements: [
+        "Use optimistic, encouraging framing and focus on what the user can do next.",
+        "Keep copy concise and mobile-friendly; favor sentence case, natural rhythm, and contractions.",
+        "Explain requirements, wait times, or issues with reassurance plus a clear action or benefit.",
+        "Highlight Setel-specific value (Mesra Rewards, One-tap fuelling, seamless payments) without exaggeration.",
+        "Prefer approved terminology and inclusive, everyday language over jargon or negative phrasing."
+      ]
+    },
+    structuredGuide: {
+      voicePillars: [
+        {
+          name: "Warm",
+          definition: "Displays affection and enthusiasm, making every interaction feel human.",
+          traits: [
+            "welcoming",
+            "approachable",
+            "fun",
+            "playful",
+            "passionate",
+            "colourful"
+          ]
+        },
+        {
+          name: "Friendly",
+          definition: "Behaves in a pleasant, kind manner that invites conversation.",
+          traits: [
+            "nice",
+            "sweet",
+            "accepting",
+            "open",
+            "easy-going",
+            "delightful"
+          ]
+        },
+        {
+          name: "Caring",
+          definition: "Shows empathy and helpfulness so users feel supported.",
+          traits: [
+            "helpful",
+            "understanding",
+            "communicative",
+            "big-hearted",
+            "loving",
+            "well-meaning"
+          ]
+        }
+      ],
+      writingPrinciples: [
+        {
+          name: "Be mindful with difficult news",
+          guidance: [
+            "State the situation without blame or alarm.",
+            "Offer reassurance or a clear path forward."
+          ],
+          examples: {
+            encouraged: "Your account is restricted from making any payments.",
+            forbidden: "You can\u2019t make any payments because your account is blocked."
+          }
+        },
+        {
+          name: "Use positive framing",
+          guidance: [
+            "Describe opportunities instead of limitations.",
+            "Swap negative verbs (can\u2019t, only) for inclusive alternatives."
+          ],
+          examples: {
+            encouraged: "This credit card is open to individuals earning RM2,000 per month.",
+            forbidden: "Only those earning RM2,000 per month can apply for this credit card."
+          }
+        },
+        {
+          name: "Invite playfulness when context allows",
+          guidance: [
+            "Add small moments of delight without distracting from the task.",
+            "Stay respectful\u2014humor should never embarrass the user."
+          ],
+          examples: {
+            encouraged: "Aw yeah, free parking on weekends!",
+            forbidden: "There is no need to pay for parking on weekends."
+          }
+        },
+        {
+          name: "Stay polite and grounded",
+          guidance: [
+            "Sound confident without bragging.",
+            "Let proof points and benefits speak louder than superlatives."
+          ],
+          examples: {
+            encouraged: "Cutting the queue at petrol stations since 2018.",
+            forbidden: "The first, best, and OG fuelling app."
+          }
+        },
+        {
+          name: "Provide solutions and reassurance",
+          guidance: [
+            "Pair any issue with a helpful next step.",
+            "Remind the user they can solve it quickly."
+          ],
+          examples: {
+            encouraged: "Insufficient balance. Take a few minutes to top up and you\u2019re good to go!",
+            forbidden: "Not enough balance to pay. You must top up immediately."
+          }
+        },
+        {
+          name: "Relate to real-life moments",
+          guidance: [
+            "Anchor benefits to daily routines or emotions.",
+            "Show empathy for the user's scenario."
+          ],
+          examples: {
+            encouraged: "Beat the morning rush with One-tap fuelling.",
+            forbidden: "Save money with One-tap fuelling."
+          }
+        }
+      ],
+      tonePlaybooks: [
+        {
+          tone: "Friendly and conversational",
+          bestFor: [
+            "Social media posts",
+            "Customer service chats",
+            "Welcome emails",
+            "Onboarding",
+            "Blog posts"
+          ],
+          impact: "Creates comfort and relatability."
+        },
+        {
+          tone: "Professional and authoritative",
+          bestFor: [
+            "Corporate communications",
+            "Business reports or white papers",
+            "B2B marketing materials",
+            "Legal documents",
+            "Policy or security updates"
+          ],
+          impact: "Builds respect that Setel knows what it\u2019s doing."
+        },
+        {
+          tone: "Persuasive and compelling",
+          bestFor: [
+            "Promotional campaigns",
+            "Product landing pages",
+            "Pitches or presentations"
+          ],
+          impact: "Heightens motivation to act."
+        },
+        {
+          tone: "Empathetic and reassuring",
+          bestFor: [
+            "Apology letters",
+            "Support follow-ups",
+            "Crisis communication",
+            "Retention efforts"
+          ],
+          impact: "Acknowledges feelings and restores trust."
+        },
+        {
+          tone: "Playful and humorous",
+          bestFor: [
+            "Social media campaigns",
+            "Promotions",
+            "Gamified flows"
+          ],
+          impact: "Boosts engagement through light entertainment."
+        },
+        {
+          tone: "Inspirational and motivational",
+          bestFor: [
+            "Success stories",
+            "Testimonials",
+            "Retention or loyalty campaigns"
+          ],
+          impact: "Uplifts and reinforces product belief."
+        },
+        {
+          tone: "Informative and neutral",
+          bestFor: [
+            "How-to guides",
+            "FAQs and Help Centre content",
+            "Blog explainers",
+            "News or release notes"
+          ],
+          impact: "Builds trust through clarity and transparency."
+        },
+        {
+          tone: "Urgent and action-oriented",
+          bestFor: [
+            "Limited-time offers",
+            "Error or warning states",
+            "Deadline reminders",
+            "Critical CTAs"
+          ],
+          impact: "Prompts quick decisions."
+        },
+        {
+          tone: "Luxurious and exclusive",
+          bestFor: [
+            "Limited editions",
+            "Loyalty or VIP communications"
+          ],
+          impact: "Signals premium, aspirational experiences."
+        },
+        {
+          tone: "Analytical and technical",
+          bestFor: [
+            "Stakeholder reports",
+            "Case studies",
+            "Build notes"
+          ],
+          impact: "Supports rational, data-backed decisions."
+        }
+      ],
+      dictionGuidelines: {
+        tips: [
+          "Choose simple, inclusive vocabulary that mirrors how Malaysians actually speak.",
+          "Introduce Setel-branded terms early (One-tap fuelling, Mesra Rewards) and reuse them consistently.",
+          "Avoid sounding transactional or punitive\u2014describe benefits, not punishments.",
+          "Use verbs that invite action: top up, redeem, explore, skip the queue."
+        ],
+        preferredTerms: [
+          {
+            term: "One app, all vehicle needs.",
+            usage: "Reinforces Setel as the go-to companion for every vehicle task.",
+            alternative: "-"
+          },
+          {
+            term: "Fuelling",
+            usage: "Default verb for adding fuel through Setel; keeps language product-specific.",
+            alternative: "-"
+          },
+          {
+            term: "Seamless",
+            usage: "Describes smooth, interruption-free experiences when paying or checking out.",
+            alternative: "Smooth, Hassle-free"
+          },
+          {
+            term: "Skip the queue",
+            usage: "Highlights convenience when actions happen from the vehicle or app.",
+            alternative: "-"
+          },
+          {
+            term: "Earn Mesra Rewards points",
+            usage: "Focus on rewards for fuelling or purchases; specify the multiplier when possible.",
+            alternative: "Collect Mesra Rewards points"
+          },
+          {
+            term: "Pay for (noun)",
+            usage: "Clarifies that Setel handles payments for fuel, Kedai Mesra, parking, etc.",
+            alternative: "-"
+          },
+          {
+            term: "Convenient",
+            usage: "Use to describe experiences that need minimal effort.",
+            alternative: "Easy"
+          },
+          {
+            term: "Locate",
+            usage: "Preferred over \u201Cfind\u201D when guiding users to stations, EV chargers, or partners.",
+            alternative: "Find"
+          },
+          {
+            term: "Scan and pay",
+            usage: "Talk about QR-based payments inside partner stores.",
+            alternative: "-"
+          },
+          {
+            term: "(Feature name) session",
+            usage: "Name discrete activities like parking session or charging session.",
+            alternative: "-"
+          },
+          {
+            term: "One-tap (verb)",
+            usage: "Signals that an action completes with a single tap (e.g., One-tap fuelling).",
+            alternative: "-"
+          }
+        ]
+      }
+    },
     children: [
       {
         title: "Content",
@@ -2839,8 +3120,43 @@
     if (!guide || typeof guide !== "object") return "You are a UX writing assistant.";
     const promptCfg = guide.rewritePrompt || {};
     const overview = typeof promptCfg.overview === "string" && promptCfg.overview.trim().length ? promptCfg.overview.trim() : "You are a UX writing assistant.";
-    const requirements = Array.isArray(promptCfg.requirements) ? promptCfg.requirements.filter((item) => typeof item === "string" && item.trim().length > 0) : [];
-    const joinedRequirements = requirements.length ? requirements.map((req) => "- " + req.trim()).join("\n") + "\n\n" : "\n";
+    const requirements = Array.isArray(promptCfg.requirements) ? promptCfg.requirements.filter(
+      (item) => typeof item === "string" && item.trim().length > 0
+    ) : [];
+    const enrichedRequirements = [];
+    const pushRequirement = (value) => {
+      if (!value) return;
+      const trimmed = value.trim();
+      if (trimmed.length) enrichedRequirements.push(trimmed);
+    };
+    const tonePreference = guide.tonePreference;
+    const toneList = Array.isArray(tonePreference) ? tonePreference : typeof tonePreference === "string" && tonePreference.trim().length ? [tonePreference] : [];
+    const normalizedTones = toneList.map((tone) => typeof tone === "string" ? tone.trim() : "").filter((tone) => Boolean(tone));
+    if (normalizedTones.length) {
+      pushRequirement(`Match these tones: ${normalizedTones.join(", ")}.`);
+    }
+    const styleFilters = guide.styleFilters || {};
+    if (styleFilters && typeof styleFilters === "object") {
+      const elementName = typeof styleFilters.element === "string" && styleFilters.element.trim().length ? styleFilters.element.trim() : "";
+      if (elementName) {
+        pushRequirement(`This copy is for a ${elementName.toLowerCase()} use case.`);
+      }
+      if (typeof styleFilters.length === "number" && !Number.isNaN(styleFilters.length)) {
+        const idealLength = Math.max(5, Math.round(styleFilters.length));
+        const tolerance = Math.max(4, Math.round(idealLength * 0.1));
+        const minLength = Math.max(5, idealLength - tolerance);
+        const maxLength = idealLength + tolerance;
+        pushRequirement(
+          `Each variant must be between ${minLength} and ${maxLength} characters (spaces included). Prioritize staying within this range over preserving the original wording.`
+        );
+      }
+    }
+    const usageContext = typeof guide.usageContext === "string" ? guide.usageContext.trim() : "";
+    if (usageContext) {
+      pushRequirement(`Follow this context and custom guidance: ${usageContext}`);
+    }
+    const finalRequirements = [...requirements, ...enrichedRequirements];
+    const joinedRequirements = finalRequirements.length ? finalRequirements.map((req) => "- " + req).join("\n") + "\n\n" : "\n";
     return overview + "\n" + joinedRequirements;
   };
   figma.on("run", () => {
