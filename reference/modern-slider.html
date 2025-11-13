@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Slider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 24px;
+        }
+
+        .slider-container {
+            margin-bottom: 40px;
+        }
+
+        .slider-label {
+            display: block;
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-track {
+            position: absolute;
+            width: 100%;
+            height: 50px;
+            background: #e0e0e0;
+            border-radius: 25px;
+            overflow: hidden;
+        }
+
+        .slider-fill {
+            position: absolute;
+            height: 100%;
+            background: #00b8ff;
+            border-radius: 25px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .slider-input {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            outline: none;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: 5px solid #00b8ff;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: 0;
+            position: relative;
+            z-index: 3;
+        }
+
+        .slider-input::-moz-range-thumb {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: 5px solid #00b8ff;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            z-index: 3;
+        }
+
+        .slider-value {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #00b8ff;
+        }
+
+        .value-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .value-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .value-box span {
+            display: block;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .value-box strong {
+            font-size: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Slider</h1>
+        
+        <div class="slider-container">
+            <label class="slider-label">Volume</label>
+            <div class="slider-wrapper">
+                <div class="slider-track">
+                    <div class="slider-fill" id="fill1"></div>
+                </div>
+                <input type="range" min="0" max="100" value="75" class="slider-input" id="slider1">
+            </div>
+            <div class="slider-value" id="value1">75%</div>
+        </div>
+
+        <div class="slider-container">
+            <label class="slider-label">Brightness</label>
+            <div class="slider-wrapper">
+                <div class="slider-track">
+                    <div class="slider-fill" id="fill2"></div>
+                </div>
+                <input type="range" min="0" max="100" value="50" class="slider-input" id="slider2">
+            </div>
+            <div class="slider-value" id="value2">50%</div>
+        </div>
+
+        <div class="slider-container">
+            <label class="slider-label">Temperature</label>
+            <div class="slider-wrapper">
+                <div class="slider-track">
+                    <div class="slider-fill" id="fill3"></div>
+                </div>
+                <input type="range" min="0" max="100" value="10" class="slider-input" id="slider3">
+            </div>
+            <div class="slider-value" id="value3">10%</div>
+        </div>
+
+        <div class="value-display">
+            <div class="value-box">
+                <span>Slider 1</span>
+                <strong id="display1">75</strong>
+            </div>
+            <div class="value-box">
+                <span>Slider 2</span>
+                <strong id="display2">50</strong>
+            </div>
+            <div class="value-box">
+                <span>Slider 3</span>
+                <strong id="display3">10</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initSlider(sliderId, fillId, valueId, displayId) {
+            const slider = document.getElementById(sliderId);
+            const fill = document.getElementById(fillId);
+            const valueDisplay = document.getElementById(valueId);
+            const boxDisplay = document.getElementById(displayId);
+
+            function updateSlider() {
+                const value = slider.value;
+                const min = slider.min ? slider.min : 0;
+                const max = slider.max ? slider.max : 100;
+                const percentage = ((value - min) / (max - min)) * 100;
+                
+                // The knob travels from 25px (its radius) to trackWidth-25px (trackWidth minus its radius)
+                const knobRadius = 25; // 50px diameter / 2
+                const trackWidth = slider.offsetWidth;
+                
+                // Calculate actual knob center position accounting for the radius offset
+                const availableWidth = trackWidth - (knobRadius * 2);
+                const knobCenterPosition = knobRadius + (percentage / 100) * availableWidth;
+                
+                // Fill should extend to the right edge of the knob (center + radius)
+                const fillWidth = knobCenterPosition + knobRadius;
+                const fillPercentage = (fillWidth / trackWidth) * 100;
+                
+                fill.style.width = Math.min(fillPercentage, 100) + '%';
+                valueDisplay.textContent = value + '%';
+                boxDisplay.textContent = value;
+            }
+
+            slider.addEventListener('input', updateSlider);
+            updateSlider();
+        }
+
+        initSlider('slider1', 'fill1', 'value1', 'display1');
+        initSlider('slider2', 'fill2', 'value2', 'display2');
+        initSlider('slider3', 'fill3', 'value3', 'display3');
+    </script>
+</body>
+</html>
