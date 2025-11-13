@@ -18,7 +18,7 @@
   }
   html,
   body {
-    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 14px/1.4 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     margin: 0;
     width: 100%;
     max-width: 100%;
@@ -70,6 +70,106 @@
     font-size: 14px;
     line-height: 20px;
     font-weight: 500;
+  }
+  .tone-section {
+    margin-top: 32px;
+  }
+  .tone-title {
+    color: #525b65;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+  }
+  .tone-options {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tone-chip {
+    border: 1px dashed #f5f5f5;
+    border-radius: 12px;
+    background: #fff;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 500;
+    color: #788494;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .tone-chip-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .tone-chip.is-selected {
+    border-style: solid;
+    border-color: transparent;
+    background: rgba(0, 176, 255, 0.1);
+    color: #00b0ff;
+  }
+  .tone-chip:focus-visible {
+    outline: 2px solid #00b0ff;
+    outline-offset: 2px;
+  }
+  .tone-chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-style: dashed;
+    border-color: #f5f5f5;
+    background: #fff;
+    color: #94a3b8;
+  }
+  .tone-chip:disabled .tone-chip-icon {
+    opacity: 0.5;
+  }
+  .element-section {
+    margin-top: 32px;
+  }
+  .element-title {
+    color: #525b65;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+  }
+  .element-options {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .element-chip {
+    border: 1px dashed #f5f5f5;
+    border-radius: 12px;
+    background: #fff;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #788494;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .element-chip.is-selected {
+    border-style: solid;
+    border-color: transparent;
+    background: rgba(0, 176, 255, 0.1);
+    color: #00b0ff;
+  }
+  .element-chip:focus-visible {
+    outline: 2px solid #00b0ff;
+    outline-offset: 2px;
   }
   textarea,
   input[type="text"] {
@@ -274,7 +374,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 0;
+    margin-top: 24px;
   }
   .dropdown {
     position: relative;
@@ -424,6 +524,14 @@
     type="text"
     placeholder="Type your copy or select a text layer in figma"
   />
+  <section class="tone-section">
+    <div class="tone-title">Select tone</div>
+    <div id="toneOptionList" class="tone-options"></div>
+  </section>
+  <section class="element-section">
+    <div class="element-title">Select usage</div>
+    <div id="elementOptionList" class="element-options"></div>
+  </section>
   <div id="filterControls" class="filter-row"></div>
   <div id="customInputWrapper" class="custom-requirements" aria-hidden="true">
     <textarea
@@ -533,49 +641,9 @@
 
   const filterConfigs = [
     {
-      key: "tone",
-      label: "Tone",
-      searchable: true,
-      options: [
-        "Apologetic",
-        "Casual",
-        "Catchy",
-        "Confident",
-        "Conversational",
-        "Convincing",
-        "Crisp",
-        "Empathetic",
-        "Engaging",
-        "Enthusiastic",
-        "Exciting",
-        "Formal",
-        "Friendly",
-        "Funny",
-        "Happy",
-        "Helpful",
-        "Inclusive",
-        "Informative",
-        "Intelligent",
-        "Inviting",
-        "Kind",
-        "Playful",
-        "Polite",
-        "Positive",
-        "Professional",
-        "Upbeat",
-        "Warm",
-        "Witty",
-      ],
-    },
-    {
       key: "length",
       label: "Length",
       options: ["Short (≤40 chars)", "Medium (41-80 chars)", "Long (81+ chars)"],
-    },
-    {
-      key: "element",
-      label: "Element",
-      options: ["Heading", "Body copy", "CTA button", "Tooltip", "Empty state"],
     },
     {
       key: "case",
@@ -590,11 +658,27 @@
   ];
   const filterSelections = {};
   const dropdownRefs = new Map();
+  const MAX_TONE_SELECTIONS = 2;
+  const elementOptionList = document.getElementById("elementOptionList");
+  const getToneSelections = () => {
+    const tones = filterSelections.tone;
+    if (Array.isArray(tones)) return tones;
+    if (typeof tones === "string" && tones.length) return [tones];
+    return [];
+  };
+  const setToneSelections = (tones) => {
+    if (!tones || !tones.length) {
+      delete filterSelections.tone;
+    } else {
+      filterSelections.tone = tones;
+    }
+  };
 
-  const toneChip = document.getElementById("toneChip");
-  const toneDropdown = document.getElementById("toneDropdown");
-  const toneSearch = document.getElementById("toneSearch");
-  const toneListEl = document.getElementById("toneList");
+  const toneOptionList = document.getElementById("toneOptionList");
+  const TONE_ICONS = Object.freeze({
+    add: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggMTZDMTIuNDE4MyAxNiAxNiAxMi40MTgzIDE2IDhDMTYgMy41ODE3MiAxMi40MTgzIDAgOCAwQzMuNTgxNzIgMCAwIDMuNTgxNzIgMCA4QzAgMTIuNDE4MyAzLjU4MTcyIDE2IDggMTZaIiBmaWxsPSIjMDBCMEZGIi8+CjxwYXRoIGQ9Ik0xMS40Mjg3IDkuMTM4NjlDMTIuMDU5OSA5LjEzODY5IDEyLjU3MTYgOC42MjcwMSAxMi41NzE2IDcuOTk1ODNDMTIuNTcxNiA3LjM2NDY1IDEyLjA1OTkgNi44NTI5NyAxMS40Mjg3IDYuODUyOTdMOS4xNDI5MSA2Ljg1Mjk3VjQuNTY3MTdDOS4xNDI5MSAzLjkzNTk5IDguNjMxMjQgMy40MjQzMiA4LjAwMDA1IDMuNDI0MzJDNy4zNjg4NyAzLjQyNDMyIDYuODU3MiAzLjkzNTk5IDYuODU3MiA0LjU2NzE3VjYuODUyOTdINC41NzE1N0MzLjk0MDM5IDYuODUyOTcgMy40Mjg3MSA3LjM2NDY1IDMuNDI4NzEgNy45OTU4M0MzLjQyODcxIDguNjI3MDEgMy45NDAzOSA5LjEzODY5IDQuNTcxNTcgOS4xMzg2OUg2Ljg1NzJWMTEuNDI0M0M2Ljg1NzIgMTIuMDU1NSA3LjM2ODg3IDEyLjU2NzIgOC4wMDAwNSAxMi41NjcyQzguNjMxMjQgMTIuNTY3MiA5LjE0MjkxIDEyLjA1NTUgOS4xNDI5MSAxMS40MjQzVjkuMTM4NjlIMTEuNDI4N1oiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=",
+    remove: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgOEMwIDEyLjQxODMgMy41ODE3MiAxNiA4IDE2QzEyLjQxODMgMTYgMTYgMTIuNDE4MyAxNiA4QzE2IDMuNTgxNzIgMTIuNDE4MyAwIDggMEMzLjU4MTcyIDAgMCAzLjU4MTcyIDAgOFoiIGZpbGw9IiMwMEIwRkYiLz4KPHBhdGggZD0iTTkuNjIwNTUgMTEuMjMyNkMxMC4wNjY5IDExLjY3ODkgMTAuNzkwNSAxMS42Nzg5IDExLjIzNjggMTEuMjMyNkMxMS42ODMxIDEwLjc4NjMgMTEuNjgzMSAxMC4wNjI3IDExLjIzNjggOS42MTYzNkw5LjYyMDQ5IDguMDAwMDVMMTEuMjM2OCA2LjM4Mzc1QzExLjY4MzEgNS45Mzc0NCAxMS42ODMxIDUuMjEzODIgMTEuMjM2OCA0Ljc2NzVDMTAuNzkwNSA0LjMyMTE5IDEwLjA2NjkgNC4zMjExOSA5LjYyMDU1IDQuNzY3NUw4LjAwNDI1IDYuMzgzODFMNi4zODgwNyA0Ljc2NzYzQzUuOTQxNzUgNC4zMjEzMSA1LjIxODE0IDQuMzIxMzEgNC43NzE4MiA0Ljc2NzYzQzQuMzI1NTEgNS4yMTM5NCA0LjMyNTUxIDUuOTM3NTYgNC43NzE4MiA2LjM4Mzg3TDYuMzg4MDEgOC4wMDAwNUw0Ljc3MTgyIDkuNjE2MjRDNC4zMjU1MSAxMC4wNjI2IDQuMzI1NTEgMTAuNzg2MiA0Ljc3MTgyIDExLjIzMjVDNS4yMTgxNCAxMS42Nzg4IDUuOTQxNzUgMTEuNjc4OCA2LjM4ODA3IDExLjIzMjVMOC4wMDQyNSA5LjYxNjNMOS42MjA1NSAxMS4yMzI2WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==",
+  });
   const toneOptions = [
     "Apologetic",
     "Casual",
@@ -625,6 +709,71 @@
     "Warm",
     "Witty",
   ];
+  const renderToneChips = () => {
+    if (!toneOptionList) return;
+    const selectedTones = getToneSelections();
+    toneOptionList.innerHTML = toneOptions
+      .map((tone) => {
+        const isSelected = selectedTones.includes(tone);
+        const isDisabled = !isSelected && selectedTones.length >= MAX_TONE_SELECTIONS;
+        const iconSrc = isSelected ? TONE_ICONS.remove : TONE_ICONS.add;
+        return `<button type="button" class="tone-chip${isSelected ? " is-selected" : ""}" data-tone="${tone}" aria-pressed="${isSelected}" ${
+          isDisabled ? "disabled" : ""
+        }>
+          <span class="tone-chip-label">${tone}</span>
+          <img class="tone-chip-icon" src="${iconSrc}" alt="" aria-hidden="true" />
+        </button>`;
+      })
+      .join("");
+  };
+
+  toneOptionList?.addEventListener("click", (event) => {
+    const chip = event.target.closest(".tone-chip");
+    if (!chip) return;
+    const tone = chip.getAttribute("data-tone");
+    if (!tone) return;
+    if (chip.disabled) return;
+    const current = getToneSelections();
+    if (current.includes(tone)) {
+      setToneSelections(current.filter((item) => item !== tone));
+    } else if (current.length < MAX_TONE_SELECTIONS) {
+      setToneSelections([...current, tone]);
+    }
+    renderToneChips();
+  });
+
+  const elementOptions = [
+    "Heading",
+    "Description",
+    "CTA Button",
+    "Body",
+    "Tooltip",
+    "Empty state",
+    "Toast",
+    "Label",
+  ];
+  const renderElementChips = () => {
+    if (!elementOptionList) return;
+    const selected = filterSelections.element || "";
+    elementOptionList.innerHTML = elementOptions
+      .map(
+        (element) => `<button type="button" class="element-chip${selected === element ? " is-selected" : ""}" data-element="${element}">
+            ${element}
+          </button>`
+      )
+      .join("");
+  };
+  elementOptionList?.addEventListener("click", (event) => {
+    const chip = event.target.closest(".element-chip");
+    if (!chip) return;
+    const value = chip.getAttribute("data-element");
+    if (!value) return;
+    filterSelections.element = filterSelections.element === value ? "" : value;
+    if (!filterSelections.element) {
+      delete filterSelections.element;
+    }
+    renderElementChips();
+  });
 
   const setGuidelineIndicator = (state, text) => {
     if (!guidelineStatus || !guidelineStatusText) return;
@@ -642,14 +791,17 @@
   const buildGuidelinePayload = () => {
     const base = getGuidelinePayload();
     const payload = base && typeof base === "object" ? { ...base } : {};
-    const tone = filterSelections.tone;
-    if (tone) {
-      payload.tonePreference = tone;
+    const toneSelections = getToneSelections();
+    if (toneSelections.length === 1) {
+      payload.tonePreference = toneSelections[0];
+    } else if (toneSelections.length > 1) {
+      payload.tonePreference = toneSelections;
     } else {
       delete payload.tonePreference;
     }
     const otherFilters = Object.entries(filterSelections).reduce((acc, [key, value]) => {
-      if (value) acc[key] = value;
+      if (!value || key === "tone") return acc;
+      acc[key] = value;
       return acc;
     }, {});
     if (Object.keys(otherFilters).length) {
@@ -962,6 +1114,8 @@
   };
 
   createDropdowns();
+  renderToneChips();
+  renderElementChips();
 
   customInput?.addEventListener("input", () => {
     const value = customInput.value.trim();
