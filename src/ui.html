@@ -967,7 +967,10 @@
   };
   const SUGGESTION_INITIAL_DELAY = 320;
   const SUGGESTION_REVEAL_STEP = 180;
+  const SKELETON_MIN_DISPLAY_MS = 1100;
   let suggestionRevealTimers = [];
+  let skeletonVisibleSince = 0;
+  let skeletonActive = false;
   const reducedMotionQuery =
     typeof window !== "undefined" && window.matchMedia
       ? window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -976,6 +979,8 @@
   const clearSuggestionRevealTimers = () => {
     suggestionRevealTimers.forEach((timerId) => clearTimeout(timerId));
     suggestionRevealTimers = [];
+    skeletonVisibleSince = 0;
+    skeletonActive = false;
   };
   const resetSuggestionCardInteractivity = (card) => {
     if (!card) return;
@@ -1015,6 +1020,9 @@
       list.appendChild(card);
       cards.push(card);
     }
+    skeletonVisibleSince =
+      typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+    skeletonActive = true;
     return { list, cards };
   };
   const revealCardContent = (card, item) => {
@@ -1045,12 +1053,20 @@
     const baseDelay = prefersReducedMotion() ? 0 : SUGGESTION_INITIAL_DELAY;
     const stepDelay = prefersReducedMotion() ? 0 : SUGGESTION_REVEAL_STEP;
     cards.forEach((card, idx) => {
+      const now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+      const elapsed = Math.max(0, now - skeletonVisibleSince);
+      const minVisibleOffset =
+        skeletonActive && !prefersReducedMotion()
+          ? Math.max(SKELETON_MIN_DISPLAY_MS - elapsed, 0)
+          : 0;
       const timer = setTimeout(() => {
         revealCardContent(card, items[idx]);
         if (idx === cards.length - 1 && list) {
           list.classList.remove("is-loading");
+          skeletonActive = false;
+          skeletonVisibleSince = 0;
         }
-      }, baseDelay + idx * stepDelay);
+      }, baseDelay + idx * stepDelay + minVisibleOffset);
       suggestionRevealTimers.push(timer);
     });
   };
@@ -1780,6 +1796,8 @@
 
     const { list, cards } = renderSkeletonPlaceholders(items.length);
     if (!cards.length || !list) {
+      skeletonActive = false;
+      skeletonVisibleSince = 0;
       const fallbackCards = items
         .map(
           (item) => `
