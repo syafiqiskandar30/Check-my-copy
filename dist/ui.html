@@ -800,6 +800,25 @@
     suggestions: suggestionsScreen,
   };
   const SCREEN_FADE_MS = 250;
+  const viewHideTimers = new WeakMap();
+  const cancelPendingHide = (view) => {
+    const timerId = viewHideTimers.get(view);
+    if (timerId) {
+      clearTimeout(timerId);
+      viewHideTimers.delete(view);
+    }
+  };
+  const scheduleHide = (view) => {
+    if (!view) return;
+    cancelPendingHide(view);
+    const timerId = setTimeout(() => {
+      if (!view.classList.contains("active")) {
+        view.hidden = true;
+      }
+      viewHideTimers.delete(view);
+    }, SCREEN_FADE_MS + 75);
+    viewHideTimers.set(view, timerId);
+  };
   const scrollToTop = () => {
     if (typeof window === "undefined") return;
     requestAnimationFrame(() => {
@@ -820,20 +839,12 @@
       if (!view) return;
       const isActive = key === name;
       if (isActive) {
+        cancelPendingHide(view);
         view.hidden = false;
         requestAnimationFrame(() => view.classList.add("active"));
       } else if (view.classList.contains("active")) {
         view.classList.remove("active");
-        const handleTransitionEnd = () => {
-          view.hidden = true;
-          view.removeEventListener("transitionend", handleTransitionEnd);
-        };
-        view.addEventListener("transitionend", handleTransitionEnd);
-        setTimeout(() => {
-          if (!view.classList.contains("active")) {
-            view.hidden = true;
-          }
-        }, SCREEN_FADE_MS + 75);
+        scheduleHide(view);
       } else {
         view.classList.remove("active");
         view.hidden = true;

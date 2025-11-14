@@ -3162,27 +3162,6 @@
   var loadFontsForNode = async (node) => {
     const uniqueFonts = [];
     const registerFont = (font) => {
-      if (!font || font === figma.mixed) return;
-      if (!uniqueFonts.some((item) => item.family === font.family && item.style === font.style)) {
-        uniqueFonts.push(font);
-      }
-    };
-    if (node.fontName === figma.mixed) {
-      const length = node.characters.length;
-      if (length > 0) {
-        const fonts = node.getRangeAllFontNames(0, length);
-        fonts.forEach((font) => registerFont(font));
-      }
-    } else {
-      registerFont(node.fontName);
-    }
-    for (const font of uniqueFonts) {
-      await figma.loadFontAsync(font);
-    }
-  };
-  var loadFontsForNode = async (node) => {
-    const uniqueFonts = [];
-    const registerFont = (font) => {
       if (font === figma.mixed) return;
       if (!uniqueFonts.some((item) => item.family === font.family && item.style === font.style)) {
         uniqueFonts.push(font);
@@ -3262,7 +3241,7 @@
           }
           return;
         }
-      if (msg.type === "rewrite") {
+        if (msg.type === "rewrite") {
           const key = String(msg.key || "");
           const text = String(msg.text || "");
           const guideline = msg.guideline || guideline_default;
@@ -3305,32 +3284,9 @@
             encounteredError = true;
             output = "Request failed: " + msgErr;
           }
-        figma.ui.postMessage({ type: "rewrite-done", output, error: encounteredError });
-        return;
-      }
-      if (msg.type === "apply-text") {
-        const nextText = typeof msg.text === "string" ? msg.text : "";
-        if (!nextText.trim().length) {
-          figma.notify("Suggestion is empty. Select another option.");
+          figma.ui.postMessage({ type: "rewrite-done", output, error: encounteredError });
           return;
         }
-        const textNode = figma.currentPage.selection.find(
-          (node) => node.type === "TEXT"
-        );
-        if (!textNode) {
-          figma.notify("Select a text layer in Figma to apply the copy.");
-          return;
-        }
-        try {
-          await loadFontsForNode(textNode);
-          textNode.characters = nextText;
-          figma.ui.postMessage({ type: "selection-text", text: nextText });
-          figma.notify("Copy applied to your selection.");
-        } catch (err) {
-          figma.notify("Couldn't apply copy: " + describeError(err));
-        }
-        return;
-      }
         if (msg.type === "apply-text") {
           const nextText = typeof msg.text === "string" ? msg.text : "";
           if (!nextText.trim().length) {
