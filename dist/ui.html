@@ -434,10 +434,48 @@
     text-transform: uppercase;
     cursor: pointer;
     text-align: center;
+    position: relative;
+    overflow: hidden;
   }
-  .rewrite-btn:disabled {
+  .rewrite-btn:disabled:not(.is-loading) {
     cursor: default;
     opacity: 0.65;
+  }
+  .rewrite-label,
+  .rewrite-shimmer {
+    display: block;
+    transition: opacity 0.2s ease;
+  }
+  .rewrite-shimmer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(110deg, rgba(255,255,255,0.4), #fff, rgba(255,255,255,0.4));
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmerText 1.4s linear infinite;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .rewrite-btn.is-loading .rewrite-label {
+    opacity: 0;
+  }
+  .rewrite-btn.is-loading .rewrite-shimmer {
+    opacity: 1;
+  }
+  @keyframes shimmerText {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
   .suggestions {
     margin-top: 0;
@@ -484,6 +522,8 @@
     flex-direction: column;
     gap: 10px;
     color: #1f2933;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: default;
   }
   .suggestion-card p {
     margin: 0;
@@ -503,6 +543,94 @@
   }
   .suggestion-dot {
     color: inherit;
+  }
+  .suggestion-card.is-interactive {
+    cursor: pointer;
+  }
+  .suggestion-card.is-interactive:focus-visible {
+    outline: 2px solid #00b0ff;
+    outline-offset: 2px;
+  }
+  .suggestion-card.is-interactive:active {
+    transform: translateY(1px);
+  }
+  .suggestions-list.is-loading .suggestion-card {
+    opacity: 1;
+  }
+  .suggestion-card.skeleton {
+    position: relative;
+    overflow: hidden;
+  }
+  .suggestion-card.revealing {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .suggestion-card.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .skeleton-block {
+    background: #e0e0e0;
+    position: relative;
+    overflow: hidden;
+    display: block;
+  }
+  .skeleton-block::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 100%
+    );
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+  .skeleton-line,
+  .skeleton-pill {
+    display: block;
+    width: 100%;
+    border-radius: 999px;
+  }
+  .skeleton-line {
+    height: 12px;
+    margin-bottom: 8px;
+  }
+  .skeleton-line.long {
+    width: 90%;
+  }
+  .skeleton-line.short {
+    width: 55%;
+  }
+  .skeleton-pill {
+    height: 10px;
+    width: 72px;
+  }
+  .skeleton-pill.short {
+    width: 42px;
+  }
+  .skeleton-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-block::before {
+      animation: none;
+    }
   }
   .score-pill {
     background: #d1fae5;
@@ -606,25 +734,10 @@
         ></textarea>
       </div>
 
-      <button id="rewrite" class="rewrite-btn" disabled>Rewrite</button>
-    </div>
-
-    <div id="rewriteLoading" class="rewrite-screen loading-screen" aria-live="polite" hidden>
-      <div class="loading-illustration" aria-hidden="true">
-        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="40" cy="40" r="32" fill="#dff1ff"/>
-          <path d="M22 36L27 22L36 34" fill="#c9dafe"/>
-          <path d="M58 36L53 22L44 34" fill="#c9dafe"/>
-          <circle cx="40" cy="44" r="24" fill="#f5f8ff"/>
-          <path d="M24 38C24 30 32 28 32 28H48C48 28 56 30 56 38V44C56 52 50 58 42 58H38C30 58 24 52 24 44V38Z" fill="#2f3b5c"/>
-          <rect x="32" y="38" width="16" height="20" rx="4" fill="#005c83"/>
-          <circle cx="42" cy="42" r="2.5" fill="#0f172a" opacity="0.4"/>
-          <path d="M30 48C31 50 33 52 36 52" stroke="#f5f8ff" stroke-width="3" stroke-linecap="round"/>
-          <path d="M50 48C49 50 47 52 44 52" stroke="#f5f8ff" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <p id="loadingMessage">Hang tight,
-we're putting your copy together!</p>
+      <button id="rewrite" class="rewrite-btn" disabled aria-live="polite">
+        <span class="rewrite-label">Rewrite</span>
+        <span id="rewriteShimmerText" class="rewrite-shimmer" aria-hidden="true">Crafting copy…</span>
+      </button>
     </div>
 
     <div id="suggestionsScreen" class="rewrite-screen suggestions-screen" hidden>
@@ -679,16 +792,26 @@ we're putting your copy together!</p>
   const btnRewrite = document.getElementById("rewrite");
   const suggestionBody = document.getElementById("suggestionBody");
   const rewriteHomeScreen = document.getElementById("rewriteHome");
-  const rewriteLoadingScreen = document.getElementById("rewriteLoading");
   const suggestionsScreen = document.getElementById("suggestionsScreen");
   const backToFormBtn = document.getElementById("backToForm");
-  const loadingMessageEl = document.getElementById("loadingMessage");
+  const rewriteShimmerText = document.getElementById("rewriteShimmerText");
   const screenViews = {
     home: rewriteHomeScreen,
-    loading: rewriteLoadingScreen,
     suggestions: suggestionsScreen,
   };
   const SCREEN_FADE_MS = 250;
+  const scrollToTop = () => {
+    if (typeof window === "undefined") return;
+    requestAnimationFrame(() => {
+      const scroller = document.scrollingElement || document.documentElement || document.body;
+      if (scroller) {
+        scroller.scrollTop = 0;
+      }
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo(0, 0);
+      }
+    });
+  };
   const showScreen = (name) => {
     const target = screenViews[name];
     if (!target) return;
@@ -716,9 +839,11 @@ we're putting your copy together!</p>
         view.hidden = true;
       }
     });
+    if (name === "suggestions" || name === "home") {
+      scrollToTop();
+    }
   };
   const showHomeScreen = () => showScreen("home");
-  const showLoadingScreen = () => showScreen("loading");
   const showSuggestionsScreen = () => showScreen("suggestions");
   backToFormBtn?.addEventListener("click", () => {
     showHomeScreen();
@@ -735,6 +860,30 @@ we're putting your copy together!</p>
     ["Confident", "Empowering"],
   ];
   const MIN_INPUT_HEIGHT = 52;
+  const DEFAULT_LOADING_TEXT = "Crafting copy…";
+  let rewriteInProgress = false;
+  const updateRewriteButtonState = () => {
+    if (!btnRewrite) return;
+    if (rewriteInProgress) {
+      btnRewrite.disabled = true;
+      return;
+    }
+    const hasText = Boolean(inputField?.value.trim());
+    btnRewrite.disabled = !hasText;
+  };
+  const setRewriteLoadingState = (isLoading, text = DEFAULT_LOADING_TEXT) => {
+    rewriteInProgress = Boolean(isLoading);
+    if (btnRewrite) {
+      btnRewrite.classList.toggle("is-loading", rewriteInProgress);
+      btnRewrite.setAttribute("aria-busy", rewriteInProgress ? "true" : "false");
+    }
+    if (rewriteShimmerText && typeof text === "string" && text.trim()) {
+      rewriteShimmerText.textContent = text;
+    } else if (rewriteShimmerText && !rewriteShimmerText.textContent.trim()) {
+      rewriteShimmerText.textContent = DEFAULT_LOADING_TEXT;
+    }
+    updateRewriteButtonState();
+  };
   const autoResizeTextarea = (element, minHeight = MIN_INPUT_HEIGHT) => {
     if (!element) return;
     element.style.height = "auto";
@@ -804,6 +953,95 @@ we're putting your copy together!</p>
     if (!inputCharCounter) return;
     const value = inputField?.value || "";
     inputCharCounter.textContent = formatCharCount(value.length);
+  };
+  const SUGGESTION_INITIAL_DELAY = 320;
+  const SUGGESTION_REVEAL_STEP = 180;
+  let suggestionRevealTimers = [];
+  const reducedMotionQuery =
+    typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : null;
+  const prefersReducedMotion = () => Boolean(reducedMotionQuery?.matches);
+  const clearSuggestionRevealTimers = () => {
+    suggestionRevealTimers.forEach((timerId) => clearTimeout(timerId));
+    suggestionRevealTimers = [];
+  };
+  const resetSuggestionCardInteractivity = (card) => {
+    if (!card) return;
+    card.classList.remove("is-interactive", "revealed");
+    card.removeAttribute("role");
+    card.removeAttribute("tabindex");
+    card.removeAttribute("data-text");
+  };
+  const createSkeletonCardElement = () => {
+    const card = document.createElement("article");
+    card.className = "suggestion-card skeleton";
+    resetSuggestionCardInteractivity(card);
+    card.innerHTML = `
+      <div class="skeleton-line skeleton-block long"></div>
+      <div class="skeleton-line skeleton-block"></div>
+      <div class="skeleton-line skeleton-block short"></div>
+      <div class="skeleton-meta">
+        <span class="skeleton-pill skeleton-block"></span>
+        <span class="skeleton-pill skeleton-block short"></span>
+        <span class="skeleton-pill skeleton-block"></span>
+      </div>
+    `;
+    return card;
+  };
+  const renderSkeletonPlaceholders = (count = MIN_SUGGESTIONS) => {
+    if (!suggestionBody) return { list: null, cards: [] };
+    clearSuggestionRevealTimers();
+    suggestionBody.className = "suggestion-body";
+    suggestionBody.innerHTML = "";
+    const list = document.createElement("div");
+    list.className = "suggestions-list is-loading";
+    suggestionBody.appendChild(list);
+    const total = Math.max(1, Number(count) || 0);
+    const cards = [];
+    for (let i = 0; i < total; i += 1) {
+      const card = createSkeletonCardElement();
+      list.appendChild(card);
+      cards.push(card);
+    }
+    return { list, cards };
+  };
+  const revealCardContent = (card, item) => {
+    if (!card) return;
+    card.classList.remove("skeleton");
+    card.dataset.text = item.text;
+    card.innerHTML = `
+      <p>${item.text}</p>
+      <div class="suggestion-meta">
+        <span>${item.tones.join(", ")}</span>
+        <span class="suggestion-dot" aria-hidden="true">·</span>
+        <span class="suggestion-char">${formatCharCount(item.text.length)}</span>
+      </div>
+    `;
+    card.setAttribute("role", "button");
+    card.tabIndex = 0;
+    card.classList.add("is-interactive");
+    card.addEventListener("click", handleSuggestionCardClick);
+    card.addEventListener("keydown", handleSuggestionCardKeydown);
+    card.classList.add("revealing");
+    requestAnimationFrame(() => {
+      card.classList.remove("revealing");
+      card.classList.add("revealed");
+    });
+  };
+  const scheduleSuggestionReveal = (cards, items, list) => {
+    if (!cards.length || !items.length) return;
+    const baseDelay = prefersReducedMotion() ? 0 : SUGGESTION_INITIAL_DELAY;
+    const stepDelay = prefersReducedMotion() ? 0 : SUGGESTION_REVEAL_STEP;
+    cards.forEach((card, idx) => {
+      const timer = setTimeout(() => {
+        revealCardContent(card, items[idx]);
+        if (idx === cards.length - 1 && list) {
+          list.classList.remove("is-loading");
+        }
+      }, baseDelay + idx * stepDelay);
+      suggestionRevealTimers.push(timer);
+    });
   };
 
   const fallbackGuideline = Object.freeze({
@@ -1465,8 +1703,37 @@ we're putting your copy together!</p>
     }
     window.parent.postMessage({ pluginMessage }, targetOrigin);
   };
+  const applySuggestionText = (text) => {
+    if (typeof text !== "string" || !text.trim()) return;
+    if (inputField) {
+      inputField.value = text;
+      inputField.dispatchEvent(new Event("input"));
+    }
+    postToPlugin({ type: "apply-text", text });
+  };
+  const activateSuggestionCard = (target) => {
+    const card = target instanceof HTMLElement ? target : null;
+    if (!card || card.classList.contains("skeleton")) return;
+    const text = card.getAttribute("data-text") || "";
+    if (!text.trim()) return;
+    applySuggestionText(text);
+  };
+  const handleSuggestionCardClick = (event) => {
+    if (!event?.currentTarget) return;
+    event.preventDefault();
+    activateSuggestionCard(event.currentTarget);
+  };
+  const handleSuggestionCardKeydown = (event) => {
+    if (!event?.currentTarget) return;
+    const key = event.key;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      activateSuggestionCard(event.currentTarget);
+    }
+  };
 
   const renderEmptyState = () => {
+    clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered";
     suggestionBody.innerHTML = `
       <div class="empty-arrow">↑</div>
@@ -1474,17 +1741,22 @@ we're putting your copy together!</p>
     `;
   };
 
-  const renderLoading = (text = "Hang tight,\nwe're putting your copy together!") => {
-    if (!loadingMessageEl) return;
-    loadingMessageEl.textContent = text;
+  const renderLoading = (text = DEFAULT_LOADING_TEXT, skeletonCount = MIN_SUGGESTIONS) => {
+    showSuggestionsScreen();
+    renderSkeletonPlaceholders(skeletonCount);
+    if (rewriteShimmerText && typeof text === "string" && text.trim()) {
+      rewriteShimmerText.textContent = text;
+    }
   };
 
   const renderStatus = (text) => {
+    clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered";
     suggestionBody.innerHTML = `<p>${text}</p>`;
   };
 
   const renderError = (text) => {
+    clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered error";
     suggestionBody.innerHTML = `<p>${text || "Something went wrong. Try again in a bit."}</p>`;
   };
@@ -1495,9 +1767,11 @@ we're putting your copy together!</p>
       return;
     }
 
-    const cards = items
-      .map(
-        (item) => `
+    const { list, cards } = renderSkeletonPlaceholders(items.length);
+    if (!cards.length || !list) {
+      const fallbackCards = items
+        .map(
+          (item) => `
         <article class="suggestion-card">
           <p>${item.text}</p>
           <div class="suggestion-meta">
@@ -1506,11 +1780,13 @@ we're putting your copy together!</p>
             <span class="suggestion-char">${formatCharCount(item.text.length)}</span>
           </div>
         </article>`
-      )
-      .join("");
-
-    suggestionBody.className = "suggestion-body";
-    suggestionBody.innerHTML = `<div class="suggestions-list">${cards}</div>`;
+        )
+        .join("");
+      suggestionBody.className = "suggestion-body";
+      suggestionBody.innerHTML = `<div class="suggestions-list">${fallbackCards}</div>`;
+      return;
+    }
+    scheduleSuggestionReveal(cards, items, list);
   };
 
   const stripFormatting = (line) =>
@@ -1520,6 +1796,10 @@ we're putting your copy together!</p>
       .replace(/^[-•*]+\s*/, "")
       .replace(/\s+/g, " ")
       .trim();
+  const stripTrailingCharCount = (text) => {
+    if (!text) return text;
+    return text.replace(/\s*\(\s*~?\d+\s*(?:char(?:s)?|character(?:s)?)\s*\)\s*$/i, "").trim();
+  };
 
   const looksLikeMeta = (line) => {
     const lower = line.toLowerCase();
@@ -1584,7 +1864,7 @@ we're putting your copy together!</p>
     const unique = [];
     const seen = new Set();
     flattened.forEach((text) => {
-      const clean = stripFormatting(text);
+      const clean = stripTrailingCharCount(stripFormatting(text));
       if (!clean) return;
       const key = clean.toLowerCase();
       if (!seen.has(key)) {
@@ -1629,13 +1909,13 @@ we're putting your copy together!</p>
       return;
     }
     const guidelinePayload = buildGuidelinePayload();
-    showLoadingScreen();
+    setRewriteLoadingState(true);
     renderLoading();
 
     const key = geminiKeyInput ? geminiKeyInput.value.trim() : "";
     if (!key) {
       postToPlugin({ type: "load-key" });
-      renderLoading("Loading saved key...");
+      renderLoading("Loading saved key…");
       window.__pendingText = text;
       window.__pendingGuideline = guidelinePayload;
       return;
@@ -1647,7 +1927,7 @@ we're putting your copy together!</p>
 
   inputField.addEventListener("input", () => {
     const hasText = Boolean(inputField.value.trim());
-    btnRewrite.disabled = !hasText;
+    updateRewriteButtonState();
     updateInputCharCount();
     resizeRewriteInput();
     if (!hasText && !window.__pendingText) {
@@ -1709,6 +1989,7 @@ we're putting your copy together!</p>
     if (msg?.type === "key-loaded") {
       if (msg.error) {
         saveStatus.textContent = "Load failed: " + msg.error;
+        setRewriteLoadingState(false);
         if (window.__pendingText) {
           showSuggestionsScreen();
           renderStatus("Couldn't load your API key. Add it in Settings to try again.");
@@ -1732,9 +2013,10 @@ we're putting your copy together!</p>
           delete window.__pendingText;
           delete window.__pendingGuideline;
           postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide });
-          showLoadingScreen();
+          setRewriteLoadingState(true);
           renderLoading();
         } else {
+          setRewriteLoadingState(false);
           showSuggestionsScreen();
           renderStatus("Add your Gemini API key in Settings to generate copy suggestions.");
           delete window.__pendingText;
@@ -1752,6 +2034,7 @@ we're putting your copy together!</p>
           ? String(msg.error.message)
           : "Unknown error.";
       console.error("Gemini rewrite error:", msg.error);
+      setRewriteLoadingState(false);
       activate("rewrite");
       showSuggestionsScreen();
       renderError("Generation failed: " + errText);
@@ -1765,6 +2048,7 @@ we're putting your copy together!</p>
     }
     if (msg?.type === "rewrite-done") {
       const output = typeof msg.output === "string" ? msg.output.trim() : "";
+      setRewriteLoadingState(false);
       showSuggestionsScreen();
       if (msg.error) {
         renderError(output);

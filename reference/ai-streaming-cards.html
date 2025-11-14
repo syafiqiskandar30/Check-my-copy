@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Streaming Text Cards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 24px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Skeleton Styles */
+        .skeleton {
+            background: #e0e0e0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.6) 50%,
+                transparent 100%
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .skeleton-image {
+            width: 100%;
+            height: 180px;
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        .skeleton-title {
+            height: 24px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .skeleton-text {
+            height: 16px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-text:last-child {
+            width: 80%;
+        }
+
+        .skeleton-avatar {
+            display: flex;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .skeleton-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 16px;
+        }
+
+        .skeleton-author {
+            flex: 1;
+        }
+
+        .skeleton-name {
+            height: 16px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            width: 120px;
+        }
+
+        .skeleton-date {
+            height: 14px;
+            border-radius: 4px;
+            width: 80px;
+        }
+
+        /* Streaming Text Styles */
+        .ai-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .ai-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .ai-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #444;
+            margin-bottom: 12px;
+            min-height: 20px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 20px;
+            background: #667eea;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        .ai-avatar {
+            display: flex;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .ai-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-right: 16px;
+            font-size: 18px;
+        }
+
+        .ai-author-info {
+            flex: 1;
+        }
+
+        .ai-name {
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .ai-date {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .control-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Skeleton Loading Card -->
+        <div class="card">
+            <div class="card-header">Loading State</div>
+            <div class="skeleton skeleton-image"></div>
+            <div class="card-content">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+                
+                <div class="skeleton-avatar">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton-author">
+                        <div class="skeleton skeleton-name"></div>
+                        <div class="skeleton skeleton-date"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Streaming Text Card -->
+        <div class="card">
+            <div class="card-header">AI Generated Content</div>
+            <div class="ai-image">🤖</div>
+            <div class="card-content">
+                <div class="ai-title" id="aiTitle"></div>
+                <div class="ai-text" id="aiText1"></div>
+                <div class="ai-text" id="aiText2"></div>
+                <div class="ai-text" id="aiText3"></div>
+                
+                <div class="ai-avatar">
+                    <div class="ai-circle">AI</div>
+                    <div class="ai-author-info">
+                        <div class="ai-name">Claude AI Assistant</div>
+                        <div class="ai-date">Just now</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="control-btn" onclick="restartAnimation()">Restart Animation</button>
+
+    <script>
+        const content = {
+            title: "The Future of Artificial Intelligence",
+            text1: "Artificial intelligence is transforming how we interact with technology, creating new possibilities for innovation and creativity across industries.",
+            text2: "From natural language processing to computer vision, AI systems are becoming increasingly sophisticated, enabling more intuitive and powerful applications.",
+            text3: "As we continue to advance AI capabilities, it's essential to consider both the opportunities and responsibilities that come with this technology."
+        };
+
+        let timeouts = [];
+
+        function typeText(element, text, delay, callback) {
+            let i = 0;
+            element.innerHTML = '';
+            
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            element.appendChild(cursor);
+
+            function type() {
+                if (i < text.length) {
+                    cursor.before(text.charAt(i));
+                    i++;
+                    timeouts.push(setTimeout(type, 30 + Math.random() * 40));
+                } else {
+                    cursor.remove();
+                    if (callback) callback();
+                }
+            }
+            
+            timeouts.push(setTimeout(type, delay));
+        }
+
+        function startStreaming() {
+            const title = document.getElementById('aiTitle');
+            const text1 = document.getElementById('aiText1');
+            const text2 = document.getElementById('aiText2');
+            const text3 = document.getElementById('aiText3');
+
+            typeText(title, content.title, 500, () => {
+                typeText(text1, content.text1, 300, () => {
+                    typeText(text2, content.text2, 200, () => {
+                        typeText(text3, content.text3, 200);
+                    });
+                });
+            });
+        }
+
+        function restartAnimation() {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+            timeouts = [];
+            
+            document.getElementById('aiTitle').innerHTML = '';
+            document.getElementById('aiText1').innerHTML = '';
+            document.getElementById('aiText2').innerHTML = '';
+            document.getElementById('aiText3').innerHTML = '';
+            
+            startStreaming();
+        }
+
+        // Start animation on load
+        startStreaming();
+    </script>
+</body>
+</html>
