@@ -3182,8 +3182,11 @@
       await figma.loadFontAsync(font);
     }
   };
+  var UI_WIDTH = 400;
+  var MIN_UI_HEIGHT = 600;
+  var MAX_UI_HEIGHT = 1e3;
   figma.on("run", () => {
-    figma.showUI(__html__, { width: 400, height: 600 });
+    figma.showUI(__html__, { width: UI_WIDTH, height: MIN_UI_HEIGHT });
     figma.ui.postMessage({
       type: "guideline-default",
       guideline: guideline_default
@@ -3212,6 +3215,16 @@
             type: "guideline-default",
             guideline: guideline_default
           });
+          return;
+        }
+        if (msg.type === "resize-ui") {
+          const requestedHeight = Number(msg.height);
+          if (!Number.isFinite(requestedHeight)) return;
+          const clampedHeight = Math.max(
+            MIN_UI_HEIGHT,
+            Math.min(Math.round(requestedHeight), MAX_UI_HEIGHT)
+          );
+          figma.ui.resize(UI_WIDTH, clampedHeight);
           return;
         }
         if (msg.type === "save-key") {

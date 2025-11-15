@@ -106,8 +106,12 @@ const loadFontsForNode = async (node: TextNode) => {
   }
 };
 
+const UI_WIDTH = 400;
+const MIN_UI_HEIGHT = 400;
+const MAX_UI_HEIGHT = 900;
+
 figma.on("run", () => {
-  figma.showUI(__html__, { width: 400, height: 600 });
+  figma.showUI(__html__, { width: UI_WIDTH, height: MIN_UI_HEIGHT });
   figma.ui.postMessage({
     type: "guideline-default",
     guideline: guidelineReference,
@@ -142,6 +146,17 @@ figma.on("run", () => {
           type: "guideline-default",
           guideline: guidelineReference,
         });
+        return;
+      }
+
+      if (msg.type === "resize-ui") {
+        const requestedHeight = Number(msg.height);
+        if (!Number.isFinite(requestedHeight)) return;
+        const clampedHeight = Math.max(
+          MIN_UI_HEIGHT,
+          Math.min(Math.round(requestedHeight), MAX_UI_HEIGHT)
+        );
+        figma.ui.resize(UI_WIDTH, clampedHeight);
         return;
       }
 
