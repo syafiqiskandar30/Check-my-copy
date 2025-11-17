@@ -8,8 +8,6 @@
     --primary: #7f56d9;
     --text: #111827;
     --subtle: #6b7280;
-    --chip-bg: #fff;
-    --chip-border: #d1d5db;
   }
   *,
   *::before,
@@ -168,181 +166,7 @@
     line-height: 20px;
     font-weight: 500;
   }
-  .tone-section {
-    margin-top: 32px;
-  }
-  .tone-title {
-    color: #525b65;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-  }
-  .tone-options,
-  .element-options {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .tone-chip,
-  .element-chip {
-    border: 1px dashed #f5f5f5;
-    border-radius: 12px;
-    background: #fff;
-    padding: 10px 14px;
-    min-width: 112px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    cursor: pointer;
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 14px;
-    line-height: 17px;
-    font-weight: 500;
-    color: #788494;
-    text-align: center;
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .tone-chip-icon,
-  .element-chip-icon {
-    width: 20px;
-    height: 20px;
-    display: inline-block;
-    flex-shrink: 0;
-  }
-  .tone-chip-label,
-  .element-chip-label {
-    color: inherit;
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 14px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: 17px;
-    text-align: center;
-    flex: 1 1 auto;
-  }
-  .tone-chip.is-selected,
-  .element-chip.is-selected {
-    border-style: solid;
-    border-color: transparent;
-    border-radius: 12px;
-    background: rgba(0, 176, 255, 0.1);
-    color: #00b0ff;
-  }
-  .tone-chip:focus-visible,
-  .element-chip:focus-visible {
-    outline: 2px solid #00b0ff;
-    outline-offset: 2px;
-  }
-  .tone-chip:disabled,
-  .element-chip:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    border-color: #f0f2f7;
-    background: #fff;
-    color: #c0c7d4;
-  }
-  .tone-chip:disabled .tone-chip-icon,
-  .element-chip:disabled .element-chip-icon {
-    opacity: 0.5;
-  }
-  .element-chip {
-    min-width: auto;
-    flex: 0 0 auto;
-    justify-content: flex-start;
-    text-align: left;
-    gap: 6px;
-  }
-  .element-chip .element-chip-label {
-    text-align: left;
-  }
-  .element-section {
-    margin-top: 32px;
-  }
-  .length-section {
-    margin-top: 32px;
-  }
-  .length-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #525b65;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-  }
-  .length-header .length-value {
-    color: var(--Typography-Light-Grey, #788494);
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 18px;
-  }
-  .length-slider {
-    position: relative;
-    margin-top: 12px;
-    width: 100%;
-    height: 36x;
-    display: flex;
-    align-items: center;
-  }
-  .length-slider-track {
-    position: absolute;
-    inset: 0;
-    border-radius: 999px;
-    background: #f5f5f5;
-    overflow: hidden;
-  }
-  .length-slider-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 0;
-    border-radius: 999px;
-    background: #00b0ff;
-  }
-  .length-slider input[type="range"] {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    -webkit-appearance: none;
-    appearance: none;
-    background: transparent;
-    cursor: pointer;
-  }
-  .length-slider input[type="range"]::-webkit-slider-runnable-track {
-    height: 100%;
-    background: transparent;
-  }
-  .length-slider input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #fff;
-    border: 4px solid #00b0ff;
-    box-shadow: none;
-  }
-  .length-slider input[type="range"]::-moz-range-thumb {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #fff;
-    border: 4px solid #00b0ff;
-    box-shadow: none;
-  }
-  .element-title {
-    color: #525b65;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-  }
+  /* length controls removed */
   textarea,
   input[type="text"] {
     width: 100%;
@@ -392,32 +216,6 @@
   }
   .guideline-status.error .status-dot {
     background: #f87171;
-  }
-  .chips {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
-  .chip-dropdown {
-    position: relative;
-  }
-  .chip {
-    border: 1px solid var(--chip-border);
-    background: var(--chip-bg);
-    border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .chip.is-selected {
-    background: #ede9fe;
-    border-color: #c4b5fd;
-    color: #5b21b6;
-    font-weight: 600;
-  }
-  .chip:focus-visible {
-    outline: 2px solid var(--primary);
   }
   .rewrite-btn {
     width: 100%;
@@ -489,6 +287,15 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+  .suggestion-note {
+    border-radius: 10px;
+    border: 1px solid #fde1c3;
+    background: #fff8f1;
+    color: #9a3412;
+    font-size: 13px;
+    line-height: 18px;
+    padding: 10px 12px;
   }
   .suggestion-body.centered {
     padding: 16px;
@@ -695,7 +502,7 @@
   <div class="rewrite-screen-container">
     <div id="rewriteHome" class="rewrite-screen active">
       <div class="field-header">
-        <label class="field-label" for="inputText">Enter copy</label>
+        <label id="inputLabel" class="field-label" for="inputText">Enter copy</label>
         <div id="inputCharCount" class="char-counter">0 characters</div>
       </div>
       <textarea
@@ -704,26 +511,7 @@
         rows="2"
         placeholder="Type your copy or select a text layer in figma"
       ></textarea>
-      <section class="tone-section">
-        <div class="tone-title">Select tone</div>
-        <div id="toneOptionList" class="tone-options"></div>
-      </section>
-      <section class="length-section">
-        <div class="length-header">
-          <span>Text length</span>
-          <span id="lengthValue" class="length-value">0 characters</span>
-        </div>
-        <div class="length-slider">
-          <div class="length-slider-track">
-            <div id="lengthFill" class="length-slider-fill" style="width:0%;"></div>
-          </div>
-          <input type="range" id="lengthSlider" min="12" max="160" value="40" step="1" />
-        </div>
-      </section>
-      <section class="element-section">
-        <div class="element-title">Select usage</div>
-        <div id="elementOptionList" class="element-options"></div>
-      </section>
+      <!-- tone controls removed -->
       <div class="context-field">
         <label for="usageContextInput">Context and custom instructions</label>
         <textarea
@@ -861,18 +649,47 @@
   });
   showHomeScreen();
   const inputField = document.getElementById("inputText");
+  const inputLabelEl = document.getElementById("inputLabel");
   const inputCharCounter = document.getElementById("inputCharCount");
-  const MIN_SUGGESTIONS = 5;
+  const MIN_SUGGESTIONS = 10;
+  const SUGGESTION_STORAGE_KEY = "setel.rewrite.lastSuggestions";
   const toneFallbacks = [
-    ["Engaging", "Friendly"],
-    ["Warm", "Appreciative"],
-    ["Enthusiastic", "Encouraging"],
-    ["Upbeat", "Supportive"],
-    ["Confident", "Empowering"],
+    ["Friendly", "Caring"],
+    ["Professional", "Clear"],
+    ["Empathetic", "Supportive"],
+    ["Persuasive", "Action-focused"],
+    ["Playful", "Upbeat"],
+    ["Inspirational", "Motivating"],
+    ["Neutral", "Informative"],
+    ["Urgent", "Time-sensitive"],
+    ["Exclusive", "Premium"],
+    ["Technical", "Precise"],
   ];
   const MIN_INPUT_HEIGHT = 52;
-  const DEFAULT_LOADING_TEXT = "Crafting copy…";
+  const rewriteLabelEl = document.querySelector(".rewrite-label");
+  const MODE_REWRITE = "rewrite";
+  const generationMode = MODE_REWRITE;
+  const MODE_CONFIG = {
+    label: "Enter copy",
+    placeholder: "Paste copy or select a text layer in Figma",
+    buttonLabel: "Rewrite",
+    loadingText: "Crafting copy…",
+  };
   let rewriteInProgress = false;
+  const getModeConfig = () => MODE_CONFIG;
+  const updateModeUI = () => {
+    const config = getModeConfig();
+    if (inputLabelEl) inputLabelEl.textContent = config.label;
+    if (inputField && !inputField.value.trim()) {
+      inputField.placeholder = config.placeholder;
+    }
+    if (rewriteLabelEl) rewriteLabelEl.textContent = config.buttonLabel;
+    if (!rewriteInProgress && rewriteShimmerText) {
+      rewriteShimmerText.textContent = config.loadingText;
+    }
+  };
+  updateModeUI();
+  const getModeLoadingText = () => getModeConfig().loadingText;
   const updateRewriteButtonState = () => {
     if (!btnRewrite) return;
     if (rewriteInProgress) {
@@ -882,16 +699,18 @@
     const hasText = Boolean(inputField?.value.trim());
     btnRewrite.disabled = !hasText;
   };
-  const setRewriteLoadingState = (isLoading, text = DEFAULT_LOADING_TEXT) => {
+  const setRewriteLoadingState = (isLoading, text) => {
     rewriteInProgress = Boolean(isLoading);
     if (btnRewrite) {
       btnRewrite.classList.toggle("is-loading", rewriteInProgress);
       btnRewrite.setAttribute("aria-busy", rewriteInProgress ? "true" : "false");
     }
-    if (rewriteShimmerText && typeof text === "string" && text.trim()) {
-      rewriteShimmerText.textContent = text;
-    } else if (rewriteShimmerText && !rewriteShimmerText.textContent.trim()) {
-      rewriteShimmerText.textContent = DEFAULT_LOADING_TEXT;
+    const labelText = typeof text === "string" && text.trim() ? text : getModeLoadingText();
+    if (rewriteShimmerText) {
+      rewriteShimmerText.textContent = labelText;
+    }
+    if (!rewriteInProgress) {
+      updateModeUI();
     }
     updateRewriteButtonState();
   };
@@ -1034,7 +853,7 @@
       <div class="suggestion-meta">
         <span>${item.tones.join(", ")}</span>
         <span class="suggestion-dot" aria-hidden="true">·</span>
-        <span class="suggestion-char">${formatCharCount(item.text.length)}</span>
+        <span class="suggestion-char">${formatCharCount(item.charCount ?? item.text.length)}</span>
       </div>
     `;
     card.setAttribute("role", "button");
@@ -1082,303 +901,15 @@
     ],
   });
 
-  const filterSelections = {};
-  const MAX_TONE_SELECTIONS = 2;
-  const elementOptionList = document.getElementById("elementOptionList");
-  const lengthSlider = document.getElementById("lengthSlider");
-  const lengthValueEl = document.getElementById("lengthValue");
-  const lengthFill = document.getElementById("lengthFill");
-  const lengthPresetMarkers = document.getElementById("lengthPresetMarkers");
-  const lengthPresetLabels = document.getElementById("lengthPresetLabels");
-  const getToneSelections = () => {
-    const tones = filterSelections.tone;
-    if (Array.isArray(tones)) return tones;
-    if (typeof tones === "string" && tones.length) return [tones];
-    return [];
-  };
-  const setToneSelections = (tones) => {
-    if (!tones || !tones.length) {
-      delete filterSelections.tone;
-    } else {
-      filterSelections.tone = tones;
-    }
-  };
-
-  const TONE_RENAME_MAP = Object.freeze({
-    "friendly and conversational": "Warm",
-    "professional and authoritative": "Firm",
-    "persuasive and compelling": "Bold",
-    "empathetic and reassuring": "Caring",
-    "playful and humourous": "Fun",
-    "playful and humorous": "Fun",
-    "inspirational and motivational": "Inspire",
-    "informative and neutral": "Clear",
-    "urgent and action-oriented": "Urgent",
-    "luxurious and exclusive": "Exclusive",
-    "analytical and technical": "Factual",
-  });
-  const SIMPLE_TONE_LABELS = Object.freeze([
-    "Warm",
-    "Firm",
-    "Bold",
-    "Caring",
-    "Fun",
-    "Inspire",
-    "Clear",
-    "Urgent",
-    "Exclusive",
-    "Factual",
-  ]);
-  const FALLBACK_TONE_DATA = SIMPLE_TONE_LABELS.map((label) => ({
-    value: label,
-    label,
-  }));
-  const USAGE_RENAME_PAIRS = [
-    ["web (feature pages) copy", "Web features"],
-    ["web (features pages) copy", "Web features"],
-    ["web (promo pages) copy", "Web promotions"],
-    ["meta title and description", "Transactional"],
-    ["meta details", "Transactional"],
-    ["email (transactional)", "Transactional"],
-    ["push notification and app inbox (transactional)", "Transactional"],
-    ["push notifications and app inbox (transactional)", "Transactional"],
-    ["push notification and app inbox (promo and nurturing)", "Promotional"],
-    ["push notifications and app inbox (promo and nurturing)", "Promotional"],
-    ["frequently asked questions/help centre articles (product)", "FAQs"],
-    ["frequently asked questions (promotions)", "FAQs"],
-    ["branding (taglines, unique selling points/usp)", "USP"],
-  ];
-  const USAGE_RENAME_MAP = Object.freeze(
-    USAGE_RENAME_PAIRS.reduce((acc, [source, target]) => {
-      const key = typeof source === "string" ? source.trim().toLowerCase() : "";
-      if (key && typeof target === "string" && target.trim().length) {
-        acc[key] = target.trim();
-      }
-      return acc;
-    }, {})
-  );
-  const RAW_FALLBACK_USAGE_OPTIONS = [
-    {
-      value: "Heading",
-      label: "Heading",
-      description: "Short hero or section title that primes the message.",
-      focus: ["Grab attention", "Frame the benefit"],
-    },
-    {
-      value: "Description",
-      label: "Description",
-      description: "One to two sentences that explain the value.",
-      focus: ["Give context", "Highlight differentiator"],
-    },
-    {
-      value: "CTA Button",
-      label: "CTA button",
-      description: "Action-driven label that finishes the sentence “I want to…”.",
-      focus: ["Use verbs", "Set expectations"],
-    },
-    {
-      value: "Body",
-      label: "Body",
-      description: "Longer supporting copy for cards, modals, or pages.",
-      focus: ["Structure info", "Keep it scannable"],
-    },
-    {
-      value: "Tooltip",
-      label: "Tooltip",
-      description: "Quick clarification tucked behind an icon.",
-      focus: ["Stay concise", "Address confusion"],
-    },
-    {
-      value: "Empty state",
-      label: "Empty state",
-      description: "Friendly message that guides users when nothing is there yet.",
-      focus: ["Acknowledge state", "Offer next step"],
-    },
-    {
-      value: "Toast",
-      label: "Toast",
-      description: "Short confirmation or error banner.",
-      focus: ["Confirm outcome", "Offer undo if possible"],
-    },
-    {
-      value: "Label",
-      label: "Label",
-      description: "Short name that makes inputs and toggles clear.",
-      focus: ["Be specific", "Avoid jargon"],
-    },
-  ];
   const guidelineMeta = {
     rewriteOverview: "",
     rewriteRequirements: [],
   };
-  const LENGTH_PRESETS = [
-    { label: "Short", value: 32 },
-    { label: "Medium", value: 64 },
-    { label: "Long", value: 106 },
-  ];
-
-  const escapeHtml = (text = "") =>
-    String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-
-  const simplifyToneLabel = (tone) => {
-    const raw = typeof tone === "string" ? tone.trim() : "";
-    if (!raw) return "";
-    const mapped = TONE_RENAME_MAP[raw.toLowerCase()];
-    return mapped || raw;
-  };
-  const simplifyUsageLabel = (label) => {
-    const raw = typeof label === "string" ? label.trim() : "";
-    if (!raw) return "";
-    const mapped = USAGE_RENAME_MAP[raw.toLowerCase()];
-    return mapped || raw;
-  };
-  const normalizeUsageOption = (option) => {
-    if (!option || typeof option !== "object") return null;
-    const baseLabel =
-      (typeof option.label === "string" && option.label.trim()) ||
-      (typeof option.value === "string" && option.value.trim()) ||
-      "";
-    const label = simplifyUsageLabel(baseLabel);
-    if (!label) return null;
-    return {
-      ...option,
-      value: label,
-      label,
-    };
-  };
-  const FALLBACK_USAGE_OPTIONS = RAW_FALLBACK_USAGE_OPTIONS.map(normalizeUsageOption).filter(Boolean);
-  let toneOptionData = [...FALLBACK_TONE_DATA];
-  let usageOptionData = [...FALLBACK_USAGE_OPTIONS];
-
-  const deriveToneOptions = (guide) => {
-    const playbooks = guide?.structuredGuide?.tonePlaybooks;
-    if (!Array.isArray(playbooks)) return [];
-    return playbooks
-      .map((entry) => {
-        const tone = typeof entry?.tone === "string" ? entry.tone.trim() : "";
-        if (!tone) return null;
-        const label = simplifyToneLabel(tone);
-        if (!label) return null;
-        const impact = typeof entry.impact === "string" ? entry.impact.trim() : "";
-        const bestFor = Array.isArray(entry.bestFor)
-          ? entry.bestFor
-              .map((item) => (typeof item === "string" ? item.trim() : ""))
-              .filter(Boolean)
-              .slice(0, 3)
-          : [];
-        return {
-          value: label,
-          label,
-          impact,
-          bestFor,
-        };
-      })
-      .filter(Boolean);
-  };
-
-  const deriveUsageOptions = (guide) => {
-    if (!guide) return [];
-    const structured = guide?.structuredGuide?.usagePlaybooks;
-    if (Array.isArray(structured) && structured.length) {
-      return structured
-        .map((entry) => {
-          const label = typeof entry?.label === "string" ? entry.label.trim() : "";
-          const value = typeof entry?.value === "string" ? entry.value.trim() : label;
-          if (!value) return null;
-          return normalizeUsageOption({
-            value,
-            label: label || value,
-            description: typeof entry.description === "string" ? entry.description.trim() : "",
-            focus: Array.isArray(entry.focus)
-              ? entry.focus
-                  .map((item) => (typeof item === "string" ? item.trim() : ""))
-                  .filter(Boolean)
-              : [],
-          });
-        })
-        .filter(Boolean);
-    }
-    const collected = [];
-    const visit = (node) => {
-      if (!node || typeof node !== "object") return;
-      if (node.materials && typeof node.materials === "object") {
-        Object.values(node.materials).forEach((group) => {
-          if (!Array.isArray(group)) return;
-          group.forEach((item) => {
-            if (!item || typeof item.material !== "string") return;
-            const label = item.material.trim();
-            if (!label) return;
-            const normalized = normalizeUsageOption({
-              value: label,
-              label,
-              description: typeof item.definition === "string" ? item.definition.trim() : "",
-              focus: Array.isArray(item.purpose)
-                ? item.purpose
-                    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
-                    .filter(Boolean)
-                : [],
-            });
-            if (normalized) {
-              collected.push(normalized);
-            }
-          });
-        });
-      }
-      if (Array.isArray(node.children)) {
-        node.children.forEach(visit);
-      }
-    };
-    visit(guide);
-    return collected;
-  };
-
-  const mergeUsageOptions = (derived) => {
-    const combined = [];
-    const pushUnique = (option) => {
-      const normalized = normalizeUsageOption(option);
-      if (!normalized || typeof normalized.value !== "string") return;
-      const value = normalized.value.trim();
-      if (!value) return;
-      const key = value.toLowerCase();
-      if (combined.some((item) => item.value.toLowerCase() === key)) return;
-      combined.push({
-        value,
-        label: normalized.label || value,
-        description: normalized.description || "",
-        focus: Array.isArray(normalized.focus) ? normalized.focus.filter(Boolean) : [],
-      });
-    };
-    derived.forEach(pushUnique);
-    FALLBACK_USAGE_OPTIONS.forEach(pushUnique);
-    return combined.slice(0, 12);
-  };
-
-  const ensureToneSelectionValidity = () => {
-    const current = getToneSelections();
-    if (!current.length) return;
-    const allowed = new Set(toneOptionData.map((item) => item.value));
-    const filtered = current.filter((tone) => allowed.has(tone));
-    if (filtered.length !== current.length) {
-      setToneSelections(filtered);
-    }
-  };
-
-  const ensureUsageSelectionValidity = () => {
-    if (!filterSelections.element) return;
-    const allowed = new Set(usageOptionData.map((item) => item.value));
-    if (!allowed.has(filterSelections.element)) {
-      delete filterSelections.element;
-    }
-  };
-
-  const getToneMetaByValue = (value) =>
-    toneOptionData.find((item) => item.value === value) || null;
-  const getUsageMetaByValue = (value) =>
-    usageOptionData.find((item) => item.value === value) || null;
+  // const LENGTH_PRESETS = [
+  //   { label: "Short", value: 32 },
+  //   { label: "Medium", value: 64 },
+  //   { label: "Long", value: 106 },
+  // ];
 
   const shortenHelperText = (text) => {
     const clean = String(text || "").trim();
@@ -1401,31 +932,10 @@
 
   const updateContextHints = () => {
     if (!usageContextInput) return;
-    const selectedUsage = getUsageMetaByValue(filterSelections.element);
-    const selectedTone = getToneMetaByValue(getToneSelections()[0]);
-
-    const helperChunks = [];
-    const addHelper = (value) => {
-      const clean = shortenHelperText(value);
-      if (clean) {
-        helperChunks.push(clean);
-      }
-    };
-
-    addHelper(selectedUsage?.description);
-    if (selectedUsage?.focus?.length) {
-      addHelper(selectedUsage.focus.slice(0, 2).join(", "));
-    }
-    addHelper(selectedTone?.impact);
-    const reminders = (guidelineMeta.rewriteRequirements || [])
+    const helperLines = (guidelineMeta.rewriteRequirements || [])
       .map((req) => shortenHelperText(req))
       .filter(Boolean)
       .slice(0, 3);
-    if (reminders.length) {
-      helperChunks.push(reminders.join(" · "));
-    }
-
-    const helperLines = helperChunks.slice(0, 3);
     if (!helperLines.length) {
       updateContextPlaceholder(DEFAULT_CONTEXT_PLACEHOLDER, DEFAULT_PLACEHOLDER_LINES);
       return;
@@ -1433,88 +943,7 @@
     updateContextPlaceholder(helperLines.join("\n"), helperLines.length);
   };
 
-  const toneOptionList = document.getElementById("toneOptionList");
-  const CHIP_ICONS = Object.freeze({
-    add: "data:image/svg+xml,%3Csvg%20width%3D%2716%27%20height%3D%2716%27%20viewBox%3D%270%200%2016%2016%27%20fill%3D%27none%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M8%2016C12.4183%2016%2016%2012.4183%2016%208C16%203.58172%2012.4183%200%208%200C3.58172%200%200%203.58172%200%208C0%2012.4183%203.58172%2016%208%2016Z%27%20fill%3D%27%2300B0FF%27/%3E%3Cpath%20d%3D%27M11.4287%209.13869C12.0599%209.13869%2012.5716%208.62701%2012.5716%207.99583C12.5716%207.36465%2012.0599%206.85297%2011.4287%206.85297L9.14291%206.85297V4.56717C9.14291%203.93599%208.63124%203.42432%208.00005%203.42432C7.36887%203.42432%206.8572%203.93599%206.8572%204.56717V6.85297H4.57157C3.94039%206.85297%203.42871%207.36465%203.42871%207.99583C3.42871%208.62701%203.94039%209.13869%204.57157%209.13869H6.8572V11.4243C6.8572%2012.0555%207.36887%2012.5672%208.00005%2012.5672C8.63124%2012.5672%209.14291%2012.0555%209.14291%2011.4243V9.13869H11.4287Z%27%20fill%3D%27white%27/%3E%3C/svg%3E",
-    remove: "data:image/svg+xml,%3Csvg%20width%3D%2716%27%20height%3D%2716%27%20viewBox%3D%270%200%2016%2016%27%20fill%3D%27none%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M0%208C0%2012.4183%203.58172%2016%208%2016C12.4183%2016%2016%2012.4183%2016%208C16%203.58172%2012.4183%200%208%200C3.58172%200%200%203.58172%200%208Z%27%20fill%3D%27%2300B0FF%27/%3E%3Cpath%20d%3D%27M9.62055%2011.2326C10.0669%2011.6789%2010.7905%2011.6789%2011.2368%2011.2326C11.6831%2010.7863%2011.6831%2010.0627%2011.2368%209.61636L9.62049%208.00005L11.2368%206.38375C11.6831%205.93744%2011.6831%205.21382%2011.2368%204.7675C10.7905%204.32119%2010.0669%204.32119%209.62055%204.7675L8.00425%206.38381L6.38807%204.76763C5.94175%204.32131%205.21814%204.32131%204.77182%204.76763C4.32551%205.21394%204.32551%205.93756%204.77182%206.38387L6.38801%208.00005L4.77182%209.61624C4.32551%2010.0626%204.32551%2010.7862%204.77182%2011.2325C5.21814%2011.6788%205.94175%2011.6788%206.38807%2011.2325L8.00425%209.6163L9.62055%2011.2326Z%27%20fill%3D%27white%27/%3E%3C/svg%3E",
-  });
-
-  const renderToneChips = () => {
-    if (!toneOptionList) return;
-    const selectedTones = getToneSelections();
-    const optionsToRender = toneOptionData.slice(0, 12);
-    toneOptionList.innerHTML = optionsToRender
-      .map((tone) => {
-        if (!tone?.value) return "";
-        const value = tone.value;
-        const label = tone.label || value;
-        const isSelected = selectedTones.includes(value);
-        const isDisabled = !isSelected && selectedTones.length >= MAX_TONE_SELECTIONS;
-        const iconSrc = isSelected ? CHIP_ICONS.remove : CHIP_ICONS.add;
-        return `<button type="button" class="tone-chip${isSelected ? " is-selected" : ""}" data-tone="${escapeHtml(
-          value
-        )}" aria-pressed="${isSelected}" ${isDisabled ? "disabled" : ""}>
-          <span class="tone-chip-label">${escapeHtml(label)}</span>
-          <img class="tone-chip-icon" src="${iconSrc}" alt="" aria-hidden="true" />
-        </button>`;
-      })
-      .filter(Boolean)
-      .join("");
-    updateContextHints();
-  };
-
-  toneOptionList?.addEventListener("click", (event) => {
-    const chip = event.target.closest(".tone-chip");
-    if (!chip) return;
-    const tone = chip.getAttribute("data-tone");
-    if (!tone) return;
-    if (chip.disabled) return;
-    const current = getToneSelections();
-    if (current.includes(tone)) {
-      setToneSelections(current.filter((item) => item !== tone));
-    } else if (current.length < MAX_TONE_SELECTIONS) {
-      setToneSelections([...current, tone]);
-    }
-    renderToneChips();
-  });
-
-  const renderElementChips = () => {
-    if (!elementOptionList) return;
-    const selected = filterSelections.element || "";
-    const optionsToRender = usageOptionData.slice(0, 12);
-    elementOptionList.innerHTML = optionsToRender
-      .map((option) => {
-        if (!option?.value) return "";
-        const value = option.value;
-        const label = option.label || value;
-        const isSelected = selected === value;
-        return `<button type="button" class="element-chip${isSelected ? " is-selected" : ""}" data-element="${escapeHtml(
-          value
-        )}" aria-pressed="${isSelected}">
-          <span class="element-chip-label">${escapeHtml(label)}</span>
-        </button>`;
-      })
-      .filter(Boolean)
-      .join("");
-    updateContextHints();
-  };
-  elementOptionList?.addEventListener("click", (event) => {
-    const chip = event.target.closest(".element-chip");
-    if (!chip) return;
-    const value = chip.getAttribute("data-element");
-    if (!value) return;
-    filterSelections.element = filterSelections.element === value ? "" : value;
-    if (!filterSelections.element) {
-      delete filterSelections.element;
-    }
-    renderElementChips();
-  });
-
   const applyGuidelineMeta = (guide) => {
-    const toneData = deriveToneOptions(guide);
-    toneOptionData = toneData.length ? toneData : [...FALLBACK_TONE_DATA];
-    const usageData = mergeUsageOptions(deriveUsageOptions(guide));
-    usageOptionData = usageData.length ? usageData : [...FALLBACK_USAGE_OPTIONS];
     const rewritePrompt = guide?.rewritePrompt || {};
     guidelineMeta.rewriteOverview =
       typeof rewritePrompt.overview === "string" ? rewritePrompt.overview.trim() : "";
@@ -1523,141 +952,10 @@
           .map((item) => (typeof item === "string" ? item.trim() : ""))
           .filter(Boolean)
       : [];
-    ensureToneSelectionValidity();
-    ensureUsageSelectionValidity();
-    renderToneChips();
-    renderElementChips();
     updateContextHints();
   };
 
-  const LENGTH_MIN = Number(lengthSlider?.min ?? 12);
-  const LENGTH_MAX = Number(lengthSlider?.max ?? 160);
-  const LENGTH_THUMB_SIZE = 32;
-  const LENGTH_SNAP_THRESHOLD = 8;
-  const findLengthPreset = (value) => {
-    if (!Array.isArray(LENGTH_PRESETS) || !LENGTH_PRESETS.length) return null;
-    let closest = LENGTH_PRESETS[0];
-    let diff = Math.abs(value - closest.value);
-    for (let i = 1; i < LENGTH_PRESETS.length; i += 1) {
-      const candidate = LENGTH_PRESETS[i];
-      const distance = Math.abs(value - candidate.value);
-      if (distance < diff) {
-        closest = candidate;
-        diff = distance;
-      }
-    }
-    return closest;
-  };
-
-  const getSnappedLengthValue = (value) => {
-    const preset = findLengthPreset(value);
-    if (!preset) return null;
-    const distance = Math.abs(value - preset.value);
-    if (distance <= LENGTH_SNAP_THRESHOLD) return preset.value;
-    return null;
-  };
-
-  const renderLengthPresetMarkers = () => {
-    if (!lengthSlider || !lengthPresetMarkers) return;
-    const min = LENGTH_MIN;
-    const max = LENGTH_MAX;
-    lengthPresetMarkers.innerHTML = LENGTH_PRESETS.map((preset) => {
-      const percent = Math.min(Math.max((preset.value - min) / (max - min), 0), 1) * 100;
-      return `<button type="button" class="length-preset" data-value="${preset.value}" style="left:${percent}%">
-        <span class="sr-only">${preset.label}</span>
-      </button>`;
-    }).join("");
-  };
-
-  const renderLengthPresetLabels = () => {
-    if (!lengthPresetLabels) return;
-    lengthPresetLabels.innerHTML = LENGTH_PRESETS.map(
-      (preset) => `<span data-value="${preset.value}">${preset.label}</span>`
-    ).join("");
-  };
-
-  const updateLengthPresetActiveStates = (value) => {
-    const markers = lengthPresetMarkers?.querySelectorAll(".length-preset");
-    const labels = lengthPresetLabels?.querySelectorAll("span");
-    markers?.forEach((marker) => {
-      const markerValue = Number(marker.getAttribute("data-value"));
-      marker.classList.toggle("active", markerValue === value);
-    });
-    labels?.forEach((label) => {
-      const labelValue = Number(label.getAttribute("data-value"));
-      label.classList.toggle("active", labelValue === value);
-    });
-  };
-
-  const updateLengthUI = (value) => {
-    if (value < 12 && lengthSlider) {
-      lengthSlider.value = "12";
-      value = 12;
-    }
-    if (lengthValueEl) {
-      const preset = findLengthPreset(value);
-      const suffix = preset ? ` · ${preset.label}` : "";
-      lengthValueEl.textContent = `${value} characters${suffix}`;
-    }
-    if (!lengthSlider || !lengthFill) return;
-    const percent = Math.min(
-      Math.max((value - LENGTH_MIN) / (LENGTH_MAX - LENGTH_MIN), 0),
-      1
-    );
-    const trackWidth = lengthSlider.offsetWidth || 0;
-    if (!trackWidth) {
-      lengthFill.style.width = `${LENGTH_THUMB_SIZE}px`;
-      return;
-    }
-    const knobRadius = LENGTH_THUMB_SIZE / 2;
-    const availableWidth = Math.max(trackWidth - LENGTH_THUMB_SIZE, 0);
-    const knobCenter = knobRadius + availableWidth * percent;
-    const fillWidth = knobCenter + knobRadius;
-    lengthFill.style.width = `${Math.min(fillWidth, trackWidth)}px`;
-    updateLengthPresetActiveStates(findLengthPreset(value)?.value || NaN);
-  };
-  const setLengthPresetValue = (value) => {
-    if (!lengthSlider) return;
-    lengthSlider.value = String(value);
-    filterSelections.length = value;
-    updateLengthUI(value);
-  };
-  lengthSlider?.addEventListener("input", (event) => {
-    const value = Number(event.target.value);
-    filterSelections.length = value;
-    updateLengthUI(value);
-  });
-  const commitLengthSliderValue = () => {
-    if (!lengthSlider) return;
-    const value = Number(lengthSlider.value);
-    if (Number.isNaN(value)) return;
-    const snappedValue = getSnappedLengthValue(value);
-    if (snappedValue !== null) {
-      setLengthPresetValue(snappedValue);
-      return;
-    }
-    filterSelections.length = value;
-    updateLengthUI(value);
-  };
-  lengthSlider?.addEventListener("change", commitLengthSliderValue);
-  lengthPresetMarkers?.addEventListener("click", (event) => {
-    const button = event.target.closest(".length-preset");
-    if (!button) return;
-    const value = Number(button.getAttribute("data-value"));
-    if (Number.isNaN(value)) return;
-    setLengthPresetValue(value);
-  });
-  lengthPresetLabels?.addEventListener("click", (event) => {
-    const label = event.target.closest("span[data-value]");
-    if (!label) return;
-    const value = Number(label.getAttribute("data-value"));
-    if (Number.isNaN(value)) return;
-    setLengthPresetValue(value);
-  });
   window.addEventListener("resize", () => {
-    if (lengthSlider) {
-      updateLengthUI(Number(lengthSlider.value));
-    }
     if (usageContextInput && !usageContextInput.value.trim().length) {
       updateContextHints();
     }
@@ -1679,27 +977,8 @@
   const buildGuidelinePayload = () => {
     const base = getGuidelinePayload();
     const payload = base && typeof base === "object" ? { ...base } : {};
-    const toneSelections = getToneSelections();
-    if (toneSelections.length === 1) {
-      payload.tonePreference = toneSelections[0];
-    } else if (toneSelections.length > 1) {
-      payload.tonePreference = toneSelections;
-    } else {
-      delete payload.tonePreference;
-    }
-    const otherFilters = {};
-    if (filterSelections.element) {
-      otherFilters.element = filterSelections.element;
-    }
-    const lengthFilter = filterSelections.length;
-    if (typeof lengthFilter === "number" && !Number.isNaN(lengthFilter)) {
-      otherFilters.length = lengthFilter;
-    }
-    if (Object.keys(otherFilters).length) {
-      payload.styleFilters = otherFilters;
-    } else {
-      delete payload.styleFilters;
-    }
+    delete payload.tonePreference;
+    delete payload.styleFilters;
     if (usageContextValue) {
       payload.usageContext = usageContextValue;
     } else {
@@ -1760,19 +1039,23 @@
   };
 
   const renderEmptyState = () => {
+    if (restoreSuggestionsFromStorage()) {
+      return;
+    }
     clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered";
     suggestionBody.innerHTML = `
       <div class="empty-arrow">↑</div>
-      <p>Select a text layer in Figma and click Rewrite to generate copy suggestions</p>
+      <p>Paste copy to rewrite, then click the button for fresh suggestions.</p>
     `;
   };
 
-  const renderLoading = (text = DEFAULT_LOADING_TEXT, skeletonCount = MIN_SUGGESTIONS) => {
+  const renderLoading = (text, skeletonCount = MIN_SUGGESTIONS) => {
     showSuggestionsScreen();
     renderSkeletonPlaceholders(skeletonCount);
-    if (rewriteShimmerText && typeof text === "string" && text.trim()) {
-      rewriteShimmerText.textContent = text;
+    const labelText = typeof text === "string" && text.trim() ? text : getModeLoadingText();
+    if (rewriteShimmerText) {
+      rewriteShimmerText.textContent = labelText;
     }
   };
 
@@ -1788,12 +1071,14 @@
     suggestionBody.innerHTML = `<p>${text || "Something went wrong. Try again in a bit."}</p>`;
   };
 
-  const renderSuggestions = (items) => {
+  const renderSuggestions = (items, options = {}) => {
     if (!items.length) {
       renderStatus("No response.");
       return;
     }
 
+    const noticeText =
+      typeof options.noticeText === "string" && options.noticeText.trim() ? options.noticeText.trim() : "";
     const { list, cards } = renderSkeletonPlaceholders(items.length);
     if (!cards.length || !list) {
       skeletonActive = false;
@@ -1806,16 +1091,61 @@
           <div class="suggestion-meta">
             <span>${item.tones.join(", ")}</span>
             <span class="suggestion-dot" aria-hidden="true">·</span>
-            <span class="suggestion-char">${formatCharCount(item.text.length)}</span>
+            <span class="suggestion-char">${formatCharCount(item.charCount ?? item.text.length)}</span>
           </div>
         </article>`
         )
         .join("");
       suggestionBody.className = "suggestion-body";
-      suggestionBody.innerHTML = `<div class="suggestions-list">${fallbackCards}</div>`;
+      const noticeMarkup = noticeText ? `<div class="suggestion-note">${noticeText}</div>` : "";
+      suggestionBody.innerHTML = `${noticeMarkup}<div class="suggestions-list">${fallbackCards}</div>`;
       return;
     }
+    if (noticeText) {
+      const noticeEl = document.createElement("div");
+      noticeEl.className = "suggestion-note";
+      noticeEl.textContent = noticeText;
+      suggestionBody.insertBefore(noticeEl, list);
+    }
     scheduleSuggestionReveal(cards, items, list);
+  };
+
+  const saveSuggestionsSnapshot = (payload) => {
+    try {
+      if (!window.localStorage) return;
+      const serialized = JSON.stringify(payload);
+      window.localStorage.setItem(SUGGESTION_STORAGE_KEY, serialized);
+    } catch (err) {
+      console.warn("Unable to save suggestions to storage:", err);
+    }
+  };
+
+  const loadSuggestionsSnapshot = () => {
+    try {
+      if (!window.localStorage) return null;
+      const raw = window.localStorage.getItem(SUGGESTION_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.suggestions) || !parsed.suggestions.length) {
+        return null;
+      }
+      return parsed;
+    } catch (err) {
+      console.warn("Unable to read suggestions from storage:", err);
+      return null;
+    }
+  };
+
+  const restoreSuggestionsFromStorage = () => {
+    const snapshot = loadSuggestionsSnapshot();
+    if (!snapshot) return false;
+    const { suggestions, noticeText } = snapshot;
+    if (!Array.isArray(suggestions) || !suggestions.length) {
+      return false;
+    }
+    showSuggestionsScreen();
+    renderSuggestions(suggestions, noticeText ? { noticeText } : undefined);
+    return true;
   };
 
   const stripFormatting = (line) =>
@@ -1832,6 +1162,7 @@
 
   const looksLikeMeta = (line) => {
     const lower = line.toLowerCase();
+    const normalized = lower.replace(/[’]/g, "'");
     if (!lower) return true;
     if (lower.length <= 2) return true;
     const metaPrefixes = [
@@ -1859,6 +1190,22 @@
     if (lower.endsWith(":") && (lower.includes("requirement") || lower.includes("suggestion"))) return true;
     if (lower.includes("i've provided") || lower.includes("i have provided")) return true;
     if (lower.includes("below are") || lower.includes("as requested")) return true;
+    const conversationalPatterns = [
+      /we understand\b/,
+      /we know\b/,
+      /we're here\b/,
+      /it's great you're\b/,
+      /it is great you're\b/,
+      /let's see\b/,
+      /let's find\b/,
+      /let's check\b/,
+      /let's explore\b/,
+      /let's walk\b/,
+      /let's take\b/,
+      /let's talk\b/,
+      /let's get you\b/,
+    ];
+    if (conversationalPatterns.some((pattern) => pattern.test(normalized))) return true;
     return false;
   };
 
@@ -1871,6 +1218,11 @@
     return segments.length >= 2 ? segments : null;
   };
 
+  const classifyLength = (count) => {
+    if (count <= 45) return "Short";
+    if (count <= 80) return "Medium";
+    return "Long";
+  };
   const buildSuggestions = (raw) => {
     if (!raw) return [];
 
@@ -1902,8 +1254,64 @@
       }
     });
 
-    return unique.slice(0, MIN_SUGGESTIONS).map((text, idx) => ({
-      text,
+    const enriched = unique.map((text) => {
+      const charCount = text.length;
+      return {
+        text,
+        charCount,
+        lengthLabel: classifyLength(charCount),
+      };
+    });
+
+    const bucketOrder = ["Short", "Medium", "Long"];
+    const bucketTargets = {
+      Short: 3,
+      Medium: 3,
+      Long: 3,
+    };
+    const buckets = {
+      Short: [],
+      Medium: [],
+      Long: [],
+    };
+    enriched.forEach((item) => {
+      if (buckets[item.lengthLabel]) {
+        buckets[item.lengthLabel].push(item);
+      } else {
+        buckets.Long.push(item);
+      }
+    });
+
+    const selected = [];
+    const usedKeys = new Set();
+
+    bucketOrder.forEach((bucket) => {
+      const bucketItems = buckets[bucket] || [];
+      const target = bucketTargets[bucket] || 0;
+      let count = 0;
+      for (const item of bucketItems) {
+        const key = item.text.toLowerCase();
+        if (usedKeys.has(key)) continue;
+        selected.push(item);
+        usedKeys.add(key);
+        count += 1;
+        if (count >= target) break;
+      }
+    });
+
+    if (selected.length < MIN_SUGGESTIONS) {
+      enriched.forEach((item) => {
+        if (selected.length >= MIN_SUGGESTIONS) return;
+        const key = item.text.toLowerCase();
+        if (!usedKeys.has(key)) {
+          selected.push(item);
+          usedKeys.add(key);
+        }
+      });
+    }
+
+    return selected.slice(0, MIN_SUGGESTIONS).map((item, idx) => ({
+      ...item,
       score: Math.max(80, 95 - idx * 2),
       tones: toneFallbacks[idx % toneFallbacks.length],
     }));
@@ -1915,15 +1323,7 @@
     inputField.dispatchEvent(new Event("input"));
   };
 
-  renderToneChips();
-  renderElementChips();
-  renderLengthPresetMarkers();
-  renderLengthPresetLabels();
   updateContextHints();
-  if (lengthSlider) {
-    updateLengthUI(Number(lengthSlider.value));
-    filterSelections.length = Number(lengthSlider.value);
-  }
 
   usageContextInput?.addEventListener("input", () => {
     usageContextValue = usageContextInput.value.trim();
@@ -1937,6 +1337,7 @@
       alert("Please enter some text.");
       return;
     }
+    const mode = generationMode;
     const guidelinePayload = buildGuidelinePayload();
     setRewriteLoadingState(true);
     renderLoading();
@@ -1947,11 +1348,13 @@
       renderLoading("Loading saved key…");
       window.__pendingText = text;
       window.__pendingGuideline = guidelinePayload;
+      window.__pendingMode = mode;
       return;
     }
 
     delete window.__pendingGuideline;
-    postToPlugin({ type: "rewrite", key, text, guideline: guidelinePayload });
+    delete window.__pendingMode;
+    postToPlugin({ type: "rewrite", key, text, guideline: guidelinePayload, mode });
   };
 
   inputField.addEventListener("input", () => {
@@ -1983,12 +1386,8 @@
       if (msg.error) {
         guidelineReference = null;
         setGuidelineIndicator("error", "Couldn't load style guide. Using fallback.");
-        toneOptionData = [...FALLBACK_TONE_DATA];
-        usageOptionData = [...FALLBACK_USAGE_OPTIONS];
         guidelineMeta.rewriteOverview = "";
         guidelineMeta.rewriteRequirements = [];
-        renderToneChips();
-        renderElementChips();
         updateContextHints();
       } else if (msg.guideline) {
         guidelineReference = msg.guideline;
@@ -1997,12 +1396,8 @@
       } else {
         guidelineReference = null;
         setGuidelineIndicator("fallback", "Using fallback style guide.");
-        toneOptionData = [...FALLBACK_TONE_DATA];
-        usageOptionData = [...FALLBACK_USAGE_OPTIONS];
         guidelineMeta.rewriteOverview = "";
         guidelineMeta.rewriteRequirements = [];
-        renderToneChips();
-        renderElementChips();
         updateContextHints();
       }
       return;
@@ -2039,9 +1434,11 @@
         if (loadedKey) {
           const text = window.__pendingText;
           const guide = window.__pendingGuideline || buildGuidelinePayload();
+          const pendingMode = window.__pendingMode || generationMode;
           delete window.__pendingText;
           delete window.__pendingGuideline;
-          postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide });
+          delete window.__pendingMode;
+          postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide, mode: pendingMode });
           setRewriteLoadingState(true);
           renderLoading();
         } else {
@@ -2050,6 +1447,7 @@
           renderStatus("Add your Gemini API key in Settings to generate copy suggestions.");
           delete window.__pendingText;
           delete window.__pendingGuideline;
+          delete window.__pendingMode;
           activate("settings");
         }
       }
@@ -2083,14 +1481,21 @@
         renderError(output);
       } else {
         const suggestions = buildSuggestions(output);
-        if (suggestions.length >= MIN_SUGGESTIONS) {
-          renderSuggestions(suggestions);
+        if (suggestions.length) {
+          const noticeText =
+            suggestions.length < MIN_SUGGESTIONS
+              ? `Only ${suggestions.length}/${MIN_SUGGESTIONS} suggestions returned. Showing available results.`
+              : "";
+          renderSuggestions(suggestions, noticeText ? { noticeText } : undefined);
+          saveSuggestionsSnapshot({
+            suggestions,
+            noticeText,
+            sourceText: inputField?.value?.trim() || "",
+            usageContext: usageContextValue,
+            storedAt: Date.now(),
+          });
         } else {
-          renderError(
-            suggestions.length
-              ? `Only ${suggestions.length}/${MIN_SUGGESTIONS} suggestions returned. Please try again.`
-              : output || "No response."
-          );
+          renderError(output || "No response.");
         }
       }
       activate("rewrite");

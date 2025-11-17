@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild src/code.ts --bundle --outfile=dist/code.js",
+    "build": "esbuild src/code.ts --bundle --outfile=dist/code.js --target=es2019",
     "copy:ui": "mkdir -p dist && cp src/ui.html dist/ui.html",
     "dev": "npm run copy:ui && npm run build -- --watch",
    "start": "npm run dev"
