@@ -20,6 +20,339 @@ const formatGuideText = (value: unknown, limit = 4): string => {
   return "";
 };
 
+const mergeUniqueStrings = (...lists: string[][]): string[] => {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+  lists.forEach((list) => {
+    list.forEach((value) => {
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      const key = trimmed.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      merged.push(trimmed);
+    });
+  });
+  return merged;
+};
+
+const collectRewriteExamples = (guide: any, limit = 3): string[] => {
+  if (!guide || !Array.isArray(guide.examples_with_why)) return [];
+  return guide.examples_with_why
+    .map((entry: any) => {
+      if (!entry || typeof entry !== "object") return "";
+      const situation = formatGuideText(entry.situation);
+      const wrong =
+        formatGuideText(entry.wrong) ||
+        formatGuideText(entry.wrong_1) ||
+        formatGuideText(entry.wrong_2) ||
+        formatGuideText(entry.wrong_3) ||
+        "";
+      const rights = [
+        formatGuideText(entry.right),
+        formatGuideText(entry.right_option_1),
+        formatGuideText(entry.right_option_2),
+        formatGuideText(entry.right_option_3),
+      ].filter(Boolean);
+      const reason = formatGuideText(entry.why) || formatGuideText(entry.why_right) || "";
+      const principles = takeStrings(entry.principles, 2).join(", ");
+      const speech = formatGuideText(entry.speech_pattern);
+      const parts: string[] = [];
+      if (situation) {
+        parts.push(`Example – ${situation}`);
+      }
+      if (wrong && rights.length) {
+        parts.push(`Replace "${wrong}" with "${rights[0]}".`);
+      } else if (rights.length) {
+        parts.push(`Aim for "${rights[0]}".`);
+      }
+      if (reason) {
+        parts.push(reason.endsWith(".") ? reason : reason + ".");
+      } else if (principles) {
+        parts.push(`Principles: ${principles}.`);
+      }
+      if (speech) {
+        parts.push(`Pattern: ${speech}.`);
+      }
+      return parts.join(" ").trim();
+    })
+    .filter(Boolean)
+    .slice(0, limit);
+};
+
+const collectComponentGuidanceNotes = (guide: any, limit = 8): string[] => {
+  const uiGuide = guide?.ui_component_guidance;
+  if (!uiGuide || typeof uiGuide !== "object") return [];
+  const notes: string[] = [];
+  const intro = formatGuideText((uiGuide as any).overview);
+  if (intro) notes.push(intro);
+  const philosophy = formatGuideText((uiGuide as any).philosophy);
+  if (philosophy) notes.push(philosophy);
+  let componentCount = 0;
+  const MAX_COMPONENT_NOTES = Math.max(0, limit - notes.length - 1);
+  const addComponentNote = (groupLabel: string, name: string, spec: any) => {
+    if (componentCount >= MAX_COMPONENT_NOTES) return;
+    if (!spec || typeof spec !== "object") return;
+    const guidance = formatGuideText((spec as any).guidance);
+    const focus = formatGuideText((spec as any).focus_on);
+    const avoid = formatGuideText((spec as any).avoid);
+    const tone = formatGuideText((spec as any).tone);
+    const structure = formatGuideText((spec as any).structure);
+    const purpose = formatGuideText((spec as any).purpose);
+    const info = [guidance, focus ? `Focus: ${focus}` : "", avoid ? `Avoid: ${avoid}` : "", tone ? `Tone: ${tone}` : "", structure ? `Structure: ${structure}` : "", purpose ? `Purpose: ${purpose}` : ""]
+      .filter(Boolean)
+      .slice(0, 2);
+    if (!info.length) return;
+    const componentLabel = toFriendlyCase(name.replace(/_/g, " "));
+    const prefix = groupLabel ? `${groupLabel} – ${componentLabel}` : componentLabel;
+    notes.push(`${prefix}: ${info.join(" ")}`);
+    componentCount += 1;
+  };
+  const addGroup = (section: any, groupKey: string) => {
+    if (!section || typeof section !== "object") return;
+    const groupLabel = toFriendlyCase(groupKey.replace(/_/g, " "));
+    Object.entries(section).forEach(([name, spec]) => addComponentNote(groupLabel, name, spec));
+  };
+  const groups = ["input_and_action", "feedback", "content_display", "transactional", "contextual_helpers"];
+  groups.forEach((key) => addGroup((uiGuide as any)[key], key));
+  const reminder = formatGuideText((uiGuide as any).key_reminder);
+  if (reminder) notes.push(reminder);
+  return notes.slice(0, limit);
+};
+
+type RequiredPhraseGroup = { label: string; phrases: string[] };
+
+const extractTermOptions = (value: unknown): string[] => {
+  const results: string[] = [];
+  const normalise = (input: string) =>
+    input
+      .split(/[,/]|(?:\bor\b)|(?:\band\b)/gi)
+      .map((chunk) =>
+        chunk
+          .replace(/["'()\[\]]/g, " ")
+          .replace(/\buse:\b/gi, " ")
+          .replace(/\bavoid\b/gi, " ")
+          .trim()
+      )
+      .map((chunk) => chunk.replace(/^not\s+/i, "").trim())
+      .filter(Boolean);
+  const walk = (entry: unknown) => {
+    if (typeof entry === "string") {
+      normalise(entry).forEach((token) => results.push(token));
+      return;
+    }
+    if (Array.isArray(entry)) {
+      entry.forEach((item) => walk(item));
+    }
+  };
+  walk(value);
+  return results;
+};
+
+const collectGuideBannedTerms = (guide: any): string[] => {
+  if (!guide || typeof guide !== "object") return [];
+  const bucket = new Map<string, string>();
+  const addValue = (value?: string) => {
+    if (!value) return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const normalized = trimmed.toLowerCase();
+    if (!bucket.has(normalized)) {
+      bucket.set(normalized, trimmed);
+    }
+  };
+  const addList = (values: string[]) => values.forEach((value) => addValue(value));
+  const forbidden = guide.forbidden || {};
+  addList(takeStrings(forbidden.never_do, 100));
+  if (forbidden.banned_terms && typeof forbidden.banned_terms === "object") {
+    addList(takeStrings((forbidden.banned_terms as any).never_use, 100));
+  }
+  const quickPatterns = guide.quick_patterns || {};
+  addList(takeStrings(quickPatterns.red_light_phrases, 100));
+  const speech = guide.human_speech_patterns || {};
+  if (speech.the_marketing_trap && typeof speech.the_marketing_trap === "object") {
+    addList(takeStrings((speech.the_marketing_trap as any).banned_corporate_formulas, 100));
+  }
+  if (speech.cliche_phrases_to_avoid && typeof speech.cliche_phrases_to_avoid === "object") {
+    addList(takeStrings((speech.cliche_phrases_to_avoid as any).never_use, 100));
+  }
+  const preferredTerms = guide.preferred_terms;
+  if (preferredTerms && typeof preferredTerms === "object") {
+    Object.values(preferredTerms).forEach((entry) => {
+      extractTermOptions(entry).forEach((token) => addValue(token));
+    });
+  }
+  const brandVocabulary = guide.brand_vocabulary;
+  if (brandVocabulary && typeof brandVocabulary === "object") {
+    const requiredTerms = (brandVocabulary as any).required_terms;
+    if (requiredTerms && typeof requiredTerms === "object") {
+      Object.values(requiredTerms).forEach((entry) => {
+        if (!entry || typeof entry !== "object") return;
+        extractTermOptions((entry as any).never).forEach((token) => addValue(token));
+      });
+    }
+  }
+  const validationCfg = (guide as any).validation;
+  if (validationCfg && typeof validationCfg === "object") {
+    const avoidLists = [
+      takeStrings((validationCfg as any).avoid_phrases, 50),
+      takeStrings((validationCfg as any).banned_phrases, 50),
+      takeStrings((validationCfg as any).forbidden_phrases, 50),
+      takeStrings((validationCfg as any).blocked_phrases, 50),
+      takeStrings((validationCfg as any).never_use, 50),
+    ];
+    avoidLists.forEach((list) => list.forEach((value) => addValue(value)));
+  }
+  const manualConstraints = (guide as any).manualConstraints;
+  if (manualConstraints && typeof manualConstraints === "object") {
+    const manualRequired = takeStrings((manualConstraints as any).required, 100);
+    manualRequired.forEach((phrase) => {
+      const lowered = phrase.toLowerCase();
+      if (bucket.has(lowered)) {
+        bucket.delete(lowered);
+      }
+    });
+  }
+  return [...bucket.values()];
+};
+
+const collectRequiredPhraseGroups = (guide: any): RequiredPhraseGroup[] => {
+  if (!guide || typeof guide !== "object") return [];
+  const groups: RequiredPhraseGroup[] = [];
+  const addSingle = (phrase?: string, label = "required phrase") => {
+    if (!phrase) return;
+    const trimmed = phrase.trim();
+    if (!trimmed) return;
+    groups.push({ label, phrases: [trimmed] });
+  };
+  const harvest = (source: unknown, label?: string) => {
+    takeStrings(source, 50).forEach((phrase) => addSingle(phrase, label));
+  };
+  harvest((guide as any).required_phrases, "required phrase");
+  const promptCfg = (guide as any).rewritePrompt;
+  if (promptCfg && typeof promptCfg === "object") {
+    harvest((promptCfg as any).required_phrases, "required phrase");
+  }
+  const validationCfg = (guide as any).validation;
+  if (validationCfg && typeof validationCfg === "object") {
+    harvest((validationCfg as any).required_phrases, "required phrase");
+  }
+  return groups;
+};
+
+const countSentences = (text: string) => {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned.length) return 0;
+  const matches = cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
+  return matches ? matches.length : 1;
+};
+
+const toNumberOrUndefined = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return undefined;
+};
+
+const formatRangeHint = (min?: number, max?: number, fallback?: string) => {
+  const trimmedFallback = typeof fallback === "string" ? fallback.trim() : "";
+  if (trimmedFallback) return trimmedFallback;
+  const hasMin = typeof min === "number";
+  const hasMax = typeof max === "number";
+  if (hasMin && hasMax) return `${min}-${max} characters`;
+  if (hasMax) return `≤${max} characters`;
+  if (hasMin) return `≥${min} characters`;
+  return "";
+};
+
+const ensureSentence = (value?: string) => {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  if (!trimmed) return "";
+  return /[.!?]$/.test(trimmed) ? trimmed : trimmed + ".";
+};
+
+type LengthPreference = {
+  label?: string;
+  minChars?: number;
+  maxChars?: number;
+  rangeHint?: string;
+  structure?: string;
+  description?: string;
+};
+
+const getLengthPreference = (guide: any): LengthPreference | null => {
+  if (!guide || typeof guide !== "object") return null;
+  const pref = (guide as any).length_preference;
+  if (!pref || typeof pref !== "object") return null;
+  const label = formatGuideText((pref as any).label) || formatGuideText((pref as any).id);
+  const minChars = toNumberOrUndefined((pref as any).min_chars);
+  const maxChars = toNumberOrUndefined((pref as any).max_chars);
+  const rangeHint = formatRangeHint(minChars, maxChars, formatGuideText((pref as any).range_hint));
+  const structure = formatGuideText((pref as any).structure);
+  const description = formatGuideText((pref as any).description);
+  if (!label && !rangeHint && typeof minChars !== "number" && typeof maxChars !== "number") {
+    return null;
+  }
+  return {
+    label,
+    minChars,
+    maxChars,
+    rangeHint,
+    structure,
+    description,
+  };
+};
+
+type ValidationRules = {
+  bannedTerms: string[];
+  requiredPhraseGroups: RequiredPhraseGroup[];
+  maxSentences: number;
+  maxChars: number;
+  minChars: number;
+};
+
+const buildValidationRules = (guide: any): ValidationRules => {
+  const lengthPref = getLengthPreference(guide);
+  return {
+    bannedTerms: collectGuideBannedTerms(guide),
+    requiredPhraseGroups: collectRequiredPhraseGroups(guide),
+    maxSentences: 2,
+    maxChars: lengthPref?.maxChars ?? 0,
+    minChars: lengthPref?.minChars ?? 0,
+  };
+};
+
+const validateVariant = (variant: string, rules: ValidationRules) => {
+  const text = (variant || "").trim();
+  const haystack = text.toLowerCase();
+  const issues: string[] = [];
+  if (!text.length) {
+    issues.push("Empty suggestion.");
+  }
+  if (rules.maxSentences && countSentences(text) > rules.maxSentences) {
+    issues.push(`Use at most ${rules.maxSentences} sentences.`);
+  }
+  if (rules.maxChars && text.length > rules.maxChars) {
+    issues.push(`Keep copy ≤${rules.maxChars} characters (currently ${text.length}).`);
+  }
+  if (rules.minChars && text.length < rules.minChars) {
+    issues.push(`Needs ≥${rules.minChars} characters (currently ${text.length}).`);
+  }
+  rules.bannedTerms.forEach((term) => {
+    const lowered = term.toLowerCase();
+    if (lowered && haystack.includes(lowered)) {
+      issues.push(`Contains banned phrase "${term}".`);
+    }
+  });
+  rules.requiredPhraseGroups.forEach((group) => {
+    const satisfied = group.phrases.some((phrase) => haystack.includes(phrase.toLowerCase()));
+    if (!satisfied) {
+      const sample = group.phrases.slice(0, 3).join(", ");
+      const descriptor = group.label || "required phrase";
+      issues.push(sample ? `Missing ${descriptor} (e.g., ${sample}).` : `Missing ${descriptor}.`);
+    }
+  });
+  return { valid: issues.length === 0, issues };
+};
+
 const toFriendlyCase = (value: string) =>
   value
     .split(/[\s_]+/g)
@@ -107,6 +440,8 @@ const DEFAULT_TONE_NAMES = [
   "Technical",
 ];
 
+const MAX_ACTIVE_TONES = 5;
+
 type ToneConfig = { label: string; notes: string[] };
 type RewriteIntent = "rewrite" | "prompt";
 
@@ -135,9 +470,9 @@ const collectToneConfigs = (guide: any): ToneConfig[] => {
         return { label: labelCandidate, notes };
       })
       .filter((tone): tone is ToneConfig => Boolean(tone && tone.label))
-      .slice(0, DEFAULT_TONE_NAMES.length);
+      .slice(0, MAX_ACTIVE_TONES);
   }
-  return DEFAULT_TONE_NAMES.map((label) => ({ label, notes: [] }));
+  return DEFAULT_TONE_NAMES.slice(0, MAX_ACTIVE_TONES).map((label) => ({ label, notes: [] }));
 };
 
 const collectScenarioHints = (guide: any, haystackRaw: string) => {
@@ -161,11 +496,75 @@ const collectScenarioHints = (guide: any, haystackRaw: string) => {
   return hints.slice(0, 3);
 };
 
+const collectSentenceLibraryHints = (guide: any, focusElement?: string) => {
+  if (!guide || typeof guide !== "object") return [];
+  const library = guide.sentence_library;
+  if (!library || typeof library !== "object") return [];
+  const elements = library.elements;
+  if (!elements || typeof elements !== "object") return [];
+  const normalizedFocus = focusElement ? focusElement.trim().toLowerCase() : "";
+  const hints: string[] = [];
+  Object.entries(elements).forEach(([key, entry]) => {
+    if (!Array.isArray(entry)) return;
+    const label = toFriendlyCase(key.replace(/_/g, " "));
+    if (!label) return;
+    const examples = entry
+      .map((item) => {
+        if (!item || typeof item !== "object") return "";
+        const example = formatGuideText((item as any).example);
+        if (!example) return "";
+        const why = formatGuideText((item as any).why);
+        return why ? `${example} (${why})` : example;
+      })
+      .filter(Boolean)
+      .slice(0, 2);
+    if (!examples.length) return;
+    if (normalizedFocus && normalizedFocus === key.toLowerCase()) {
+      hints.push(`${label} focus: ${examples[0]}.`);
+    }
+    hints.push(`${label} reference: ${examples[0]}.`);
+    if (examples[1]) {
+      hints.push(`${label} idea: ${examples[1]}.`);
+    }
+  });
+  return hints.slice(0, 12);
+};
+
 const deriveGuidePrompt = (guide: any) => {
   if (!guide || typeof guide !== "object") {
     return { overview: "", requirements: [] as string[] };
   }
 
+  const manualConstraints = (guide as any).manualConstraints;
+  const manualRequiredSet = new Set<string>(
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).required, 50).map((phrase) => phrase.toLowerCase())
+      : []
+  );
+  const manualRequiredPhrases =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).required, 50)
+      : [];
+  const manualAvoidPhrases =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).avoid, 50)
+      : [];
+  const manualReminders =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).reminders, 50)
+      : [];
+  const manualPlayZones =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).play_zones, 10)
+      : [];
+  const manualNoPlayZones =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).no_play_zones, 10)
+      : [];
+  const manualImmutableRules =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).immutable_rules, 10)
+      : [];
   const requirements: string[] = [];
   const overviewParts: string[] = [];
   const coreIdentity = guide.core_identity || {};
@@ -186,6 +585,54 @@ const deriveGuidePrompt = (guide: any) => {
   }
   if (typeof coreIdentity.the_1m_user_reality === "string") {
     requirements.push(coreIdentity.the_1m_user_reality.trim());
+  }
+
+  const meta = guide.meta;
+  if (meta && typeof meta === "object") {
+    const purpose = formatGuideText((meta as any).purpose);
+    if (purpose) {
+      overviewParts.push(purpose);
+    }
+    const version = formatGuideText((meta as any).version);
+    const lastUpdated = formatGuideText((meta as any).last_updated);
+    if (version && lastUpdated) {
+      requirements.push(`Guide version ${version}, updated ${lastUpdated}.`);
+    } else if (version) {
+      requirements.push(`Guide version ${version}.`);
+    } else if (lastUpdated) {
+      requirements.push(`Guide updated ${lastUpdated}.`);
+    }
+    const changelog = (meta as any).changelog;
+    if (changelog && typeof changelog === "object") {
+      const entries = Object.entries(changelog)
+        .filter(([, note]) => typeof note === "string" && note.trim().length > 0)
+        .sort(([verA], [verB]) => (verA < verB ? 1 : -1));
+      if (entries.length) {
+        const [latestVersion, latestNote] = entries[0];
+        requirements.push(`Latest change (${latestVersion}): ${String(latestNote).trim()}`);
+      }
+    }
+  }
+
+  const companyProfile = guide.company_profile;
+  if (companyProfile && typeof companyProfile === "object") {
+    const industry = formatGuideText((companyProfile as any).industry);
+    const companyType = formatGuideText((companyProfile as any).type);
+    const audience = formatGuideText((companyProfile as any).target_audience);
+    let descriptor = "";
+    if (industry && companyType) {
+      descriptor = `Setel is a ${companyType} company in the ${industry} space.`;
+    } else if (industry) {
+      descriptor = `Setel operates in the ${industry} space.`;
+    } else if (companyType) {
+      descriptor = `Setel is a ${companyType} company.`;
+    }
+    if (descriptor) {
+      overviewParts.push(descriptor);
+    }
+    if (audience) {
+      requirements.push(`Write for ${audience}.`);
+    }
   }
 
   const aiRole = guide.your_role_as_ai;
@@ -340,6 +787,32 @@ const deriveGuidePrompt = (guide: any) => {
     requirements.push(`Pronouns: ${pronounRules.join("; ")}.`);
   }
 
+  const creativeFreedom = guide.creative_freedom;
+  const fallbackPlayZones =
+    creativeFreedom && typeof creativeFreedom === "object"
+      ? takeStrings((creativeFreedom as any).where_you_can_play, 6)
+      : [];
+  const fallbackNoPlayZones =
+    creativeFreedom && typeof creativeFreedom === "object"
+      ? takeStrings((creativeFreedom as any).where_you_cannot_play, 6)
+      : [];
+  const fallbackImmutable =
+    creativeFreedom && typeof creativeFreedom === "object"
+      ? takeStrings((creativeFreedom as any).immutable_rules, 6)
+      : [];
+  const playZones = mergeUniqueStrings(manualPlayZones, fallbackPlayZones);
+  if (playZones.length) {
+    requirements.push(`You can experiment more with tone when working on: ${playZones.join(", ")}.`);
+  }
+  const noPlayZones = mergeUniqueStrings(manualNoPlayZones, fallbackNoPlayZones);
+  if (noPlayZones.length) {
+    requirements.push(`Stay literal and conservative for: ${noPlayZones.join(", ")}.`);
+  }
+  const immutableRules = mergeUniqueStrings(manualImmutableRules, fallbackImmutable);
+  if (immutableRules.length) {
+    requirements.push(`Immutable rules you must never break: ${immutableRules.join(", ")}.`);
+  }
+
   const forbiddenSource =
     guide && typeof guide === "object" && guide.forbidden && typeof guide.forbidden === "object"
       ? (guide.forbidden as any).never_do
@@ -358,10 +831,65 @@ const deriveGuidePrompt = (guide: any) => {
     typeof (guide.forbidden as any).banned_terms === "object"
       ? ((guide.forbidden as any).banned_terms as any).never_use
       : [];
-  const bannedTerms = takeStrings(bannedTermsSource, 6);
+  const bannedTerms = takeStrings(bannedTermsSource, 6).filter(
+    (term) => !manualRequiredSet.has(term.trim().toLowerCase())
+  );
   if (bannedTerms.length) {
     requirements.push(`Banned terms: ${bannedTerms.join(", ")}.`);
   }
+
+  const validationCfg = guide.validation;
+  if (validationCfg && typeof validationCfg === "object") {
+    const requiredPhrases = takeStrings((validationCfg as any).required_phrases, 6);
+    if (requiredPhrases.length) {
+      const requirementText =
+        requiredPhrases.length === 1
+          ? `Include the phrase "${requiredPhrases[0]}" naturally in the copy.`
+          : `Include these phrases naturally when they fit: ${requiredPhrases.join(", ")}.`;
+      requirements.push(requirementText);
+    }
+    const avoidBuckets = [
+      takeStrings((validationCfg as any).avoid_phrases, 6),
+      takeStrings((validationCfg as any).banned_phrases, 6),
+      takeStrings((validationCfg as any).forbidden_phrases, 6),
+      takeStrings((validationCfg as any).blocked_phrases, 6),
+      takeStrings((validationCfg as any).never_use, 6),
+    ];
+    const avoidPhrases: string[] = [];
+    const seenAvoid = new Set<string>();
+    avoidBuckets.forEach((bucket) =>
+      bucket.forEach((phrase) => {
+        const trimmed = phrase.trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+        if (seenAvoid.has(key)) return;
+        seenAvoid.add(key);
+        avoidPhrases.push(trimmed);
+      })
+    );
+    if (avoidPhrases.length) {
+      requirements.push(`Avoid these phrases entirely: ${avoidPhrases.join(", ")}.`);
+    }
+  }
+  if (manualRequiredPhrases.length) {
+    const quoted = manualRequiredPhrases.map((phrase) => `"${phrase}"`).join(", ");
+    if (manualRequiredPhrases.length === 1) {
+      requirements.push(`Your rewrite must contain the exact phrase ${quoted} verbatim.`);
+    } else {
+      requirements.push(`Your rewrite must include ALL of these exact phrases verbatim: ${quoted}.`);
+    }
+  }
+  if (manualAvoidPhrases.length) {
+    requirements.push(`Never use these manual avoid phrases: ${manualAvoidPhrases.join(", ")}.`);
+  }
+  if (manualReminders.length) {
+    manualReminders.forEach((reminder) => {
+      const text = reminder.endsWith(".") ? reminder : reminder + ".";
+      requirements.push(text);
+    });
+  }
+  collectRewriteExamples(guide).forEach((example) => requirements.push(example));
+  collectComponentGuidanceNotes(guide).forEach((note) => requirements.push(note));
 
   const preferredTerms = guide.preferred_terms;
   if (preferredTerms && typeof preferredTerms === "object") {
@@ -619,7 +1147,13 @@ const getToneSequence = (guide: any): string[] => {
 
 const buildRewriteInstructions = (
   guide: any,
-  options?: { sourceText?: string; targetToneName?: string; toneNotes?: string[]; intent?: RewriteIntent }
+  options?: {
+    sourceText?: string;
+    targetToneName?: string;
+    toneNotes?: string[];
+    intent?: RewriteIntent;
+    elementFocus?: string;
+  }
 ) => {
   const fallbackOverview =
     "You are a UX writing assistant for Setel, Malaysia’s all‑in‑one motoring app at PETRONAS.";
@@ -629,6 +1163,15 @@ const buildRewriteInstructions = (
 
   const promptCfg = (guide as any).rewritePrompt || {};
   const derived = deriveGuidePrompt(guide);
+  const manualConstraints = (guide as any).manualConstraints;
+  const manualRequiredPhrases =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).required, 10)
+      : [];
+  const manualAvoidPhrases =
+    manualConstraints && typeof manualConstraints === "object"
+      ? takeStrings((manualConstraints as any).avoid, 10)
+      : [];
   const forcedTone =
     typeof options?.targetToneName === "string" && options.targetToneName.trim().length
       ? options.targetToneName.trim()
@@ -658,7 +1201,7 @@ const buildRewriteInstructions = (
   };
 
   pushRequirement(
-    "Provide a mix of short (≤45 characters), medium (~65 characters), and longer (≤110 characters) rewrites, but output only the final copy text with no labels or descriptors."
+    "Provide a mix of short, medium, and longer rewrites, but output only the final copy text with no labels or descriptors."
   );
   pushRequirement(
     "Output exactly one rewrite for this request—no introductions, lists, or conversational framing."
@@ -702,6 +1245,28 @@ const buildRewriteInstructions = (
     pushRequirement(`Follow this context and custom guidance: ${usageContext}`);
   }
 
+  const selectedLength = getLengthPreference(guide);
+  if (selectedLength) {
+    const descriptor = selectedLength.label ? `${selectedLength.label} length` : "Target length";
+    const rangeLine = selectedLength.rangeHint
+      ? `${descriptor}: ${selectedLength.rangeHint}.`
+      : `${descriptor}.`;
+    const extraParts = [
+      ensureSentence(selectedLength.structure),
+      ensureSentence(selectedLength.description),
+    ].filter(Boolean);
+    pushRequirement([rangeLine, ...extraParts].join(" ").trim());
+  }
+
+  const focusElement =
+    typeof options?.elementFocus === "string" && options.elementFocus.trim()
+      ? options.elementFocus.trim()
+      : "";
+  if (focusElement) {
+    pushRequirement(`Focus on ${toFriendlyCase(focusElement.replace(/_/g, " "))} patterns from the sentence library.`);
+  }
+  collectSentenceLibraryHints(guide, focusElement).forEach((hint) => pushRequirement(hint));
+
   const haystackParts = [];
   if (options && typeof options.sourceText === "string") {
     haystackParts.push(options.sourceText);
@@ -744,6 +1309,7 @@ const loadFontsForNode = async (node: TextNode) => {
   }
 };
 
+const MAX_VALIDATION_ATTEMPTS = 2;
 const UI_WIDTH = 400;
 const MIN_UI_HEIGHT = 400;
 const MAX_UI_HEIGHT = 900;
@@ -880,6 +1446,8 @@ figma.on("run", () => {
         try {
           const intent: RewriteIntent = msg.mode === "prompt" ? "prompt" : "rewrite";
           const toneConfigs = collectToneConfigs(guideline);
+          const validationRules = buildValidationRules(guideline);
+          const validationFailures: string[] = [];
           const variants: string[] = [];
           for (const toneConfig of toneConfigs) {
             const toneName = toneConfig.label;
@@ -892,19 +1460,65 @@ figma.on("run", () => {
               targetToneName: toneName,
               toneNotes: toneConfig.notes,
               intent,
+              elementFocus: msg.elementFocus,
             });
-            const prompt =
-              instructions +
-              "Return exactly one unique variant with no extra commentary.\n\n" +
-              (intent === "prompt" ? "User prompt:\n" : "User copy:\n") +
-              text;
-            const variantText = await callModel(prompt);
-            const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
-            if (cleanedVariant) {
-              variants.push(cleanedVariant);
+            const composePrompt = (feedback?: string) => {
+              let prompt =
+                instructions +
+                "Return exactly one unique variant with no extra commentary.\n\n" +
+                (intent === "prompt" ? "User prompt:\n" : "User copy:\n") +
+                text;
+              if (feedback && feedback.trim().length) {
+                prompt += `\n\n${feedback.trim()}`;
+              }
+              return prompt;
+            };
+            let accepted = false;
+            let lastIssues: string[] = [];
+            let feedback: string | undefined;
+            for (let attempt = 1; attempt <= MAX_VALIDATION_ATTEMPTS; attempt++) {
+              const variantText = await callModel(composePrompt(feedback));
+              const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
+              if (!cleanedVariant) {
+                lastIssues = ["Empty response from model."];
+              } else {
+                const validation = validateVariant(cleanedVariant, validationRules);
+                if (validation.valid) {
+                  variants.push(cleanedVariant);
+                  accepted = true;
+                  break;
+                }
+                lastIssues = validation.issues;
+                if (attempt < MAX_VALIDATION_ATTEMPTS) {
+                  feedback = `The previous answer failed validation because: ${validation.issues.join(
+                    "; "
+                  )}. Provide a brand-new rewrite that fixes every issue.`;
+                }
+              }
+            }
+            if (!accepted) {
+              const failureMessage = lastIssues.length
+                ? lastIssues.join("; ")
+                : "Model returned no usable text.";
+              validationFailures.push(`Tone "${toneName}" filtered out (${failureMessage}).`);
             }
           }
-          output = variants.map((line, idx) => `${idx + 1}. ${line}`).join("\n\n");
+          if (!variants.length) {
+            encounteredError = true;
+            output =
+              validationFailures.length > 0
+                ? "Validation blocked every suggestion:\n- " + validationFailures.join("\n- ")
+                : "No response.";
+          } else {
+            if (validationFailures.length) {
+              figma.notify(
+                `Filtered ${validationFailures.length} variant${
+                  validationFailures.length > 1 ? "s" : ""
+                } that broke the guide.`
+              );
+            }
+            output = variants.map((line, idx) => `${idx + 1}. ${line}`).join("\n\n");
+          }
         } catch (err: any) {
           encounteredError = true;
           output = "Request failed: " + describeError(err);

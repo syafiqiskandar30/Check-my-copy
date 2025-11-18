@@ -166,7 +166,7 @@
     line-height: 20px;
     font-weight: 500;
   }
-  /* length controls removed */
+  /* shared input styles */
   textarea,
   input[type="text"] {
     width: 100%;
@@ -348,9 +348,6 @@
     font-weight: 400;
     line-height: 20px;
   }
-  .suggestion-dot {
-    color: inherit;
-  }
   .suggestion-card.is-interactive {
     cursor: pointer;
   }
@@ -486,6 +483,144 @@
   .context-area::placeholder {
     color: #94a3b8;
   }
+  .length-row {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .length-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .length-label-row label {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #525b65;
+  }
+  .length-range {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .length-select {
+    width: 100%;
+    border: 1px solid #f5f5f5;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: #1f2933;
+  }
+  .length-hint {
+    margin: 0;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 18px;
+  }
+  .element-row {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .element-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .element-label-row label {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #525b65;
+  }
+  .element-hint {
+    margin: 0;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 18px;
+  }
+  .keyword-section {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .keyword-field label {
+    display: block;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: #525b65;
+  }
+  .keyword-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .keyword-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 0;
+  }
+  .chip-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #f5f5f5;
+    background: #fff;
+    min-height: 48px;
+  }
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip-input input {
+    border: none;
+    flex: 1 1 140px;
+    min-width: 120px;
+    font-size: 14px;
+    padding: 6px 4px;
+    font-family: inherit;
+    color: #1f2933;
+  }
+  .chip-input input:focus {
+    outline: none;
+  }
+  .keyword-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #1f2933;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .keyword-chip button {
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  .keyword-chip button:focus-visible {
+    outline: 2px solid #00b0ff;
+    outline-offset: 2px;
+  }
   .char-counter {
     font-size: 12px;
     line-height: 18px;
@@ -520,6 +655,60 @@
           rows="2"
           placeholder="Use on fuelling flow.&#10;Do not use word &ldquo;free&rdquo;."
         ></textarea>
+      </div>
+      <div class="length-row">
+        <div class="length-label-row">
+          <label for="lengthSelect">Target length</label>
+          <span id="lengthRangeLabel" class="length-range">Auto mix</span>
+        </div>
+        <select id="lengthSelect" class="length-select">
+          <option value="">Auto (mix short + medium + long)</option>
+        </select>
+        <p id="lengthHint" class="length-hint">We'll mix short, medium, and long suggestions automatically.</p>
+      </div>
+      <div class="element-row">
+        <div class="element-label-row">
+          <label for="elementSelect">Element</label>
+          <span id="elementLabel" class="length-range">All elements</span>
+        </div>
+        <select id="elementSelect" class="length-select">
+          <option value="">All elements (library hints included)</option>
+        </select>
+        <p id="elementHint" class="element-hint">
+          Use the sentence library above to guide tone and structure for each element.
+        </p>
+      </div>
+      <div class="keyword-section">
+        <div class="keyword-field">
+          <div class="keyword-label-row">
+            <label for="requiredKeywordInput">Must-include phrases</label>
+            <p class="keyword-hint">Press Enter to add</p>
+          </div>
+          <div class="chip-input" data-field="required">
+            <div id="requiredKeywordChips" class="chip-list"></div>
+            <input
+              id="requiredKeywordInput"
+              type="text"
+              placeholder="Add keyword or phrase"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+        <div class="keyword-field">
+          <div class="keyword-label-row">
+            <label for="avoidKeywordInput">Avoid phrases</label>
+            <p class="keyword-hint">Press Enter to add</p>
+          </div>
+          <div class="chip-input" data-field="avoid">
+            <div id="avoidKeywordChips" class="chip-list"></div>
+            <input
+              id="avoidKeywordInput"
+              type="text"
+              placeholder="Add banned word or phrase"
+              autocomplete="off"
+            />
+          </div>
+        </div>
       </div>
 
       <button id="rewrite" class="rewrite-btn" disabled aria-live="polite">
@@ -651,7 +840,13 @@
   const inputField = document.getElementById("inputText");
   const inputLabelEl = document.getElementById("inputLabel");
   const inputCharCounter = document.getElementById("inputCharCount");
-  const MIN_SUGGESTIONS = 10;
+  const lengthSelect = document.getElementById("lengthSelect");
+  const lengthRangeLabel = document.getElementById("lengthRangeLabel");
+  const lengthHintEl = document.getElementById("lengthHint");
+  const elementSelect = document.getElementById("elementSelect");
+  const elementLabel = document.getElementById("elementLabel");
+  const elementHintEl = document.getElementById("elementHint");
+  const MIN_SUGGESTIONS = 5;
   const SUGGESTION_STORAGE_KEY = "setel.rewrite.lastSuggestions";
   const toneFallbacks = [
     ["Friendly", "Caring"],
@@ -778,6 +973,92 @@
     autoResizeTextarea(usageContextInput, MIN_CONTEXT_HEIGHT);
   };
   let usageContextValue = "";
+  const requiredKeywordInput = document.getElementById("requiredKeywordInput");
+  const avoidKeywordInput = document.getElementById("avoidKeywordInput");
+  const requiredKeywordChips = document.getElementById("requiredKeywordChips");
+  const avoidKeywordChips = document.getElementById("avoidKeywordChips");
+  const manualKeywordState = {
+    required: [],
+    avoid: [],
+  };
+  const keywordInputs = {
+    required: requiredKeywordInput,
+    avoid: avoidKeywordInput,
+  };
+  const keywordChipLists = {
+    required: requiredKeywordChips,
+    avoid: avoidKeywordChips,
+  };
+  const keywordTypes = ["required", "avoid"];
+  const sanitizeKeyword = (value = "") => value.replace(/\s+/g, " ").trim();
+  const renderKeywordChips = (type) => {
+    const listEl = keywordChipLists[type];
+    if (!listEl) return;
+    listEl.innerHTML = "";
+    const keywords = manualKeywordState[type] || [];
+    keywords.forEach((keyword, index) => {
+      const chip = document.createElement("span");
+      chip.className = "keyword-chip";
+      const label = document.createElement("span");
+      label.textContent = keyword;
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "chip-remove";
+      removeBtn.setAttribute("aria-label", `Remove keyword "${keyword}"`);
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => {
+        manualKeywordState[type].splice(index, 1);
+        renderKeywordChips(type);
+      });
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      listEl.appendChild(chip);
+    });
+  };
+  const addManualKeyword = (type, rawValue) => {
+    const keyword = sanitizeKeyword(rawValue);
+    if (!keyword) return false;
+    const keywords = manualKeywordState[type];
+    const exists = keywords.some((value) => value.toLowerCase() === keyword.toLowerCase());
+    if (exists) return false;
+    keywords.push(keyword);
+    renderKeywordChips(type);
+    return true;
+  };
+  const commitManualKeywordFromInput = (type) => {
+    const input = keywordInputs[type];
+    if (!input) return;
+    if (addManualKeyword(type, input.value)) {
+      input.value = "";
+    }
+  };
+  const commitAllManualKeywords = () => {
+    keywordTypes.forEach((type) => commitManualKeywordFromInput(type));
+  };
+  const handleKeywordInputKeydown = (event, type) => {
+    if (!event) return;
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      commitManualKeywordFromInput(type);
+      return;
+    }
+    if (
+      event.key === "Backspace" &&
+      event.target instanceof HTMLInputElement &&
+      !event.target.value.trim() &&
+      manualKeywordState[type].length
+    ) {
+      manualKeywordState[type].pop();
+      renderKeywordChips(type);
+      event.preventDefault();
+    }
+  };
+  keywordTypes.forEach((type) => {
+    const input = keywordInputs[type];
+    if (!input) return;
+    input.addEventListener("keydown", (event) => handleKeywordInputKeydown(event, type));
+    input.addEventListener("blur", () => commitManualKeywordFromInput(type));
+  });
   const formatCharCount = (count) => `${count} character${count === 1 ? "" : "s"}`;
   const updateInputCharCount = () => {
     if (!inputCharCounter) return;
@@ -851,8 +1132,6 @@
     card.innerHTML = `
       <p>${item.text}</p>
       <div class="suggestion-meta">
-        <span>${item.tones.join(", ")}</span>
-        <span class="suggestion-dot" aria-hidden="true">·</span>
         <span class="suggestion-char">${formatCharCount(item.charCount ?? item.text.length)}</span>
       </div>
     `;
@@ -905,11 +1184,246 @@
     rewriteOverview: "",
     rewriteRequirements: [],
   };
-  // const LENGTH_PRESETS = [
-  //   { label: "Short", value: 32 },
-  //   { label: "Medium", value: 64 },
-  //   { label: "Long", value: 106 },
-  // ];
+  const defaultLengthGuide = {
+    overview: "We'll automatically mix short (0-32), medium (33-72), and long (73-140) unless you pick a target.",
+    options: {
+      short: {
+        label: "Short",
+        min_chars: 0,
+        max_chars: 32,
+        range_hint: "0-32 characters",
+        structure: "2-5 words. Verb + noun/object. No filler.",
+        use_cases: ["Primary buttons", "Badges/chips", "Toast titles"],
+        notes: "Still state the action clearly.",
+      },
+      medium: {
+        label: "Medium",
+        min_chars: 33,
+        max_chars: 72,
+        range_hint: "33-72 characters",
+        structure: "1 sentence. Verb + benefit + helper clause.",
+        use_cases: ["Push notifications", "Modals", "List tiles"],
+        notes: "Add context first, then action. Avoid small talk.",
+      },
+      long: {
+        label: "Long",
+        min_chars: 73,
+        max_chars: 140,
+        range_hint: "73-140 characters",
+        structure: "1-2 sentences. Outcome first, action second.",
+        use_cases: ["Empty states", "Education cards", "Tooltips"],
+        notes: "Max two sentences so it stays scannable.",
+      },
+    },
+  };
+  const cleanString = (value) => (typeof value === "string" ? value.trim() : "");
+  const toNumberOrUndefined = (value) =>
+    typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  const formatRangeLabel = (min, max, fallback) => {
+    if (cleanString(fallback)) return cleanString(fallback);
+    const hasMin = typeof min === "number";
+    const hasMax = typeof max === "number";
+    if (hasMin && hasMax) return `${min}-${max} characters`;
+    if (hasMax) return `≤${max} characters`;
+    if (hasMin) return `≥${min} characters`;
+    return "";
+  };
+  const normalizeLengthGuide = (guide) => {
+    const source = guide?.length_presets || guide || {};
+    const overview = cleanString(source.overview);
+    const options = [];
+    const entries = source.options && typeof source.options === "object" ? source.options : {};
+    Object.entries(entries).forEach(([id, spec]) => {
+      if (!spec || typeof spec !== "object") return;
+      const label = cleanString(spec.label) || cleanString(id);
+      if (!label) return;
+      const minChars = toNumberOrUndefined(spec.min_chars);
+      const maxChars = toNumberOrUndefined(spec.max_chars);
+      const rangeLabel = formatRangeLabel(minChars, maxChars, spec.range_hint);
+      const structure = cleanString(spec.structure);
+      const useCases = Array.isArray(spec.use_cases)
+        ? spec.use_cases
+            .map((entry) => cleanString(entry))
+            .filter(Boolean)
+        : [];
+      const useCasesText = useCases.length ? `Use for: ${useCases.join(", ")}.` : "";
+      const notes = cleanString(spec.notes);
+      const summaryParts = [structure, useCasesText, notes].filter(Boolean);
+      options.push({
+        id,
+        label,
+        minChars,
+        maxChars,
+        rangeLabel,
+        structure,
+        useCasesText,
+        notes,
+        summary: summaryParts.join(" "),
+      });
+    });
+    return {
+      overview,
+      options,
+    };
+  };
+  const initialLengthState = normalizeLengthGuide(defaultLengthGuide);
+  let lengthPresets = initialLengthState.options;
+  let lengthOverviewText = initialLengthState.overview;
+  let selectedLengthId = "";
+  const getLengthPresetById = (value) => lengthPresets.find((preset) => preset.id === value);
+  const updateLengthDisplays = () => {
+    const activePreset = selectedLengthId ? getLengthPresetById(selectedLengthId) : null;
+    if (lengthRangeLabel) {
+      lengthRangeLabel.textContent = activePreset ? activePreset.rangeLabel : "Auto mix";
+    }
+    if (lengthHintEl) {
+      if (activePreset) {
+        lengthHintEl.textContent = activePreset.summary || lengthOverviewText;
+      } else {
+        const rangeSummary = lengthPresets
+          .map((preset) => `${preset.label} ${preset.rangeLabel}`.trim())
+          .filter(Boolean)
+          .join(", ");
+        const base = lengthOverviewText || "We'll mix short, medium, and long suggestions automatically.";
+        lengthHintEl.textContent = rangeSummary ? `${base} (${rangeSummary}).` : base;
+      }
+    }
+  };
+  const renderLengthSelectOptions = () => {
+    if (!lengthSelect) return;
+    const previous = lengthSelect.value;
+    lengthSelect.innerHTML = "";
+    const autoOption = document.createElement("option");
+    autoOption.value = "";
+    autoOption.textContent = "Auto (mix short + medium + long)";
+    lengthSelect.appendChild(autoOption);
+    lengthPresets.forEach((preset) => {
+      const option = document.createElement("option");
+      option.value = preset.id;
+      option.textContent = `${preset.label} (${preset.rangeLabel || "range"})`;
+      lengthSelect.appendChild(option);
+    });
+    const validPrevious = previous && getLengthPresetById(previous) ? previous : "";
+    lengthSelect.value = validPrevious;
+    selectedLengthId = validPrevious;
+    updateLengthDisplays();
+  };
+  const applyLengthGuide = (guide) => {
+    const normalized = normalizeLengthGuide(guide?.length_presets ? guide : defaultLengthGuide);
+    if (normalized.options.length) {
+      lengthPresets = normalized.options;
+      lengthOverviewText = normalized.overview || defaultLengthGuide.overview;
+    } else {
+      const fallback = normalizeLengthGuide(defaultLengthGuide);
+      lengthPresets = fallback.options;
+      lengthOverviewText = fallback.overview;
+    }
+    if (!getLengthPresetById(selectedLengthId)) {
+      selectedLengthId = "";
+    }
+    renderLengthSelectOptions();
+  };
+  renderLengthSelectOptions();
+  lengthSelect?.addEventListener("change", () => {
+    selectedLengthId = lengthSelect.value || "";
+    updateLengthDisplays();
+  });
+
+  const makeElementLabel = (value) => {
+    const cleaned = cleanString(value);
+    if (!cleaned) return "";
+    return cleaned
+      .split(/[_\s]+/g)
+      .filter(Boolean)
+      .map((segment) => {
+        const lower = segment.toLowerCase();
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      })
+      .join(" ");
+  };
+  const normalizeSentenceLibrary = (guide) => {
+    const entries =
+      guide && typeof guide === "object" && guide.sentence_library && typeof guide.sentence_library === "object"
+        ? guide.sentence_library.elements
+        : null;
+    const options = [];
+    if (entries && typeof entries === "object") {
+      Object.entries(entries).forEach(([id, spec]) => {
+        if (!Array.isArray(spec)) return;
+        const label = makeElementLabel(id) || cleanString(id);
+        if (!label) return;
+        const hints = spec
+          .map((item) => {
+            if (!item || typeof item !== "object") return "";
+            const example = cleanString(item.example);
+            if (!example) return "";
+            const why = cleanString(item.why);
+            return why ? `${example} (${why})` : example;
+          })
+          .filter(Boolean);
+        if (!hints.length) return;
+        options.push({
+          id,
+          label,
+          hint: hints[0],
+          extras: hints.slice(1),
+        });
+      });
+    }
+    return {
+      options,
+    };
+  };
+  let sentenceLibraryOptions = [];
+  let selectedElementId = "";
+  const getElementOptionById = (value) => sentenceLibraryOptions.find((option) => option.id === value);
+  const updateElementDisplays = () => {
+    const active = selectedElementId ? getElementOptionById(selectedElementId) : null;
+    if (elementLabel) {
+      elementLabel.textContent = active ? active.label : "All elements";
+    }
+    if (elementHintEl) {
+      if (active) {
+        elementHintEl.textContent = active.hint;
+      } else if (sentenceLibraryOptions.length) {
+        elementHintEl.textContent = "Library hints for every element influence the prompt.";
+      } else {
+        elementHintEl.textContent = "Sentence library examples load once the style guide is ready.";
+      }
+    }
+  };
+  const renderElementSelectOptions = () => {
+    if (!elementSelect) return;
+    const previous = elementSelect.value;
+    elementSelect.innerHTML = "";
+    const autoOption = document.createElement("option");
+    autoOption.value = "";
+    autoOption.textContent = "All elements (library hints included)";
+    elementSelect.appendChild(autoOption);
+    sentenceLibraryOptions.forEach((option) => {
+      const opt = document.createElement("option");
+      opt.value = option.id;
+      opt.textContent = option.label;
+      elementSelect.appendChild(opt);
+    });
+    const validPrevious = previous && getElementOptionById(previous) ? previous : "";
+    elementSelect.value = validPrevious;
+    selectedElementId = validPrevious;
+    updateElementDisplays();
+  };
+  const applySentenceLibrary = (guide) => {
+    const normalized = normalizeSentenceLibrary(guide);
+    sentenceLibraryOptions = normalized.options;
+    if (!getElementOptionById(selectedElementId)) {
+      selectedElementId = "";
+    }
+    renderElementSelectOptions();
+  };
+  renderElementSelectOptions();
+  elementSelect?.addEventListener("change", () => {
+    selectedElementId = elementSelect.value || "";
+    updateElementDisplays();
+  });
 
   const shortenHelperText = (text) => {
     const clean = String(text || "").trim();
@@ -952,6 +1466,8 @@
           .map((item) => (typeof item === "string" ? item.trim() : ""))
           .filter(Boolean)
       : [];
+    applyLengthGuide(guide);
+    applySentenceLibrary(guide);
     updateContextHints();
   };
 
@@ -983,6 +1499,71 @@
       payload.usageContext = usageContextValue;
     } else {
       delete payload.usageContext;
+    }
+    const manualRequired = manualKeywordState.required.slice();
+    const manualAvoid = manualKeywordState.avoid.slice();
+    if (manualRequired.length || manualAvoid.length) {
+      const mergeKeywordLists = (existing, additions) => {
+        const current = Array.isArray(existing)
+          ? existing
+              .map((item) => (typeof item === "string" ? item.trim() : ""))
+              .filter(Boolean)
+          : [];
+        const merged = [];
+        const seen = new Set();
+        current.concat(additions).forEach((value) => {
+          const trimmed = sanitizeKeyword(value);
+          if (!trimmed) return;
+          const key = trimmed.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          merged.push(trimmed);
+        });
+        return merged;
+      };
+      const validationSource =
+        payload.validation && typeof payload.validation === "object"
+          ? { ...payload.validation }
+          : {};
+      if (manualRequired.length) {
+        validationSource.required_phrases = mergeKeywordLists(
+          validationSource.required_phrases,
+          manualRequired
+        );
+      }
+      if (manualAvoid.length) {
+        validationSource.avoid_phrases = mergeKeywordLists(validationSource.avoid_phrases, manualAvoid);
+      }
+      payload.validation = validationSource;
+      payload.manualConstraints = {
+        required: manualRequired,
+        avoid: manualAvoid,
+      };
+    }
+    const activeElement = selectedElementId ? getElementOptionById(selectedElementId) : null;
+    if (activeElement) {
+      payload.element_focus = activeElement.id;
+    } else if (payload.element_focus) {
+      delete payload.element_focus;
+    }
+    const activeLengthPreset = selectedLengthId ? getLengthPresetById(selectedLengthId) : null;
+    if (activeLengthPreset) {
+      const lengthPreference = {
+        id: activeLengthPreset.id,
+        label: activeLengthPreset.label,
+        range_hint: activeLengthPreset.rangeLabel,
+        structure: activeLengthPreset.structure,
+        description: activeLengthPreset.summary,
+      };
+      if (typeof activeLengthPreset.minChars === "number") {
+        lengthPreference.min_chars = activeLengthPreset.minChars;
+      }
+      if (typeof activeLengthPreset.maxChars === "number") {
+        lengthPreference.max_chars = activeLengthPreset.maxChars;
+      }
+      payload.length_preference = lengthPreference;
+    } else if (payload.length_preference) {
+      delete payload.length_preference;
     }
     return payload;
   };
@@ -1071,14 +1652,12 @@
     suggestionBody.innerHTML = `<p>${text || "Something went wrong. Try again in a bit."}</p>`;
   };
 
-  const renderSuggestions = (items, options = {}) => {
+  const renderSuggestions = (items) => {
     if (!items.length) {
       renderStatus("No response.");
       return;
     }
 
-    const noticeText =
-      typeof options.noticeText === "string" && options.noticeText.trim() ? options.noticeText.trim() : "";
     const { list, cards } = renderSkeletonPlaceholders(items.length);
     if (!cards.length || !list) {
       skeletonActive = false;
@@ -1089,23 +1668,14 @@
         <article class="suggestion-card">
           <p>${item.text}</p>
           <div class="suggestion-meta">
-            <span>${item.tones.join(", ")}</span>
-            <span class="suggestion-dot" aria-hidden="true">·</span>
             <span class="suggestion-char">${formatCharCount(item.charCount ?? item.text.length)}</span>
           </div>
         </article>`
-        )
+        ) 
         .join("");
       suggestionBody.className = "suggestion-body";
-      const noticeMarkup = noticeText ? `<div class="suggestion-note">${noticeText}</div>` : "";
-      suggestionBody.innerHTML = `${noticeMarkup}<div class="suggestions-list">${fallbackCards}</div>`;
+      suggestionBody.innerHTML = `<div class="suggestions-list">${fallbackCards}</div>`;
       return;
-    }
-    if (noticeText) {
-      const noticeEl = document.createElement("div");
-      noticeEl.className = "suggestion-note";
-      noticeEl.textContent = noticeText;
-      suggestionBody.insertBefore(noticeEl, list);
     }
     scheduleSuggestionReveal(cards, items, list);
   };
@@ -1139,12 +1709,12 @@
   const restoreSuggestionsFromStorage = () => {
     const snapshot = loadSuggestionsSnapshot();
     if (!snapshot) return false;
-    const { suggestions, noticeText } = snapshot;
+    const { suggestions } = snapshot;
     if (!Array.isArray(suggestions) || !suggestions.length) {
       return false;
     }
     showSuggestionsScreen();
-    renderSuggestions(suggestions, noticeText ? { noticeText } : undefined);
+    renderSuggestions(suggestions);
     return true;
   };
 
@@ -1332,6 +1902,7 @@
   });
 
   btnRewrite.onclick = async () => {
+    commitAllManualKeywords();
     const text = inputField.value.trim();
     if (!text) {
       alert("Please enter some text.");
@@ -1354,7 +1925,14 @@
 
     delete window.__pendingGuideline;
     delete window.__pendingMode;
-    postToPlugin({ type: "rewrite", key, text, guideline: guidelinePayload, mode });
+    postToPlugin({
+      type: "rewrite",
+      key,
+      text,
+      guideline: guidelinePayload,
+      mode,
+      elementFocus: selectedElementId,
+    });
   };
 
   inputField.addEventListener("input", () => {
@@ -1388,6 +1966,8 @@
         setGuidelineIndicator("error", "Couldn't load style guide. Using fallback.");
         guidelineMeta.rewriteOverview = "";
         guidelineMeta.rewriteRequirements = [];
+        applyLengthGuide(null);
+        applySentenceLibrary(null);
         updateContextHints();
       } else if (msg.guideline) {
         guidelineReference = msg.guideline;
@@ -1398,6 +1978,8 @@
         setGuidelineIndicator("fallback", "Using fallback style guide.");
         guidelineMeta.rewriteOverview = "";
         guidelineMeta.rewriteRequirements = [];
+        applyLengthGuide(null);
+        applySentenceLibrary(null);
         updateContextHints();
       }
       return;
@@ -1438,7 +2020,14 @@
           delete window.__pendingText;
           delete window.__pendingGuideline;
           delete window.__pendingMode;
-          postToPlugin({ type: "rewrite", key: loadedKey, text, guideline: guide, mode: pendingMode });
+          postToPlugin({
+            type: "rewrite",
+            key: loadedKey,
+            text,
+            guideline: guide,
+            mode: pendingMode,
+            elementFocus: selectedElementId,
+          });
           setRewriteLoadingState(true);
           renderLoading();
         } else {
@@ -1482,14 +2071,9 @@
       } else {
         const suggestions = buildSuggestions(output);
         if (suggestions.length) {
-          const noticeText =
-            suggestions.length < MIN_SUGGESTIONS
-              ? `Only ${suggestions.length}/${MIN_SUGGESTIONS} suggestions returned. Showing available results.`
-              : "";
-          renderSuggestions(suggestions, noticeText ? { noticeText } : undefined);
+          renderSuggestions(suggestions);
           saveSuggestionsSnapshot({
             suggestions,
-            noticeText,
             sourceText: inputField?.value?.trim() || "",
             usageContext: usageContextValue,
             storedAt: Date.now(),

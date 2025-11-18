@@ -12,8 +12,13 @@
         "2.0": "Added decision framework and conflict resolution"
       }
     },
+    company_profile: {
+      industry: "User experience (UX) and user interface (UI) design",
+      type: "B2C",
+      target_audience: "For users who rely on Setel to pay for fuel, age 18 to 55."
+    },
     your_role_as_ai: {
-      what_you_do: "You're a helpful colleague who rewrites copy for UX writers, PMs, and PDs. They come to you saying 'Hey, can you rewrite this better for our 1M users?' and you help them.",
+      what_you_do: "You're a senior UX writer, with vast knowledge in shaping product's voice, tone, and overall content strategy, moving beyond just writing microcopy to actively driving business goals and aligning diverse teams around a unified user experience vision and rewrites copy for PMs, and PDs.",
       how_you_think: "Stay neutral, clear, and helpful in your approach. Understand what the copy needs to do. Think through the intent, context, and user needs.",
       what_you_output: "Copy that follows the brand voice (Warm, Friendly, Caring) and matches the requested tone. The copy should sound human and natural, not corporate or robotic.",
       critical_reminder: "Your output will reach 1M+ users. They might misinterpret cold, corporate, or unclear language. Every word matters. Keep it human, keep it clear.",
@@ -28,6 +33,72 @@
         provide_variety: "Generate 3-5 variations when possible, showing different approaches (shorter vs longer, playful vs neutral, direct vs supportive).",
         explain_your_choices: "When helpful, briefly explain why an option works (e.g., 'shorter and more direct' or 'softer tone for error message').",
         stay_collaborative: "You're a colleague, not a machine. Be helpful, not prescriptive."
+      }
+    },
+    manualConstraints: {
+      required: [
+        "Write with the confidence of a senior UX writer who aligns PMs, PDs, and UX writers around the same story.",
+        "Keep the tone warm, human, and direct so stakeholders instantly understand the intent."
+      ],
+      avoid: [
+        "Never mention that you're rewriting or generating options.",
+        "Avoid corporate buzzwords or stiff marketing language.",
+        "Don't introduce interaction verbs that contradict the actual experience (e.g., don't say 'tap' for licence plate recognition parking)."
+      ],
+      reminders: [
+        "Highlight how UX copy connects product strategy to real user benefits.",
+        "Ground every line in real-life language a Setel user would actually say."
+      ],
+      play_zones: [
+        "Marketing headlines (but still avoid corporate formulas)",
+        "Push notifications (grab attention, but stay human)",
+        "Celebration messages (amp up positivity)",
+        "Error messages (find the friendliest truth)"
+      ],
+      no_play_zones: [
+        "NEVER use marketing formulas (discover, explore, tailored, etc.)",
+        "NEVER use corporate buzzwords",
+        "NEVER write sentences your mom wouldn't say"
+      ],
+      immutable_rules: [
+        "Currency formatting (RM50)",
+        "Date format (Day Month Year)",
+        "Button text (ALL CAPS)",
+        "Core voice (always warm)",
+        "Never blame user",
+        "British English"
+      ]
+    },
+    length_presets: {
+      overview: "Pick the right length before writing so the copy fits its real estate. Each preset also defines the structure (how many words/clauses) so AI output stays meaningful, even when it is short.",
+      options: {
+        short: {
+          label: "Short",
+          range_hint: "0-32 characters",
+          min_chars: 0,
+          max_chars: 32,
+          structure: "2-5 words. Verb + noun/object. No commas or filler phrases.",
+          use_cases: ["Primary buttons", "Chips and badges", "Toast titles or quick status labels"],
+          notes: "Still include the action and object so it reads complete, not like a fragment."
+        },
+        medium: {
+          label: "Medium",
+          range_hint: "33-72 characters",
+          min_chars: 33,
+          max_chars: 72,
+          structure: "1 tight sentence (verb + benefit + helper clause). Max 1 comma.",
+          use_cases: ["Push notifications", "Modals and confirmations", "List tiles or promo banners"],
+          notes: "Add context first, then the next step. No soft intros ('Hey there')."
+        },
+        long: {
+          label: "Long",
+          range_hint: "73-140 characters",
+          min_chars: 73,
+          max_chars: 999,
+          structure: "1-2 short sentences. Lead with the outcome, close with the action or reassurance.",
+          use_cases: ["Empty states", "Feature education cards", "In-app explainers or tooltips"],
+          notes: "Stay conversational. If it needs more than 140 characters, split it into a second surface."
+        }
       }
     },
     core_identity: {
@@ -246,6 +317,91 @@
         ]
       }
     },
+    sentence_library: {
+      purpose: "Curated clips for common UI elements. Use them as reference points to keep structure, tone, and clarity consistent.",
+      elements: {
+        heading: [
+          {
+            example: "Fuel up and go\u2014no queue.",
+            why: "Punchy benefit first; removes filler."
+          },
+          {
+            example: "We handle the payment for you.",
+            why: "Warm reassurance expressed as a simple sentence."
+          }
+        ],
+        description: [
+          {
+            example: "Link your licence plate so parking and payment happen automatically.",
+            why: "Sets expectation by describing the setup + result."
+          },
+          {
+            example: "We\u2019ll spot your car, charge the fee, and send a receipt.",
+            why: "Sequence sentence that keeps verbs active and friendly."
+          }
+        ],
+        tooltip: [
+          {
+            example: "Leave this on to skip tapping every time.",
+            why: "Reminder-style line with a gentle command."
+          },
+          {
+            example: "Only uses your plate when you\u2019re at a Setel-enabled bay.",
+            why: "Clarifies scope and privacy in a small space."
+          }
+        ],
+        button: [
+          {
+            example: "Start contactless parking",
+            why: "Verb + context. Clear for buttons."
+          },
+          {
+            example: "View payment status",
+            why: "Action + object without fluff."
+          }
+        ],
+        body: [
+          {
+            example: "Parking is sorted the moment we read your licence plate.",
+            why: "Narrative sentence describing what happens."
+          },
+          {
+            example: "You\u2019ll see the charge inside the app as soon as we confirm it.",
+            why: "Follows up with user reassurance and next step."
+          }
+        ],
+        empty_state: [
+          {
+            example: "No parked sessions yet. Once you arrive, we\u2019ll show them here.",
+            why: "Explains absence and signals what changes it."
+          },
+          {
+            example: "Your licence plate isn\u2019t linked. Add it to make parking contactless.",
+            why: "Instructional, friendly, no blame."
+          }
+        ],
+        toast: [
+          {
+            example: "Payment sent\u2014enjoy the ride.",
+            why: "Celebratory confirmation in past tense."
+          },
+          {
+            example: "We\u2019re reading your plate. Hold tight.",
+            why: "Short status update with human tone."
+          }
+        ],
+        label: [
+          {
+            example: "Licence plate",
+            why: "Precise noun phrase."
+          },
+          {
+            example: "Automatic payment",
+            why: "Feature label that sounds confident."
+          }
+        ]
+      }
+    },
     before_after_real_examples: {
       example_1: {
         ai_generated: "Select the ideal credit card for you",
@@ -334,15 +490,17 @@
         friendly: {
           blend: "Friendly + Warm",
           ui_label: "Friendly",
-          when: "Default for most everyday interactions",
-          qualities: "Conversational, approachable, helpful without being pushy",
+          traits: "Warm, approachable, relatable, and casual.",
+          syntactic_elements: "Simple verb and adjective",
           how: "Simple words, contractions, casual like talking to a friend. Warm undertone keeps it caring.",
-          example: "You're all set!",
+          example: "Fuel up with Setel and enjoy up to 3x Mesra Rewards points\u2014easy and rewarding!",
           avoid: "Being too casual in serious situations"
         },
         friendly_persuasive: {
           blend: "Friendly + Persuasive",
           ui_label: "Friendly and Persuasive",
+          traits: "Encouraging, optimistic, benefit-first, confident.",
+          syntactic_elements: "Conversational opener, benefit-focused noun phrase, and gentle action verb.",
           when: "Gentle calls-to-action, feature promotion, encouraging user action",
           qualities: "Warm motivation without pressure, focus on benefits naturally",
           how: "Conversational base with benefit-focused language. Strong but friendly verbs.",
@@ -352,6 +510,8 @@
         friendly_playful: {
           blend: "Friendly + Playful",
           ui_label: "Friendly and Playful",
+          traits: "Lively, witty, celebratory, lighthearted.",
+          syntactic_elements: "Playful interjection, lively verb, and quirky adjective-noun pairing.",
           when: "Celebrations, rewards, low-stakes fun moments",
           qualities: "Light-hearted and warm, positive energy",
           how: "Casual language with personality. Fun phrases, light exclamations.",
@@ -361,15 +521,17 @@
         professional: {
           blend: "Professional + Neutral",
           ui_label: "Professional",
-          when: "Serious matters, legal content, accountability statements",
-          qualities: "Formal but clear, confident, precise",
+          traits: "Formal, confident, knowledgeable, precise.",
+          syntactic_elements: "Descriptive phrase and technical verb/noun.",
           how: "Formal tone, no contractions or slang. Neutral facts without emotion.",
-          example: "We are investigating this matter.",
+          example: "Fuel with Setel and earn up to 3x Mesra Rewards points, a smart choice for maximising your benefits.",
           avoid: "Sounding robotic or corporate"
         },
         professional_empathetic: {
           blend: "Professional + Empathetic",
           ui_label: "Professional and Empathetic",
+          traits: "Responsible, composed, reassuring, accountable.",
+          syntactic_elements: "Formal acknowledgement clause, user-focused noun, and reassuring action verb.",
           when: "System outages, major issues requiring accountability + care",
           qualities: "Formal accountability with human understanding",
           how: "Professional facts delivery with acknowledgment of user frustration.",
@@ -379,15 +541,17 @@
         empathetic: {
           blend: "Empathetic + Friendly",
           ui_label: "Empathetic",
-          when: "User errors, frustration, disappointment, things not working",
-          qualities: "Understanding and supportive, prioritizes helpfulness",
+          traits: "Sincere, caring, supportive, understanding",
+          syntactic_elements: "Compassionate verb, reaffirming phrase, and promising adverb.",
           how: "Acknowledge feelings, be supportive. Friendly approach with understanding tone.",
-          example: "That password didn't match. Give it another go?",
+          example: "Example: We understand how much every point matters. That\u2019s why fuelling with Setel lets you earn up to 3x Mesra Rewards points effortlessly.",
           avoid: "Being condescending or over-apologetic"
         },
         empathetic_supportive: {
           blend: "Empathetic + Inspirational",
           ui_label: "Empathetic and Supportive",
+          traits: "Compassionate, encouraging, steady, motivating.",
+          syntactic_elements: "Validating clause, motivational verb, and hopeful adjective-noun pairing.",
           when: "Helping users through challenges, encouraging progress",
           qualities: "Understanding with uplifting encouragement",
           how: "Acknowledge the situation, then provide positive forward momentum.",
@@ -397,16 +561,20 @@
         neutral: {
           blend: "Neutral + Clear",
           ui_label: "Neutral",
+          traits: "Objective, direct, calm, minimal.",
+          syntactic_elements: "Factual phrase, simple noun/adjective, and technical verb",
           when: "Straightforward information, status updates, transactional confirmations",
           qualities: "Objective, factual, no emotional coloring",
           how: "State facts clearly. Remove all enthusiasm and emotion. Maximum clarity.",
-          example: "Payment completed.",
+          example: "Fuel with Setel to earn up to 3x Mesra Rewards points. It's a simple way to maximise your rewards.",
           warning: "Can feel cold if overused. Inject warmth through word choice when possible.",
           avoid: "Using in situations requiring empathy or celebration"
         },
         neutral_helpful: {
           blend: "Neutral + Friendly",
           ui_label: "Neutral and Helpful",
+          traits: "Balanced, clear, straightforward, approachable.",
+          syntactic_elements: "Objective noun, clear verb, and optional helpful adjective or question.",
           when: "Informational content that needs clarity + approachability",
           qualities: "Clear facts with a helpful tone",
           how: "State information objectively but with warm word choices.",
@@ -416,24 +584,28 @@
         persuasive: {
           blend: "Persuasive + Inspirational",
           ui_label: "Persuasive",
-          when: "Strong calls-to-action, limited offers, feature launches",
-          qualities: "Motivating with focus on possibilities and benefits",
+          traits: "Enthusiastic, engaging, inspiring, action-oriented.",
+          syntactic_elements: "Negative command phrase, actionable verb, and superlative adjective.",
           how: "Strong verbs, benefit-focused, create motivation with uplifting language.",
-          example: "Earn 10% cashback every time you fuel. Start now.",
+          example: "Don't miss out! Fuel with Setel now and unlock up to 3x Mesra Rewards points - the best deal in town.",
           avoid: "Creating false urgency or pressure"
         },
         urgent: {
           blend: "Urgent + Clear",
           ui_label: "Urgent",
+          traits: "Decisive, time-sensitive, action-focused, clear.",
+          syntactic_elements: "Actionable verb, urgency adverb, and time-sensitive phrase",
           when: "Time-sensitive actions, immediate attention needed",
           qualities: "Direct and concise with maximum clarity",
           how: "Short sentences, time-sensitive words (now, fast, limited), clear action needed.",
-          example: "Top up now to complete your order.",
+          example: "Act fast! Fuel with Setel now and earn up to 3x Mesra Rewards points before time runs out!",
           avoid: "Creating panic or using for non-urgent matters"
         },
         urgent_empathetic: {
           blend: "Urgent + Empathetic",
           ui_label: "Urgent and Empathetic",
+          traits: "Concerned, caring, direct, time-aware.",
+          syntactic_elements: "Empathetic opener, deadline noun phrase, and direct action verb.",
           when: "Time-sensitive but user might be stressed",
           qualities: "Direct about urgency while acknowledging user situation",
           how: "Lead with understanding, then state time-sensitive action clearly.",
@@ -443,28 +615,34 @@
         inspirational: {
           blend: "Inspirational + Friendly",
           ui_label: "Inspirational",
+          traits: "Uplifting, celebratory, energizing, hopeful.",
+          syntactic_elements: "Encouraging phrase, actionable verb, and reassuring phrase.",
           when: "Milestones, achievements, goal completion",
           qualities: "Uplifting and warm, celebrates success",
           how: "Positive language focused on achievement. Friendly delivery.",
-          example: "You're crushing it! Keep going.",
+          example: "YTake your journey to the next level! Fuel with Setel and earn up to 3x Mesra Rewards points\u2014you deserve it.",
           avoid: "Over-the-top praise for small actions"
         },
         exclusive: {
           blend: "Exclusive + Professional",
           ui_label: "Exclusive",
+          traits: "Refined, appreciative, premium, confident.",
+          syntactic_elements: "Personalised verb, grandeur adjective, and reassuring phrase.",
           when: "Premium features, special member benefits, VIP content",
           qualities: "Elevated without being snobbish, implies value",
           how: "Refined language that suggests quality and selectivity. Professional undertone.",
-          example: "You're invited to join Platinum tier.",
+          example: "Experience premium rewards. Fuel with Setel and earn up to 3x Mesra Rewards points\u2014because you deserve more.",
           avoid: "Sounding elitist or making others feel excluded"
         },
         technical: {
           blend: "Technical + Clear",
           ui_label: "Technical",
+          traits: "Precise, methodical, data-driven, unambiguous.",
+          syntactic_elements: "Causal phrase, causative verb, and quantifier.",
           when: "Developer docs, complex features, specifications",
           qualities: "Precise and logical, accuracy over simplicity",
           how: "Use specific technical terms. Prioritize precision. Clear structure.",
-          example: "API rate limit: 100 requests per minute.",
+          example: "By fuelling with Setel, you can earn up to 3x Mesra Rewards points, significantly increasing your total points over time.",
           avoid: "Unnecessary jargon when simple terms work"
         }
       },
@@ -794,27 +972,6 @@
         principle: "Neutral facts + timeframe + next steps"
       }
     },
-    creative_freedom: {
-      where_you_can_play: [
-        "Marketing headlines (but still avoid corporate formulas)",
-        "Push notifications (grab attention, but stay human)",
-        "Celebration messages (amp up positivity)",
-        "Error messages (find the friendliest truth)"
-      ],
-      where_you_cannot_play: [
-        "NEVER use marketing formulas (discover, explore, tailored, etc.)",
-        "NEVER use corporate buzzwords",
-        "NEVER write sentences your mom wouldn't say"
-      ],
-      immutable_rules: [
-        "Currency formatting (RM50)",
-        "Date format (Day Month Year)",
-        "Button text (ALL CAPS)",
-        "Core voice (always warm)",
-        "Never blame user",
-        "British English"
-      ]
-    },
     examples_with_why: [
       {
         situation: "Insufficient balance",
@@ -1018,6 +1175,289 @@
     }
     return "";
   };
+  var mergeUniqueStrings = (...lists) => {
+    const seen = /* @__PURE__ */ new Set();
+    const merged = [];
+    lists.forEach((list) => {
+      list.forEach((value) => {
+        const trimmed = value.trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(trimmed);
+      });
+    });
+    return merged;
+  };
+  var collectRewriteExamples = (guide, limit = 3) => {
+    if (!guide || !Array.isArray(guide.examples_with_why)) return [];
+    return guide.examples_with_why.map((entry) => {
+      if (!entry || typeof entry !== "object") return "";
+      const situation = formatGuideText(entry.situation);
+      const wrong = formatGuideText(entry.wrong) || formatGuideText(entry.wrong_1) || formatGuideText(entry.wrong_2) || formatGuideText(entry.wrong_3) || "";
+      const rights = [
+        formatGuideText(entry.right),
+        formatGuideText(entry.right_option_1),
+        formatGuideText(entry.right_option_2),
+        formatGuideText(entry.right_option_3)
+      ].filter(Boolean);
+      const reason = formatGuideText(entry.why) || formatGuideText(entry.why_right) || "";
+      const principles = takeStrings(entry.principles, 2).join(", ");
+      const speech = formatGuideText(entry.speech_pattern);
+      const parts = [];
+      if (situation) {
+        parts.push(`Example \u2013 ${situation}`);
+      }
+      if (wrong && rights.length) {
+        parts.push(`Replace "${wrong}" with "${rights[0]}".`);
+      } else if (rights.length) {
+        parts.push(`Aim for "${rights[0]}".`);
+      }
+      if (reason) {
+        parts.push(reason.endsWith(".") ? reason : reason + ".");
+      } else if (principles) {
+        parts.push(`Principles: ${principles}.`);
+      }
+      if (speech) {
+        parts.push(`Pattern: ${speech}.`);
+      }
+      return parts.join(" ").trim();
+    }).filter(Boolean).slice(0, limit);
+  };
+  var collectComponentGuidanceNotes = (guide, limit = 8) => {
+    const uiGuide = guide == null ? void 0 : guide.ui_component_guidance;
+    if (!uiGuide || typeof uiGuide !== "object") return [];
+    const notes = [];
+    const intro = formatGuideText(uiGuide.overview);
+    if (intro) notes.push(intro);
+    const philosophy = formatGuideText(uiGuide.philosophy);
+    if (philosophy) notes.push(philosophy);
+    let componentCount = 0;
+    const MAX_COMPONENT_NOTES = Math.max(0, limit - notes.length - 1);
+    const addComponentNote = (groupLabel, name, spec) => {
+      if (componentCount >= MAX_COMPONENT_NOTES) return;
+      if (!spec || typeof spec !== "object") return;
+      const guidance = formatGuideText(spec.guidance);
+      const focus = formatGuideText(spec.focus_on);
+      const avoid = formatGuideText(spec.avoid);
+      const tone = formatGuideText(spec.tone);
+      const structure = formatGuideText(spec.structure);
+      const purpose = formatGuideText(spec.purpose);
+      const info = [guidance, focus ? `Focus: ${focus}` : "", avoid ? `Avoid: ${avoid}` : "", tone ? `Tone: ${tone}` : "", structure ? `Structure: ${structure}` : "", purpose ? `Purpose: ${purpose}` : ""].filter(Boolean).slice(0, 2);
+      if (!info.length) return;
+      const componentLabel = toFriendlyCase(name.replace(/_/g, " "));
+      const prefix = groupLabel ? `${groupLabel} \u2013 ${componentLabel}` : componentLabel;
+      notes.push(`${prefix}: ${info.join(" ")}`);
+      componentCount += 1;
+    };
+    const addGroup = (section, groupKey) => {
+      if (!section || typeof section !== "object") return;
+      const groupLabel = toFriendlyCase(groupKey.replace(/_/g, " "));
+      Object.entries(section).forEach(([name, spec]) => addComponentNote(groupLabel, name, spec));
+    };
+    const groups = ["input_and_action", "feedback", "content_display", "transactional", "contextual_helpers"];
+    groups.forEach((key) => addGroup(uiGuide[key], key));
+    const reminder = formatGuideText(uiGuide.key_reminder);
+    if (reminder) notes.push(reminder);
+    return notes.slice(0, limit);
+  };
+  var extractTermOptions = (value) => {
+    const results = [];
+    const normalise = (input) => input.split(/[,/]|(?:\bor\b)|(?:\band\b)/gi).map(
+      (chunk) => chunk.replace(/["'()\[\]]/g, " ").replace(/\buse:\b/gi, " ").replace(/\bavoid\b/gi, " ").trim()
+    ).map((chunk) => chunk.replace(/^not\s+/i, "").trim()).filter(Boolean);
+    const walk = (entry) => {
+      if (typeof entry === "string") {
+        normalise(entry).forEach((token) => results.push(token));
+        return;
+      }
+      if (Array.isArray(entry)) {
+        entry.forEach((item) => walk(item));
+      }
+    };
+    walk(value);
+    return results;
+  };
+  var collectGuideBannedTerms = (guide) => {
+    if (!guide || typeof guide !== "object") return [];
+    const bucket = /* @__PURE__ */ new Map();
+    const addValue = (value) => {
+      if (!value) return;
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      const normalized = trimmed.toLowerCase();
+      if (!bucket.has(normalized)) {
+        bucket.set(normalized, trimmed);
+      }
+    };
+    const addList = (values) => values.forEach((value) => addValue(value));
+    const forbidden = guide.forbidden || {};
+    addList(takeStrings(forbidden.never_do, 100));
+    if (forbidden.banned_terms && typeof forbidden.banned_terms === "object") {
+      addList(takeStrings(forbidden.banned_terms.never_use, 100));
+    }
+    const quickPatterns = guide.quick_patterns || {};
+    addList(takeStrings(quickPatterns.red_light_phrases, 100));
+    const speech = guide.human_speech_patterns || {};
+    if (speech.the_marketing_trap && typeof speech.the_marketing_trap === "object") {
+      addList(takeStrings(speech.the_marketing_trap.banned_corporate_formulas, 100));
+    }
+    if (speech.cliche_phrases_to_avoid && typeof speech.cliche_phrases_to_avoid === "object") {
+      addList(takeStrings(speech.cliche_phrases_to_avoid.never_use, 100));
+    }
+    const preferredTerms = guide.preferred_terms;
+    if (preferredTerms && typeof preferredTerms === "object") {
+      Object.values(preferredTerms).forEach((entry) => {
+        extractTermOptions(entry).forEach((token) => addValue(token));
+      });
+    }
+    const brandVocabulary = guide.brand_vocabulary;
+    if (brandVocabulary && typeof brandVocabulary === "object") {
+      const requiredTerms = brandVocabulary.required_terms;
+      if (requiredTerms && typeof requiredTerms === "object") {
+        Object.values(requiredTerms).forEach((entry) => {
+          if (!entry || typeof entry !== "object") return;
+          extractTermOptions(entry.never).forEach((token) => addValue(token));
+        });
+      }
+    }
+    const validationCfg = guide.validation;
+    if (validationCfg && typeof validationCfg === "object") {
+      const avoidLists = [
+        takeStrings(validationCfg.avoid_phrases, 50),
+        takeStrings(validationCfg.banned_phrases, 50),
+        takeStrings(validationCfg.forbidden_phrases, 50),
+        takeStrings(validationCfg.blocked_phrases, 50),
+        takeStrings(validationCfg.never_use, 50)
+      ];
+      avoidLists.forEach((list) => list.forEach((value) => addValue(value)));
+    }
+    const manualConstraints = guide.manualConstraints;
+    if (manualConstraints && typeof manualConstraints === "object") {
+      const manualRequired = takeStrings(manualConstraints.required, 100);
+      manualRequired.forEach((phrase) => {
+        const lowered = phrase.toLowerCase();
+        if (bucket.has(lowered)) {
+          bucket.delete(lowered);
+        }
+      });
+    }
+    return [...bucket.values()];
+  };
+  var collectRequiredPhraseGroups = (guide) => {
+    if (!guide || typeof guide !== "object") return [];
+    const groups = [];
+    const addSingle = (phrase, label = "required phrase") => {
+      if (!phrase) return;
+      const trimmed = phrase.trim();
+      if (!trimmed) return;
+      groups.push({ label, phrases: [trimmed] });
+    };
+    const harvest = (source, label) => {
+      takeStrings(source, 50).forEach((phrase) => addSingle(phrase, label));
+    };
+    harvest(guide.required_phrases, "required phrase");
+    const promptCfg = guide.rewritePrompt;
+    if (promptCfg && typeof promptCfg === "object") {
+      harvest(promptCfg.required_phrases, "required phrase");
+    }
+    const validationCfg = guide.validation;
+    if (validationCfg && typeof validationCfg === "object") {
+      harvest(validationCfg.required_phrases, "required phrase");
+    }
+    return groups;
+  };
+  var countSentences = (text) => {
+    const cleaned = text.replace(/\s+/g, " ").trim();
+    if (!cleaned.length) return 0;
+    const matches = cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
+    return matches ? matches.length : 1;
+  };
+  var toNumberOrUndefined = (value) => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    return void 0;
+  };
+  var formatRangeHint = (min, max, fallback) => {
+    const trimmedFallback = typeof fallback === "string" ? fallback.trim() : "";
+    if (trimmedFallback) return trimmedFallback;
+    const hasMin = typeof min === "number";
+    const hasMax = typeof max === "number";
+    if (hasMin && hasMax) return `${min}-${max} characters`;
+    if (hasMax) return `\u2264${max} characters`;
+    if (hasMin) return `\u2265${min} characters`;
+    return "";
+  };
+  var ensureSentence = (value) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (!trimmed) return "";
+    return /[.!?]$/.test(trimmed) ? trimmed : trimmed + ".";
+  };
+  var getLengthPreference = (guide) => {
+    if (!guide || typeof guide !== "object") return null;
+    const pref = guide.length_preference;
+    if (!pref || typeof pref !== "object") return null;
+    const label = formatGuideText(pref.label) || formatGuideText(pref.id);
+    const minChars = toNumberOrUndefined(pref.min_chars);
+    const maxChars = toNumberOrUndefined(pref.max_chars);
+    const rangeHint = formatRangeHint(minChars, maxChars, formatGuideText(pref.range_hint));
+    const structure = formatGuideText(pref.structure);
+    const description = formatGuideText(pref.description);
+    if (!label && !rangeHint && typeof minChars !== "number" && typeof maxChars !== "number") {
+      return null;
+    }
+    return {
+      label,
+      minChars,
+      maxChars,
+      rangeHint,
+      structure,
+      description
+    };
+  };
+  var buildValidationRules = (guide) => {
+    var _a, _b;
+    const lengthPref = getLengthPreference(guide);
+    return {
+      bannedTerms: collectGuideBannedTerms(guide),
+      requiredPhraseGroups: collectRequiredPhraseGroups(guide),
+      maxSentences: 2,
+      maxChars: (_a = lengthPref == null ? void 0 : lengthPref.maxChars) != null ? _a : 0,
+      minChars: (_b = lengthPref == null ? void 0 : lengthPref.minChars) != null ? _b : 0
+    };
+  };
+  var validateVariant = (variant, rules) => {
+    const text = (variant || "").trim();
+    const haystack = text.toLowerCase();
+    const issues = [];
+    if (!text.length) {
+      issues.push("Empty suggestion.");
+    }
+    if (rules.maxSentences && countSentences(text) > rules.maxSentences) {
+      issues.push(`Use at most ${rules.maxSentences} sentences.`);
+    }
+    if (rules.maxChars && text.length > rules.maxChars) {
+      issues.push(`Keep copy \u2264${rules.maxChars} characters (currently ${text.length}).`);
+    }
+    if (rules.minChars && text.length < rules.minChars) {
+      issues.push(`Needs \u2265${rules.minChars} characters (currently ${text.length}).`);
+    }
+    rules.bannedTerms.forEach((term) => {
+      const lowered = term.toLowerCase();
+      if (lowered && haystack.includes(lowered)) {
+        issues.push(`Contains banned phrase "${term}".`);
+      }
+    });
+    rules.requiredPhraseGroups.forEach((group) => {
+      const satisfied = group.phrases.some((phrase) => haystack.includes(phrase.toLowerCase()));
+      if (!satisfied) {
+        const sample = group.phrases.slice(0, 3).join(", ");
+        const descriptor = group.label || "required phrase";
+        issues.push(sample ? `Missing ${descriptor} (e.g., ${sample}).` : `Missing ${descriptor}.`);
+      }
+    });
+    return { valid: issues.length === 0, issues };
+  };
   var toFriendlyCase = (value) => value.split(/[\s_]+/g).filter(Boolean).map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase()).join(" ");
   var gatherScenarioKeywords = (key, entry) => {
     const keywords = /* @__PURE__ */ new Set();
@@ -1085,6 +1525,7 @@
     "Exclusive",
     "Technical"
   ];
+  var MAX_ACTIVE_TONES = 5;
   var collectToneConfigs = (guide) => {
     const palette = guide == null ? void 0 : guide.tone_palette;
     const available = palette == null ? void 0 : palette.available_tones;
@@ -1107,9 +1548,9 @@
         const example = formatGuideText(entry.example);
         if (example) notes.push(`Example tone: ${example}.`);
         return { label: labelCandidate, notes };
-      }).filter((tone) => Boolean(tone && tone.label)).slice(0, DEFAULT_TONE_NAMES.length);
+      }).filter((tone) => Boolean(tone && tone.label)).slice(0, MAX_ACTIVE_TONES);
     }
-    return DEFAULT_TONE_NAMES.map((label) => ({ label, notes: [] }));
+    return DEFAULT_TONE_NAMES.slice(0, MAX_ACTIVE_TONES).map((label) => ({ label, notes: [] }));
   };
   var collectScenarioHints = (guide, haystackRaw) => {
     if (!guide || typeof guide !== "object") return [];
@@ -1131,10 +1572,50 @@
     });
     return hints.slice(0, 3);
   };
+  var collectSentenceLibraryHints = (guide, focusElement) => {
+    if (!guide || typeof guide !== "object") return [];
+    const library = guide.sentence_library;
+    if (!library || typeof library !== "object") return [];
+    const elements = library.elements;
+    if (!elements || typeof elements !== "object") return [];
+    const normalizedFocus = focusElement ? focusElement.trim().toLowerCase() : "";
+    const hints = [];
+    Object.entries(elements).forEach(([key, entry]) => {
+      if (!Array.isArray(entry)) return;
+      const label = toFriendlyCase(key.replace(/_/g, " "));
+      if (!label) return;
+      const examples = entry.map((item) => {
+        if (!item || typeof item !== "object") return "";
+        const example = formatGuideText(item.example);
+        if (!example) return "";
+        const why = formatGuideText(item.why);
+        return why ? `${example} (${why})` : example;
+      }).filter(Boolean).slice(0, 2);
+      if (!examples.length) return;
+      if (normalizedFocus && normalizedFocus === key.toLowerCase()) {
+        hints.push(`${label} focus: ${examples[0]}.`);
+      }
+      hints.push(`${label} reference: ${examples[0]}.`);
+      if (examples[1]) {
+        hints.push(`${label} idea: ${examples[1]}.`);
+      }
+    });
+    return hints.slice(0, 12);
+  };
   var deriveGuidePrompt = (guide) => {
     if (!guide || typeof guide !== "object") {
       return { overview: "", requirements: [] };
     }
+    const manualConstraints = guide.manualConstraints;
+    const manualRequiredSet = new Set(
+      manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.required, 50).map((phrase) => phrase.toLowerCase()) : []
+    );
+    const manualRequiredPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.required, 50) : [];
+    const manualAvoidPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.avoid, 50) : [];
+    const manualReminders = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.reminders, 50) : [];
+    const manualPlayZones = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.play_zones, 10) : [];
+    const manualNoPlayZones = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.no_play_zones, 10) : [];
+    const manualImmutableRules = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.immutable_rules, 10) : [];
     const requirements = [];
     const overviewParts = [];
     const coreIdentity = guide.core_identity || {};
@@ -1155,6 +1636,50 @@
     }
     if (typeof coreIdentity.the_1m_user_reality === "string") {
       requirements.push(coreIdentity.the_1m_user_reality.trim());
+    }
+    const meta = guide.meta;
+    if (meta && typeof meta === "object") {
+      const purpose = formatGuideText(meta.purpose);
+      if (purpose) {
+        overviewParts.push(purpose);
+      }
+      const version = formatGuideText(meta.version);
+      const lastUpdated = formatGuideText(meta.last_updated);
+      if (version && lastUpdated) {
+        requirements.push(`Guide version ${version}, updated ${lastUpdated}.`);
+      } else if (version) {
+        requirements.push(`Guide version ${version}.`);
+      } else if (lastUpdated) {
+        requirements.push(`Guide updated ${lastUpdated}.`);
+      }
+      const changelog = meta.changelog;
+      if (changelog && typeof changelog === "object") {
+        const entries = Object.entries(changelog).filter(([, note]) => typeof note === "string" && note.trim().length > 0).sort(([verA], [verB]) => verA < verB ? 1 : -1);
+        if (entries.length) {
+          const [latestVersion, latestNote] = entries[0];
+          requirements.push(`Latest change (${latestVersion}): ${String(latestNote).trim()}`);
+        }
+      }
+    }
+    const companyProfile = guide.company_profile;
+    if (companyProfile && typeof companyProfile === "object") {
+      const industry = formatGuideText(companyProfile.industry);
+      const companyType = formatGuideText(companyProfile.type);
+      const audience = formatGuideText(companyProfile.target_audience);
+      let descriptor = "";
+      if (industry && companyType) {
+        descriptor = `Setel is a ${companyType} company in the ${industry} space.`;
+      } else if (industry) {
+        descriptor = `Setel operates in the ${industry} space.`;
+      } else if (companyType) {
+        descriptor = `Setel is a ${companyType} company.`;
+      }
+      if (descriptor) {
+        overviewParts.push(descriptor);
+      }
+      if (audience) {
+        requirements.push(`Write for ${audience}.`);
+      }
     }
     const aiRole = guide.your_role_as_ai;
     if (aiRole && typeof aiRole === "object") {
@@ -1283,16 +1808,83 @@
     if (pronounRules.length) {
       requirements.push(`Pronouns: ${pronounRules.join("; ")}.`);
     }
+    const creativeFreedom = guide.creative_freedom;
+    const fallbackPlayZones = creativeFreedom && typeof creativeFreedom === "object" ? takeStrings(creativeFreedom.where_you_can_play, 6) : [];
+    const fallbackNoPlayZones = creativeFreedom && typeof creativeFreedom === "object" ? takeStrings(creativeFreedom.where_you_cannot_play, 6) : [];
+    const fallbackImmutable = creativeFreedom && typeof creativeFreedom === "object" ? takeStrings(creativeFreedom.immutable_rules, 6) : [];
+    const playZones = mergeUniqueStrings(manualPlayZones, fallbackPlayZones);
+    if (playZones.length) {
+      requirements.push(`You can experiment more with tone when working on: ${playZones.join(", ")}.`);
+    }
+    const noPlayZones = mergeUniqueStrings(manualNoPlayZones, fallbackNoPlayZones);
+    if (noPlayZones.length) {
+      requirements.push(`Stay literal and conservative for: ${noPlayZones.join(", ")}.`);
+    }
+    const immutableRules = mergeUniqueStrings(manualImmutableRules, fallbackImmutable);
+    if (immutableRules.length) {
+      requirements.push(`Immutable rules you must never break: ${immutableRules.join(", ")}.`);
+    }
     const forbiddenSource = guide && typeof guide === "object" && guide.forbidden && typeof guide.forbidden === "object" ? guide.forbidden.never_do : [];
     const forbidden = takeStrings(forbiddenSource, 6);
     if (forbidden.length) {
       requirements.push(`Never do: ${forbidden.join(", ")}.`);
     }
     const bannedTermsSource = guide && typeof guide === "object" && guide.forbidden && typeof guide.forbidden === "object" && guide.forbidden.banned_terms && typeof guide.forbidden.banned_terms === "object" ? guide.forbidden.banned_terms.never_use : [];
-    const bannedTerms = takeStrings(bannedTermsSource, 6);
+    const bannedTerms = takeStrings(bannedTermsSource, 6).filter(
+      (term) => !manualRequiredSet.has(term.trim().toLowerCase())
+    );
     if (bannedTerms.length) {
       requirements.push(`Banned terms: ${bannedTerms.join(", ")}.`);
     }
+    const validationCfg = guide.validation;
+    if (validationCfg && typeof validationCfg === "object") {
+      const requiredPhrases = takeStrings(validationCfg.required_phrases, 6);
+      if (requiredPhrases.length) {
+        const requirementText = requiredPhrases.length === 1 ? `Include the phrase "${requiredPhrases[0]}" naturally in the copy.` : `Include these phrases naturally when they fit: ${requiredPhrases.join(", ")}.`;
+        requirements.push(requirementText);
+      }
+      const avoidBuckets = [
+        takeStrings(validationCfg.avoid_phrases, 6),
+        takeStrings(validationCfg.banned_phrases, 6),
+        takeStrings(validationCfg.forbidden_phrases, 6),
+        takeStrings(validationCfg.blocked_phrases, 6),
+        takeStrings(validationCfg.never_use, 6)
+      ];
+      const avoidPhrases = [];
+      const seenAvoid = /* @__PURE__ */ new Set();
+      avoidBuckets.forEach(
+        (bucket) => bucket.forEach((phrase) => {
+          const trimmed = phrase.trim();
+          if (!trimmed) return;
+          const key = trimmed.toLowerCase();
+          if (seenAvoid.has(key)) return;
+          seenAvoid.add(key);
+          avoidPhrases.push(trimmed);
+        })
+      );
+      if (avoidPhrases.length) {
+        requirements.push(`Avoid these phrases entirely: ${avoidPhrases.join(", ")}.`);
+      }
+    }
+    if (manualRequiredPhrases.length) {
+      const quoted = manualRequiredPhrases.map((phrase) => `"${phrase}"`).join(", ");
+      if (manualRequiredPhrases.length === 1) {
+        requirements.push(`Your rewrite must contain the exact phrase ${quoted} verbatim.`);
+      } else {
+        requirements.push(`Your rewrite must include ALL of these exact phrases verbatim: ${quoted}.`);
+      }
+    }
+    if (manualAvoidPhrases.length) {
+      requirements.push(`Never use these manual avoid phrases: ${manualAvoidPhrases.join(", ")}.`);
+    }
+    if (manualReminders.length) {
+      manualReminders.forEach((reminder) => {
+        const text = reminder.endsWith(".") ? reminder : reminder + ".";
+        requirements.push(text);
+      });
+    }
+    collectRewriteExamples(guide).forEach((example) => requirements.push(example));
+    collectComponentGuidanceNotes(guide).forEach((note) => requirements.push(note));
     const preferredTerms = guide.preferred_terms;
     if (preferredTerms && typeof preferredTerms === "object") {
       const replacements = Object.entries(preferredTerms).map(([preferred, avoid]) => {
@@ -1515,6 +2107,9 @@
     }
     const promptCfg = guide.rewritePrompt || {};
     const derived = deriveGuidePrompt(guide);
+    const manualConstraints = guide.manualConstraints;
+    const manualRequiredPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.required, 10) : [];
+    const manualAvoidPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.avoid, 10) : [];
     const forcedTone = typeof (options == null ? void 0 : options.targetToneName) === "string" && options.targetToneName.trim().length ? options.targetToneName.trim() : "";
     const toneNotesSource = options == null ? void 0 : options.toneNotes;
     const toneNotes = Array.isArray(toneNotesSource) ? toneNotesSource.map((note) => typeof note === "string" ? note.trim() : "").filter(Boolean) : [];
@@ -1531,7 +2126,7 @@
       if (trimmed.length) enrichedRequirements.push(trimmed);
     };
     pushRequirement(
-      "Provide a mix of short (\u226445 characters), medium (~65 characters), and longer (\u2264110 characters) rewrites, but output only the final copy text with no labels or descriptors."
+      "Provide a mix of short, medium, and longer rewrites, but output only the final copy text with no labels or descriptors."
     );
     pushRequirement(
       "Output exactly one rewrite for this request\u2014no introductions, lists, or conversational framing."
@@ -1572,6 +2167,21 @@
     if (usageContext) {
       pushRequirement(`Follow this context and custom guidance: ${usageContext}`);
     }
+    const selectedLength = getLengthPreference(guide);
+    if (selectedLength) {
+      const descriptor = selectedLength.label ? `${selectedLength.label} length` : "Target length";
+      const rangeLine = selectedLength.rangeHint ? `${descriptor}: ${selectedLength.rangeHint}.` : `${descriptor}.`;
+      const extraParts = [
+        ensureSentence(selectedLength.structure),
+        ensureSentence(selectedLength.description)
+      ].filter(Boolean);
+      pushRequirement([rangeLine, ...extraParts].join(" ").trim());
+    }
+    const focusElement = typeof (options == null ? void 0 : options.elementFocus) === "string" && options.elementFocus.trim() ? options.elementFocus.trim() : "";
+    if (focusElement) {
+      pushRequirement(`Focus on ${toFriendlyCase(focusElement.replace(/_/g, " "))} patterns from the sentence library.`);
+    }
+    collectSentenceLibraryHints(guide, focusElement).forEach((hint) => pushRequirement(hint));
     const haystackParts = [];
     if (options && typeof options.sourceText === "string") {
       haystackParts.push(options.sourceText);
@@ -1608,6 +2218,7 @@
       await figma.loadFontAsync(font);
     }
   };
+  var MAX_VALIDATION_ATTEMPTS = 2;
   var UI_WIDTH = 400;
   var MIN_UI_HEIGHT = 400;
   var MAX_UI_HEIGHT = 900;
@@ -1717,6 +2328,8 @@
           try {
             const intent = msg.mode === "prompt" ? "prompt" : "rewrite";
             const toneConfigs = collectToneConfigs(guideline);
+            const validationRules = buildValidationRules(guideline);
+            const validationFailures = [];
             const variants = [];
             for (const toneConfig of toneConfigs) {
               const toneName = toneConfig.label;
@@ -1725,16 +2338,57 @@
                 sourceText: text,
                 targetToneName: toneName,
                 toneNotes: toneConfig.notes,
-                intent
+                intent,
+                elementFocus: msg.elementFocus
               });
-              const prompt = instructions + "Return exactly one unique variant with no extra commentary.\n\n" + (intent === "prompt" ? "User prompt:\n" : "User copy:\n") + text;
-              const variantText = await callModel(prompt);
-              const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
-              if (cleanedVariant) {
-                variants.push(cleanedVariant);
+              const composePrompt = (feedback2) => {
+                let prompt = instructions + "Return exactly one unique variant with no extra commentary.\n\n" + (intent === "prompt" ? "User prompt:\n" : "User copy:\n") + text;
+                if (feedback2 && feedback2.trim().length) {
+                  prompt += `
+
+${feedback2.trim()}`;
+                }
+                return prompt;
+              };
+              let accepted = false;
+              let lastIssues = [];
+              let feedback;
+              for (let attempt = 1; attempt <= MAX_VALIDATION_ATTEMPTS; attempt++) {
+                const variantText = await callModel(composePrompt(feedback));
+                const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
+                if (!cleanedVariant) {
+                  lastIssues = ["Empty response from model."];
+                } else {
+                  const validation = validateVariant(cleanedVariant, validationRules);
+                  if (validation.valid) {
+                    variants.push(cleanedVariant);
+                    accepted = true;
+                    break;
+                  }
+                  lastIssues = validation.issues;
+                  if (attempt < MAX_VALIDATION_ATTEMPTS) {
+                    feedback = `The previous answer failed validation because: ${validation.issues.join(
+                      "; "
+                    )}. Provide a brand-new rewrite that fixes every issue.`;
+                  }
+                }
+              }
+              if (!accepted) {
+                const failureMessage = lastIssues.length ? lastIssues.join("; ") : "Model returned no usable text.";
+                validationFailures.push(`Tone "${toneName}" filtered out (${failureMessage}).`);
               }
             }
-            output = variants.map((line, idx) => `${idx + 1}. ${line}`).join("\n\n");
+            if (!variants.length) {
+              encounteredError = true;
+              output = validationFailures.length > 0 ? "Validation blocked every suggestion:\n- " + validationFailures.join("\n- ") : "No response.";
+            } else {
+              if (validationFailures.length) {
+                figma.notify(
+                  `Filtered ${validationFailures.length} variant${validationFailures.length > 1 ? "s" : ""} that broke the guide.`
+                );
+              }
+              output = variants.map((line, idx) => `${idx + 1}. ${line}`).join("\n\n");
+            }
           } catch (err) {
             encounteredError = true;
             output = "Request failed: " + describeError(err);
