@@ -361,6 +361,72 @@ const collectComponentGuidanceNotes = (guide: any, limit = 8): string[] => {
 
 type RequiredPhraseGroup = { label: string; phrases: string[] };
 
+const normalizeRequiredPhraseEntries = (
+  source: unknown,
+  defaultLabel = "required phrase"
+): RequiredPhraseGroup[] => {
+  const groups: RequiredPhraseGroup[] = [];
+  const addGroup = (phrases: string[], label = defaultLabel) => {
+    const merged = mergeUniqueStrings(phrases);
+    if (!merged.length) return;
+    groups.push({ label, phrases: merged });
+  };
+  const normalizeLabel = (label?: string) => (label && label.trim().length ? label.trim() : defaultLabel);
+  const normalizeString = (value: unknown) =>
+    typeof value === "string" ? value.trim() : "";
+  const splitOptionsFromString = (value: string): string[] => {
+    if (!value) return [];
+    const hasDelimiter = /[,/|;]/.test(value) || /\bor\b/i.test(value);
+    if (!hasDelimiter) return [];
+    return value
+      .split(/\s*(?:[,/|;]|\bor\b)\s*/i)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+  };
+  const handleEntry = (entry: unknown, label = defaultLabel) => {
+    if (!entry) return;
+    if (Array.isArray(entry)) {
+      const phrases = entry.map((item) => normalizeString(item)).filter(Boolean);
+      if (phrases.length) addGroup(phrases, label);
+      return;
+    }
+    if (typeof entry === "object") {
+      const data: any = entry;
+      const customLabel = normalizeLabel(typeof data.label === "string" ? data.label : label);
+      const optionFields = ["any_of", "one_of", "phrases", "options"];
+      for (const field of optionFields) {
+        if (Array.isArray(data[field])) {
+          handleEntry(data[field], customLabel);
+          return;
+        }
+      }
+      if (typeof data.phrase === "string") {
+        const text = normalizeString(data.phrase);
+        if (text) {
+          addGroup([text], customLabel);
+        }
+      }
+      return;
+    }
+    const text = normalizeString(entry);
+    if (text) {
+      const options = splitOptionsFromString(text);
+      if (options.length > 1) {
+        addGroup(options, label);
+      } else {
+        addGroup([text], label);
+      }
+    }
+  };
+
+  if (Array.isArray(source)) {
+    source.forEach((entry) => handleEntry(entry, defaultLabel));
+  } else {
+    handleEntry(source, defaultLabel);
+  }
+  return groups;
+};
+
 const extractTermOptions = (value: unknown): string[] => {
   const results: string[] = [];
   const normalise = (input: string) =>
@@ -445,13 +511,18 @@ const collectGuideBannedTerms = (guide: any): string[] => {
   }
   const manualConstraints = (guide as any).manualConstraints;
   if (manualConstraints && typeof manualConstraints === "object") {
-    const manualRequired = takeStrings((manualConstraints as any).required, 100);
-    manualRequired.forEach((phrase) => {
-      const lowered = phrase.toLowerCase();
-      if (bucket.has(lowered)) {
-        bucket.delete(lowered);
-      }
-    });
+    const manualGroups = normalizeRequiredPhraseEntries(
+      (manualConstraints as any).required,
+      "include phrase"
+    );
+    manualGroups.forEach((group) =>
+      group.phrases.forEach((phrase) => {
+        const lowered = phrase.toLowerCase();
+        if (lowered && bucket.has(lowered)) {
+          bucket.delete(lowered);
+        }
+      })
+    );
   }
   return [...bucket.values()];
 };
@@ -459,23 +530,33 @@ const collectGuideBannedTerms = (guide: any): string[] => {
 const collectRequiredPhraseGroups = (guide: any): RequiredPhraseGroup[] => {
   if (!guide || typeof guide !== "object") return [];
   const groups: RequiredPhraseGroup[] = [];
-  const addSingle = (phrase?: string, label = "required phrase") => {
-    if (!phrase) return;
-    const trimmed = phrase.trim();
-    if (!trimmed) return;
-    groups.push({ label, phrases: [trimmed] });
+  const pushGroups = (entries: RequiredPhraseGroup[]) => {
+    entries.forEach((entry) => {
+      if (!entry || !entry.phrases || !entry.phrases.length) return;
+      groups.push({
+        label: entry.label || "required phrase",
+        phrases: entry.phrases,
+      });
+    });
   };
-  const harvest = (source: unknown, label?: string) => {
-    takeStrings(source, 50).forEach((phrase) => addSingle(phrase, label));
-  };
-  harvest((guide as any).required_phrases, "required phrase");
+  pushGroups(normalizeRequiredPhraseEntries((guide as any).required_phrases, "required phrase"));
   const promptCfg = (guide as any).rewritePrompt;
   if (promptCfg && typeof promptCfg === "object") {
-    harvest((promptCfg as any).required_phrases, "required phrase");
+    pushGroups(
+      normalizeRequiredPhraseEntries((promptCfg as any).required_phrases, "required phrase")
+    );
   }
   const validationCfg = (guide as any).validation;
   if (validationCfg && typeof validationCfg === "object") {
-    harvest((validationCfg as any).required_phrases, "required phrase");
+    pushGroups(
+      normalizeRequiredPhraseEntries((validationCfg as any).required_phrases, "required phrase")
+    );
+    pushGroups(
+      normalizeRequiredPhraseEntries(
+        (validationCfg as any).required_phrase_groups,
+        "required phrase option"
+      )
+    );
   }
   return groups;
 };
@@ -755,18 +836,28 @@ const collectToneConfigs = (guide: any): ToneConfig[] => {
         const labelCandidate = formatGuideText((entry as any).ui_label) || toFriendlyCase(key);
         if (!labelCandidate) return null;
         const notes: string[] = [];
-        const blend = formatGuideText((entry as any).blend);
-        if (blend) notes.push(`Blend: ${blend}.`);
-        const when = formatGuideText((entry as any).when);
-        if (when) notes.push(`Context: ${when}.`);
-        const qualities = formatGuideText((entry as any).qualities);
-        if (qualities) notes.push(`Qualities: ${qualities}.`);
-        const how = formatGuideText((entry as any).how);
-        if (how) notes.push(`How: ${how}.`);
-        const avoid = formatGuideText((entry as any).avoid);
-        if (avoid) notes.push(`Avoid: ${avoid}.`);
-        const example = formatGuideText((entry as any).example);
-        if (example) notes.push(`Example tone: ${example}.`);
+        const addNote = (value?: string, template?: (text: string) => string) => {
+          const text = formatGuideText(value);
+          if (!text) return;
+          notes.push(template ? template(text) : text);
+        };
+        addNote((entry as any).blend, (text) => `Blend both qualities: ${text}.`);
+        addNote(
+          (entry as any).traits,
+          (text) => `Let verbs and adjectives broadcast these traits: ${text}.`
+        );
+        addNote(
+          (entry as any).syntactic_elements,
+          (text) => `Structure cue for this tone: ${text}.`
+        );
+        addNote((entry as any).when, (text) => `Typical context: ${text}.`);
+        addNote((entry as any).qualities, (text) => `Energy target: ${text}.`);
+        addNote(
+          (entry as any).how,
+          (text) => (text.endsWith(".") ? text : text + ".")
+        );
+        addNote((entry as any).avoid, (text) => `Avoid: ${text}.`);
+        addNote((entry as any).example, (text) => `Sample tone line: ${text}.`);
         return { key, label: labelCandidate, notes };
       })
       .filter((tone): tone is ToneConfig => Boolean(tone && tone.label));
@@ -854,15 +945,19 @@ const deriveGuidePrompt = (guide: any) => {
   }
 
   const manualConstraints = (guide as any).manualConstraints;
-  const manualRequiredSet = new Set<string>(
+  const manualIncludeGroups =
     manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).required, 50).map((phrase) => phrase.toLowerCase())
-      : []
-  );
-  const manualRequiredPhrases =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).required, 50)
+      ? normalizeRequiredPhraseEntries((manualConstraints as any).required, "include phrase")
       : [];
+  const manualRequiredSet = new Set<string>();
+  manualIncludeGroups.forEach((group) =>
+    group.phrases.forEach((phrase) => {
+      const normalized = phrase.toLowerCase();
+      if (normalized) {
+        manualRequiredSet.add(normalized);
+      }
+    })
+  );
   const manualAvoidPhrases =
     manualConstraints && typeof manualConstraints === "object"
       ? takeStrings((manualConstraints as any).avoid, 50)
@@ -870,6 +965,12 @@ const deriveGuidePrompt = (guide: any) => {
   const manualReminders =
     manualConstraints && typeof manualConstraints === "object"
       ? takeStrings((manualConstraints as any).reminders, 50)
+      : [];
+  const manualCoreInstructions: string[] =
+    manualConstraints && typeof manualConstraints === "object" && Array.isArray((manualConstraints as any).core_instructions)
+      ? (manualConstraints as any).core_instructions
+          .map((entry: unknown) => (typeof entry === "string" ? entry.trim() : ""))
+          .filter((entry: string): entry is string => entry.length > 0)
       : [];
   const manualPlayZones =
     manualConstraints && typeof manualConstraints === "object"
@@ -1162,14 +1263,28 @@ const deriveGuidePrompt = (guide: any) => {
 
   const validationCfg = guide.validation;
   if (validationCfg && typeof validationCfg === "object") {
-    const requiredPhrases = takeStrings((validationCfg as any).required_phrases, 6);
-    if (requiredPhrases.length) {
-      const requirementText =
-        requiredPhrases.length === 1
-          ? `Include the phrase "${requiredPhrases[0]}" naturally in the copy.`
-          : `Include these phrases naturally when they fit: ${requiredPhrases.join(", ")}.`;
-      requirements.push(requirementText);
-    }
+    const mustUsePhrases = normalizeRequiredPhraseEntries(
+      (validationCfg as any).required_phrases,
+      "required phrase"
+    );
+    const optionalChoiceGroups = normalizeRequiredPhraseEntries(
+      (validationCfg as any).required_phrase_groups,
+      "required phrase option"
+    );
+    const combinedRequiredGroups = [...mustUsePhrases, ...optionalChoiceGroups].slice(0, 6);
+    combinedRequiredGroups.forEach((group) => {
+      if (!group.phrases.length) return;
+      if (group.phrases.length === 1) {
+        requirements.push(`Include the phrase "${group.phrases[0]}" naturally in the copy.`);
+      } else {
+        const descriptor = group.label || "required phrase option";
+        requirements.push(
+          `Use at least one of these ${descriptor}s (rotate across variants when it makes sense): ${group.phrases.join(
+            ", "
+          )}.`
+        );
+      }
+    });
     const avoidBuckets = [
       takeStrings((validationCfg as any).avoid_phrases, 6),
       takeStrings((validationCfg as any).banned_phrases, 6),
@@ -1194,13 +1309,22 @@ const deriveGuidePrompt = (guide: any) => {
       requirements.push(`Avoid these phrases entirely: ${avoidPhrasesFiltered.join(", ")}.`);
     }
   }
-  if (manualRequiredPhrases.length) {
-    const quoted = manualRequiredPhrases.map((phrase) => `"${phrase}"`).join(", ");
-    if (manualRequiredPhrases.length === 1) {
-      requirements.push(`Your rewrite must contain the exact phrase ${quoted} verbatim.`);
-    } else {
-      requirements.push(`Your rewrite must include ALL of these exact phrases verbatim: ${quoted}.`);
-    }
+  if (manualIncludeGroups.length) {
+    manualIncludeGroups.forEach((group) => {
+      if (!group.phrases.length) return;
+      if (group.phrases.length === 1) {
+        requirements.push(
+          `Optional keyword—use it only when it makes the copy clearer: "${group.phrases[0]}".`
+        );
+      } else {
+        const descriptor = group.label || "keyword option";
+        requirements.push(
+          `Optional ${descriptor} set: ${group.phrases.join(
+            ", "
+          )}. Rotate them across variants when they genuinely help, but skip them if they feel forced.`
+        );
+      }
+    });
   }
   const manualAvoidPhrasesFiltered = manualAvoidPhrases.filter((phrase) => !isVoiceDescriptorWord(phrase));
   if (manualAvoidPhrasesFiltered.length) {
@@ -1212,6 +1336,13 @@ const deriveGuidePrompt = (guide: any) => {
     manualReminders.forEach((reminder) => {
       const text = reminder.endsWith(".") ? reminder : reminder + ".";
       requirements.push(text);
+    });
+  }
+  if (manualCoreInstructions.length) {
+    manualCoreInstructions.forEach((instruction) => {
+      if (instruction) {
+        requirements.push(instruction);
+      }
     });
   }
   collectRewriteExamples(guide).forEach((example) => {
@@ -1558,16 +1689,57 @@ const sanitiseJsonStringLiterals = (value: string): string => {
   return result;
 };
 
-const tryParseJson = (value: string): unknown | null => {
+type JsonParseOptions = {
+  stageLabel?: string;
+  logError?: (stage: string, snippet: string, error?: string) => void;
+};
+
+const tryParseJson = (
+  value: string,
+  depth = 0,
+  options?: JsonParseOptions
+): unknown | null => {
   if (typeof value !== "string") return null;
   const trimmed = normaliseJsonQuotes(value.trim());
   if (!trimmed) return null;
   try {
-    return JSON.parse(trimmed);
+    const parsed = JSON.parse(trimmed);
+    if (
+      typeof parsed === "string" &&
+      depth < 2 &&
+      (parsed.trim().startsWith("{") || parsed.trim().startsWith("["))
+    ) {
+      const nested = tryParseJson(parsed, depth + 1, options);
+      if (nested) {
+        return nested;
+      }
+    }
+    return parsed;
   } catch (err) {
+    if (options?.stageLabel && options?.logError) {
+      const message =
+        err && typeof err === "object" && "message" in err ? String((err as any).message) : String(err);
+      options.logError(options.stageLabel, trimmed, message);
+    }
     try {
-      return JSON.parse(sanitiseJsonStringLiterals(trimmed));
+      const parsed = JSON.parse(sanitiseJsonStringLiterals(trimmed));
+      if (
+        typeof parsed === "string" &&
+        depth < 2 &&
+        (parsed.trim().startsWith("{") || parsed.trim().startsWith("["))
+      ) {
+        const nested = tryParseJson(parsed, depth + 1, options);
+        if (nested) {
+          return nested;
+        }
+      }
+      return parsed;
     } catch (err2) {
+      if (options?.stageLabel && options?.logError) {
+        const message =
+          err2 && typeof err2 === "object" && "message" in err2 ? String((err2 as any).message) : String(err2);
+        options.logError(options.stageLabel, trimmed, message);
+      }
       return null;
     }
   }
@@ -1629,6 +1801,51 @@ const extractLooseVariantObjects = (source: string): string[] => {
   return blocks;
 };
 
+const extractVariantsJsonBlock = (source: string): string | null => {
+  if (!source) return null;
+  const lower = source.toLowerCase();
+  const marker = lower.indexOf('"variants"');
+  if (marker < 0) return null;
+  const start = source.lastIndexOf("{", marker);
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < source.length; i += 1) {
+    const char = source[i];
+    if (char === '"' && !escaped) {
+      inString = !inString;
+    }
+    if (!inString) {
+      if (char === "{") {
+        depth += 1;
+      } else if (char === "}") {
+        depth -= 1;
+        if (depth <= 0) {
+          return source.slice(start, i + 1);
+        }
+      }
+    }
+    if (char === "\\" && !escaped) {
+      escaped = true;
+    } else {
+      escaped = false;
+    }
+  }
+  return null;
+};
+
+const logVariantParsingIssue = (stage: string, snippet: string, error?: string) => {
+  if (!snippet) return;
+  try {
+    const preview = snippet.length > 360 ? snippet.slice(0, 360) + "…" : snippet;
+    const label = error ? `${stage} (${error})` : stage;
+    console.warn(`[rewrite] ${label}: ${preview}`);
+  } catch (err) {
+    console.warn("[rewrite] logging failed", err);
+  }
+};
+
 const normalizeParsedVariants = (candidate: unknown): ModelVariant[] => {
   if (!candidate) return [];
   const potentialVariants = Array.isArray((candidate as any).variants)
@@ -1659,18 +1876,38 @@ const parseModelResponseVariants = (
   const trimmed = response.trim();
   if (!trimmed) return [];
   const parseSource = stripModelResponsePreface(trimmed) || trimmed;
-  let parsed = tryParseJson(parseSource);
-  if (!parsed) {
-    const extracted = extractJsonSubstring(parseSource);
-    if (extracted) {
-      parsed = tryParseJson(extracted);
+  const attemptParse = (payload: string, label: string): unknown | null => {
+    if (!payload) return null;
+    return tryParseJson(payload, 0, {
+      stageLabel: label,
+      logError: logVariantParsingIssue,
+    });
+  };
+  const extractNormalized = (candidate: unknown): ModelVariant[] | null => {
+    if (!candidate) return null;
+    const normalized = normalizeParsedVariants(candidate);
+    return normalized.length ? normalized : null;
+  };
+  const attemptNormalized = (payload: string, label: string): ModelVariant[] | null => {
+    const candidate = attemptParse(payload, label);
+    return extractNormalized(candidate);
+  };
+  const variantsBlock = extractVariantsJsonBlock(parseSource);
+  if (variantsBlock) {
+    const blockNormalized = attemptNormalized(variantsBlock, "variants block parse");
+    if (blockNormalized) {
+      return blockNormalized;
     }
   }
-  if (parsed) {
-    const normalized = normalizeParsedVariants(parsed);
-    if (normalized.length) {
-      return normalized;
+  let parsedNormalized = attemptNormalized(parseSource, "raw response JSON parse");
+  if (!parsedNormalized) {
+    const substring = extractJsonSubstring(parseSource);
+    if (substring) {
+      parsedNormalized = attemptNormalized(substring, "substring parse");
     }
+  }
+  if (parsedNormalized) {
+    return parsedNormalized;
   }
   const looseObjects = extractLooseVariantObjects(parseSource);
   if (looseObjects.length) {
@@ -1690,9 +1927,54 @@ const parseModelResponseVariants = (
       return approximations;
     }
   }
+  const plaintextCandidates = extractPlaintextVariantCandidates(parseSource);
+  if (plaintextCandidates.length) {
+    logVariantParsingIssue("plaintext candidate fallback", parseSource);
+    return plaintextCandidates.map((text) => ({
+      tone: fallbackTone,
+      length: fallbackLength,
+      text,
+    }));
+  }
+  logVariantParsingIssue("final fallback", parseSource);
   return parseSource
     ? [{ tone: fallbackTone, length: fallbackLength, text: parseSource }]
     : [];
+};
+
+const flattenVariantOutputs = (entries: string[]): string[] => {
+  if (!entries.length) return entries;
+  const flattened: string[] = [];
+  let changed = false;
+  entries.forEach((entry) => {
+    const trimmed = (entry || "").trim();
+    if (trimmed.startsWith("{") && trimmed.includes('"variants"')) {
+      const block = extractVariantsJsonBlock(trimmed) || trimmed;
+      const parsed = tryParseJson(block);
+      const normalized = parsed ? normalizeParsedVariants(parsed) : [];
+      if (normalized.length) {
+        normalized.forEach((variant) => flattened.push(variant.text));
+        changed = true;
+        return;
+      }
+    }
+    flattened.push(entry);
+  });
+  return changed ? flattened : entries;
+};
+
+const dedupeVariantOutputs = (entries: string[]): string[] => {
+  if (!entries.length) return entries;
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  entries.forEach((entry) => {
+    const key = normalizeVariantForComparison(entry);
+    if (!key) return;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deduped.push(entry);
+  });
+  return deduped;
 };
 
 const extractPlaintextVariantCandidates = (raw: string): string[] => {
@@ -1712,6 +1994,15 @@ const extractPlaintextVariantCandidates = (raw: string): string[] => {
     /^Your variants array/i.test(value) ||
     /^Keep these exact source terms/i.test(value);
   const isLikelyCopyLine = (value: string) => value.length >= 15 && /\s/.test(value);
+  const isMetaComment = (value: string) => {
+    const lower = value.toLowerCase();
+    return (
+      lower.includes("source copy") ||
+      lower.includes("assumed intent") ||
+      lower.includes("not provided in the prompt") ||
+      lower.includes("based on the instructions")
+    );
+  };
 
   const cleanedBlocks = blocks
     .map((block) =>
@@ -1731,6 +2022,7 @@ const extractPlaintextVariantCandidates = (raw: string): string[] => {
   return cleanedBlocks.filter((block) => {
     if (!isLikelyCopyLine(block)) return false;
     const lower = block.toLowerCase();
+    if (isMetaComment(block)) return false;
     if (
       lower.startsWith('"tone"') ||
       lower.startsWith('"length"') ||
@@ -1773,10 +2065,6 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
   const promptCfg = (guide as any).rewritePrompt || {};
   const derived = deriveGuidePrompt(guide);
   const manualConstraints = (guide as any).manualConstraints;
-  const manualRequiredPhrases =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).required, 10)
-      : [];
   const manualAvoidPhrases =
     manualConstraints && typeof manualConstraints === "object"
       ? takeStrings((manualConstraints as any).avoid, 10)
@@ -1815,10 +2103,10 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
   pushRequirement(JSON_RESPONSE_TEMPLATE);
 
   pushRequirement(
-    "Provide a mix of short, medium, and longer rewrites, but output only the final copy text with no labels or descriptors."
+    "For every JSON variant, keep the text value limited to the final UX copy only—no labels, intros, or commentary."
   );
   pushRequirement(
-    "Output exactly one rewrite for this request—no introductions, lists, or conversational framing."
+    "Each JSON variant must contain exactly one rewrite; never include multiple options, bullet lists, or extra framing."
   );
   pushRequirement(
     "Speak directly to the end-user; never mention rewrites, options, or that you're providing variations."
@@ -1829,7 +2117,16 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
   pushRequirement(
     "Skip pleasantries or commentary about what the reader is doing (e.g., “It's great you're looking…”); lead with the product benefit or action."
   );
+  pushRequirement(
+    "Never mention missing source copy, assumed intent, or that you're inferring context—just deliver the final rewrite, even if the prompt feels incomplete."
+  );
   pushRequirement("Use at most two short sentences and state each fact only once (no repetition).");
+  pushRequirement(
+    "Change the sentence rhythm, verbs, and descriptive words for each tone so the emotional intent is obvious; never recycle the same hero verb across variants."
+  );
+  pushRequirement(
+    "Keep the meaning and include all required keywords, but rephrase everything else using different wording; do not reuse longer phrases (more than 2–3 words) from the original unless they are required keywords or product names."
+  );
   if (intent === "prompt") {
     pushRequirement(
       "Create original UX copy that fulfils the user brief; treat their text as instructions, not content to restate."
@@ -1840,6 +2137,9 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
   if (forcedTone) {
     pushRequirement(
       `Write this variant strictly in the ${forcedTone} tone, but never mention the tone name or describe it in the output.`
+    );
+    pushRequirement(
+      "Make the tone felt through word choice, cadence, and punctuation; use the tone brief (traits, structure cue, how-to) to guide vocabulary."
     );
     toneNotes.forEach((note) => pushRequirement(note));
   } else if (toneNames.length) {
@@ -1862,7 +2162,7 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
     );
   }
   pushRequirement(
-    "Return each variant on its own line with no bullets, numbering, headers, or conversational lead-ins—only the rewritten copy."
+    "Never print standalone variant text outside the JSON response—populate only the JSON `variants[].text` fields."
   );
   pushRequirement(
     "Vary the opening words across variants; if one starts with a specific word or phrase (e.g., “Remember needing…”), every other rewrite must begin differently and avoid repeating that same opener."
@@ -1963,6 +2263,7 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
   let encounteredError = false;
   const PROMPT_TOKEN_LIMIT = 6000;
   const TOKEN_APPROX_DIVISOR = 4;
+  const PROMPT_CHAR_LIMIT = PROMPT_TOKEN_LIMIT * TOKEN_APPROX_DIVISOR;
   const cycleVersion = deriveGuideVersion(guideline);
   const cycleSignature = buildCycleSignature(text, cycleVersion);
   if (resetCycle || cycleSignature !== toneCycleSignature) {
@@ -2054,6 +2355,14 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
     const key = normalizeVariantForComparison(text);
     return key ? variantFingerprints.has(key) : false;
   };
+  const isDisallowedVariantText = (value: string) => {
+    const lower = value.toLowerCase();
+    return (
+      lower.includes("source copy") ||
+      lower.includes("assumed intent") ||
+      lower.includes("not provided in the prompt")
+    );
+  };
 
   const sourceLabel = intent === "prompt" ? "User prompt:\n" : "User copy:\n";
 
@@ -2096,32 +2405,62 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
       "Your variants array must contain one entry per task above, in the same order.",
       "Each entry must include the tone and length from its TASK_SPEC block.",
       "Every variant must sound distinct—rewrite it if any two openings or phrasings feel similar.",
+      "Let each tone's traits dictate different verbs, cadence, and punctuation so the emotional energy clearly shifts between variants.",
     ].join(" ");
 
-    const buildMultiTonePrompt = (useCoreText = false) => {
-      const sections = toneTasks
-        .map((task, idx) => buildTaskSection(task, idx, useCoreText))
-        .join("\n\n");
-      return (
-        sections +
-        "\n\n" +
-        uniquenessReminder +
-        "\n\n" +
-        sourceLabel +
-        text
-      );
+    type PromptSegments = {
+      full: string;
+      instructions: string;
+      source: string;
     };
 
-    const composePrompt = () => {
-      const primary = buildMultiTonePrompt(false);
-      if (Math.floor(primary.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT) {
-        return primary;
+    const buildPromptSegments = (tasks: ToneTask[], useCoreText = false): PromptSegments => {
+      const sections = tasks
+        .map((task, idx) => buildTaskSection(task, idx, useCoreText))
+        .join("\n\n");
+      const instructionsBlock = `${sections}\n\n${uniquenessReminder}`.trim();
+      const sourceBlock = `${sourceLabel}${text}`;
+      const fullPrompt = instructionsBlock ? `${instructionsBlock}\n\n${sourceBlock}` : sourceBlock;
+      return {
+        full: fullPrompt,
+        instructions: instructionsBlock,
+        source: sourceBlock,
+      };
+    };
+
+    const isWithinPromptLimit = (value: string) =>
+      Math.floor(value.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT;
+
+    const clampPromptToLimit = (segments: PromptSegments): string => {
+      const sourceBlock = segments.source;
+      const hasSource = sourceBlock.trim().length > 0;
+      if (!hasSource) {
+        return segments.full.slice(0, PROMPT_CHAR_LIMIT).trim();
       }
-      const fallback = buildMultiTonePrompt(true);
-      if (Math.floor(fallback.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT) {
-        return fallback;
+      if (sourceBlock.length >= PROMPT_CHAR_LIMIT) {
+        return sourceBlock.slice(0, PROMPT_CHAR_LIMIT);
       }
-      return fallback.slice(0, PROMPT_TOKEN_LIMIT * TOKEN_APPROX_DIVISOR).trim();
+      const delimiter = "\n\n";
+      const instructionsBudget = Math.max(
+        PROMPT_CHAR_LIMIT - sourceBlock.length - delimiter.length,
+        0
+      );
+      const trimmedInstructions =
+        instructionsBudget > 0 ? segments.instructions.slice(0, instructionsBudget).trimEnd() : "";
+      const prefix = trimmedInstructions ? `${trimmedInstructions}${delimiter}` : "";
+      return `${prefix}${sourceBlock}`;
+    };
+
+    const composePrompt = (tasks: ToneTask[]) => {
+      const primary = buildPromptSegments(tasks, false);
+      if (isWithinPromptLimit(primary.full)) {
+        return primary.full;
+      }
+      const fallback = buildPromptSegments(tasks, true);
+      if (isWithinPromptLimit(fallback.full)) {
+        return fallback.full;
+      }
+      return clampPromptToLimit(fallback);
     };
 
     const findMatchingTask = (tone?: string): ToneTask | null => {
@@ -2144,6 +2483,7 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
       entries.forEach((entry) => {
         const rawText = typeof entry.text === "string" ? entry.text.trim() : "";
         if (!rawText) return;
+        if (isDisallowedVariantText(rawText)) return;
         if (!allowDuplicates && hasSeenVariant(rawText)) return;
         const targetTask = findMatchingTask(entry.tone) || toneTasks.find((task) => !task.resultText);
         if (!targetTask) return;
@@ -2155,31 +2495,65 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
       });
     };
 
-    for (let attempt = 1; attempt <= MAX_VALIDATION_ATTEMPTS; attempt++) {
-      const variantText = await callModel(composePrompt());
+    const getTaskResultTexts = () => toneTasks.map((task) => task.resultText || "");
+
+    const pruneDuplicateTaskResults = () => {
+      const seen = new Set<string>();
+      let cleared = false;
+      toneTasks.forEach((task) => {
+        const text = (task.resultText || "").trim();
+        if (!text) return;
+        const key = normalizeVariantForComparison(text);
+        if (!key) return;
+        if (seen.has(key)) {
+          task.resultText = "";
+          cleared = true;
+        } else {
+          seen.add(key);
+        }
+      });
+      return cleared;
+    };
+
+    const desiredVariantCount = selectedToneConfigs.length;
+    const hasCompleteSet = () => toneTasks.every((task) => (task.resultText || "").trim().length > 0);
+    const uniqueVariantCount = () =>
+      dedupeVariantOutputs(getTaskResultTexts().filter((value) => value.trim().length > 0)).length;
+
+    const selectPendingTasks = () => toneTasks.filter((task) => !(task.resultText || "").trim());
+
+    let attempt = 0;
+    while (uniqueVariantCount() < desiredVariantCount && attempt < MAX_VALIDATION_ATTEMPTS) {
+      const pendingTasks = selectPendingTasks();
+      if (!pendingTasks.length) {
+        if (!pruneDuplicateTaskResults()) {
+          break;
+        }
+        continue;
+      }
+      attempt += 1;
+      const variantText = await callModel(composePrompt(pendingTasks));
       const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
       if (!cleanedVariant) {
         continue;
       }
       const parsedVariants = parseModelResponseVariants(
         cleanedVariant,
-        toneTasks[0]?.instructions.toneKey || "",
-        toneTasks[0]?.instructions.lengthKey || determineTaskSpecLengthKey(null)
+        pendingTasks[0]?.instructions.toneKey || toneTasks[0]?.instructions.toneKey || "",
+        pendingTasks[0]?.instructions.lengthKey ||
+          toneTasks[0]?.instructions.lengthKey ||
+          determineTaskSpecLengthKey(null)
       );
       assignVariants(parsedVariants, false);
-      if (toneTasks.every((task) => task.resultText)) {
-        break;
-      }
       const fallbackEntries = extractPlaintextVariantCandidates(
         stripModelResponsePreface(cleanedVariant)
       ).map((text) => ({
         text,
       }));
       assignVariants(fallbackEntries, false);
-      if (toneTasks.every((task) => task.resultText)) {
-        break;
-      }
+      pruneDuplicateTaskResults();
     }
+    pruneDuplicateTaskResults();
 
     toneTasks.forEach((task) => {
       variants.push(task.resultText || "No response.");
@@ -2190,7 +2564,9 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
       toneCycleCompleted = true;
     }
 
-    const suggestionLines: string[] = variants.map((line, idx) => `${idx + 1}. ${line}`);
+    const flattenedVariants = flattenVariantOutputs(variants);
+    const uniqueVariants = dedupeVariantOutputs(flattenedVariants);
+    const suggestionLines: string[] = uniqueVariants.map((line, idx) => `${idx + 1}. ${line}`);
     if (!suggestionLines.length) {
       encounteredError = true;
       output = "No response.";
@@ -2229,7 +2605,7 @@ const loadFontsForNode = async (node: TextNode) => {
   }
 };
 
-const MAX_VALIDATION_ATTEMPTS = 2;
+const MAX_VALIDATION_ATTEMPTS = 6;
 const UI_WIDTH = 720;
 const MIN_UI_HEIGHT = 348;
 const MAX_UI_HEIGHT = 900;

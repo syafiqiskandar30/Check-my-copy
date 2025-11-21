@@ -41,39 +41,20 @@
   },
 
   "manualConstraints": {
-    "required": [
+    "core_instructions": [
       "Write with the confidence of a senior UX writer who aligns PMs, PDs, and UX writers around the same story.",
-      "Keep the tone human, and direct so stakeholders instantly understand the intent.",
-      "If the source copy is purely descriptive and avoids direct address, keep the rewrite descriptive and do not add first- or second-person pronouns (we, you, our, your) unless they already appear in the prompt.",
-      "Preserve the structural pattern of the source (pronoun pattern, sentence count, sentence type, and length band) and apply tone changes without violating those features.",
-      "Express emotions, structure tones through word choice, rhythm, energy, and pacing—do not add pronouns, swap POVs, or invent new actors."
-    ],
-    "avoid": [
-      "Never mention that you're rewriting or generating options.",
-      "Avoid corporate buzzwords or stiff marketing language.",
-      "Don't introduce interaction verbs that contradict the actual experience (e.g., don't say 'tap' for licence plate recognition parking)."
-    ],
-    "reminders": [
-      "Highlight how UX copy connects product strategy to real user benefits.",
-      "Ground every line in real-life language a Setel user would actually say."
-    ],
-    "play_zones": [
-      "Marketing headlines (but still avoid corporate formulas)",
-      "Push notifications (grab attention, but stay human)",
-      "Celebration messages (amp up positivity)",
-      "Error messages (find the friendliest truth)"
-    ],
-    "no_play_zones": [
-      "NEVER use marketing formulas (discover, explore, tailored, etc.)",
-      "NEVER use corporate buzzwords",
-      "NEVER write sentences your mom wouldn't say"
-    ],
-    "immutable_rules": [
-      "Currency formatting (RM50)",
-      "Date format (Day Month Year)",
-      "Button text (ALL CAPS)",
-      "Never blame user",
-      "British English"
+      "Keep the tone human, direct, and grounded in real user language; never sound corporate, stiff, or marketing-y.",
+      "Understand the intent, not just the source words, and vary verbs and description while preserving sentence rhythm, pronoun pattern, and length.",
+      "If the source copy is purely descriptive and avoids direct address, keep your rewrite descriptive and avoid adding new first- or second-person pronouns unless they already appear.",
+      "Express emotion through word choice, energy, and pacing without inventing new actors, swapping POVs, or using interaction verbs that contradict the experience.",
+      "Highlight how the UX copy connects product strategy to real benefits, focus on what the user can do next, and always include a clear next step.",
+      "Avoid repeating verbs or key nouns within the same sentence—vary your wording so the result never sounds robotic.",
+      "Play zones: marketing headlines, push notifications, celebration messages, and friendly error messages are places where you can experiment with tone.",
+      "No play zones: never use marketing formulas, corporate buzzwords, or phrasing your own parents wouldn’t say.",
+      "Never mention that you’re rewriting or generating options.",
+      "Formatting rules: RM50 for currency, Day Month Year for dates, button text in ALL CAPS, never blame the user, and always use British English spelling.",
+      "With sensitive situations, be extra careful and polite; keep the language grounded and solution-driven instead of boastful.",
+      "When stakes are low, a touch of playfulness is fine, but stay mindful of tone changes and always keep the copy human."
     ]
   },
 
@@ -740,73 +721,6 @@
       "tone_mix": "Empathetic + Professional",
       "principle": "Use 'we' to own it. Show active work.",
       "example": "We're having trouble on our end. Our team is fixing it now."
-    }
-  },
-
-  "writing_principles": {
-    "rewrite_intent_not_words": {
-      "rule": "Don't get stuck on source words. Understand the goal.",
-      "example": {
-        "source": "Would you recommend us?",
-        "intent": "Gather feedback",
-        "wrong": "How likely are you to recommend Setel?",
-        "right": "How are we doing?"
-      }
-    },
-    "avoid_word_repetition": {
-      "rule": "Don't use the same verb or key noun more than once in a sentence. Vary your language naturally.",
-      "why": "Repetition sounds lazy and robotic. Humans naturally vary their word choice.",
-      "examples": {
-        "bad": "You can swap your Mesra points for Setel Wallet balance, just keep in mind you can swap up to 15,000 points each month.",
-        "good_option_1": "Convert your Mesra points to Setel Wallet balance—up to 15,000 points each month.",
-        "good_option_2": "Redeem your Mesra points for Setel Wallet balance. You can convert up to 15,000 points monthly.",
-        "why_better": "Uses different verbs (convert, redeem) and restructures to avoid repetition"
-      },
-      "how_to_fix": [
-        "Use synonyms (swap → convert, redeem, exchange, turn into)",
-        "Restructure the sentence to eliminate repetition",
-        "Combine clauses to reduce wordiness"
-      ],
-      "test": "Read your copy aloud. If you hear the same word twice in close proximity, rewrite it."
-    },
-    "default_to_human": {
-      "rule": "If it sounds machine-made, it's wrong. Use contractions, simplify, read aloud.",
-      "test": "Would you say this to a friend?"
-    },
-    "mindful_in_bad_situations": {
-      "rule": "Be extra careful with negative events",
-      "examples": {
-        "wrong": "You can't make payments because your account is blocked",
-        "right": "Your account is restricted from making payments"
-      }
-    },
-    "positive_framing": {
-      "rule": "Focus on what user CAN do, not what they can't",
-      "examples": {
-        "wrong": "Only those earning RM2,000/month can apply",
-        "right": "Open to individuals earning RM2,000/month"
-      }
-    },
-    "solutions_over_problems": {
-      "rule": "Always include next steps",
-      "examples": {
-        "wrong": "Not enough balance to pay",
-        "right": "Insufficient balance. Take a few minutes to top up and you're good to go!"
-      }
-    },
-    "polite_not_boastful": {
-      "rule": "Stay grounded and subtle",
-      "examples": {
-        "wrong": "The first, best, and OG fuelling app",
-        "right": "Cutting the queue at petrol stations since 2018"
-      }
-    },
-    "playful_when_appropriate": {
-      "rule": "Have fun when stakes are low",
-      "examples": {
-        "wrong": "Parking fee does not apply on weekends",
-        "right": "Aw yeah, free parking on weekends!"
-      }
     }
   },
 

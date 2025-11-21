@@ -36,39 +36,20 @@
       }
     },
     manualConstraints: {
-      required: [
+      core_instructions: [
         "Write with the confidence of a senior UX writer who aligns PMs, PDs, and UX writers around the same story.",
-        "Keep the tone human, and direct so stakeholders instantly understand the intent.",
-        "If the source copy is purely descriptive and avoids direct address, keep the rewrite descriptive and do not add first- or second-person pronouns (we, you, our, your) unless they already appear in the prompt.",
-        "Preserve the structural pattern of the source (pronoun pattern, sentence count, sentence type, and length band) and apply tone changes without violating those features.",
-        "Express emotions, structure tones through word choice, rhythm, energy, and pacing\u2014do not add pronouns, swap POVs, or invent new actors."
-      ],
-      avoid: [
-        "Never mention that you're rewriting or generating options.",
-        "Avoid corporate buzzwords or stiff marketing language.",
-        "Don't introduce interaction verbs that contradict the actual experience (e.g., don't say 'tap' for licence plate recognition parking)."
-      ],
-      reminders: [
-        "Highlight how UX copy connects product strategy to real user benefits.",
-        "Ground every line in real-life language a Setel user would actually say."
-      ],
-      play_zones: [
-        "Marketing headlines (but still avoid corporate formulas)",
-        "Push notifications (grab attention, but stay human)",
-        "Celebration messages (amp up positivity)",
-        "Error messages (find the friendliest truth)"
-      ],
-      no_play_zones: [
-        "NEVER use marketing formulas (discover, explore, tailored, etc.)",
-        "NEVER use corporate buzzwords",
-        "NEVER write sentences your mom wouldn't say"
-      ],
-      immutable_rules: [
-        "Currency formatting (RM50)",
-        "Date format (Day Month Year)",
-        "Button text (ALL CAPS)",
-        "Never blame user",
-        "British English"
+        "Keep the tone human, direct, and grounded in real user language; never sound corporate, stiff, or marketing-y.",
+        "Understand the intent, not just the source words, and vary verbs and description while preserving sentence rhythm, pronoun pattern, and length.",
+        "If the source copy is purely descriptive and avoids direct address, keep your rewrite descriptive and avoid adding new first- or second-person pronouns unless they already appear.",
+        "Express emotion through word choice, energy, and pacing without inventing new actors, swapping POVs, or using interaction verbs that contradict the experience.",
+        "Highlight how the UX copy connects product strategy to real benefits, focus on what the user can do next, and always include a clear next step.",
+        "Avoid repeating verbs or key nouns within the same sentence\u2014vary your wording so the result never sounds robotic.",
+        "Play zones: marketing headlines, push notifications, celebration messages, and friendly error messages are places where you can experiment with tone.",
+        "No play zones: never use marketing formulas, corporate buzzwords, or phrasing your own parents wouldn\u2019t say.",
+        "Never mention that you\u2019re rewriting or generating options.",
+        "Formatting rules: RM50 for currency, Day Month Year for dates, button text in ALL CAPS, never blame the user, and always use British English spelling.",
+        "With sensitive situations, be extra careful and polite; keep the language grounded and solution-driven instead of boastful.",
+        "When stakes are low, a touch of playfulness is fine, but stay mindful of tone changes and always keep the copy human."
       ]
     },
     length_presets: {
@@ -695,72 +676,6 @@
         tone_mix: "Empathetic + Professional",
         principle: "Use 'we' to own it. Show active work.",
         example: "We're having trouble on our end. Our team is fixing it now."
-      }
-    },
-    writing_principles: {
-      rewrite_intent_not_words: {
-        rule: "Don't get stuck on source words. Understand the goal.",
-        example: {
-          source: "Would you recommend us?",
-          intent: "Gather feedback",
-          wrong: "How likely are you to recommend Setel?",
-          right: "How are we doing?"
-        }
-      },
-      avoid_word_repetition: {
-        rule: "Don't use the same verb or key noun more than once in a sentence. Vary your language naturally.",
-        why: "Repetition sounds lazy and robotic. Humans naturally vary their word choice.",
-        examples: {
-          bad: "You can swap your Mesra points for Setel Wallet balance, just keep in mind you can swap up to 15,000 points each month.",
-          good_option_1: "Convert your Mesra points to Setel Wallet balance\u2014up to 15,000 points each month.",
-          good_option_2: "Redeem your Mesra points for Setel Wallet balance. You can convert up to 15,000 points monthly.",
-          why_better: "Uses different verbs (convert, redeem) and restructures to avoid repetition"
-        },
-        how_to_fix: [
-          "Use synonyms (swap \u2192 convert, redeem, exchange, turn into)",
-          "Restructure the sentence to eliminate repetition",
-          "Combine clauses to reduce wordiness"
-        ],
-        test: "Read your copy aloud. If you hear the same word twice in close proximity, rewrite it."
-      },
-      default_to_human: {
-        rule: "If it sounds machine-made, it's wrong. Use contractions, simplify, read aloud.",
-        test: "Would you say this to a friend?"
-      },
-      mindful_in_bad_situations: {
-        rule: "Be extra careful with negative events",
-        examples: {
-          wrong: "You can't make payments because your account is blocked",
-          right: "Your account is restricted from making payments"
-        }
-      },
-      positive_framing: {
-        rule: "Focus on what user CAN do, not what they can't",
-        examples: {
-          wrong: "Only those earning RM2,000/month can apply",
-          right: "Open to individuals earning RM2,000/month"
-        }
-      },
-      solutions_over_problems: {
-        rule: "Always include next steps",
-        examples: {
-          wrong: "Not enough balance to pay",
-          right: "Insufficient balance. Take a few minutes to top up and you're good to go!"
-        }
-      },
-      polite_not_boastful: {
-        rule: "Stay grounded and subtle",
-        examples: {
-          wrong: "The first, best, and OG fuelling app",
-          right: "Cutting the queue at petrol stations since 2018"
-        }
-      },
-      playful_when_appropriate: {
-        rule: "Have fun when stakes are low",
-        examples: {
-          wrong: "Parking fee does not apply on weekends",
-          right: "Aw yeah, free parking on weekends!"
-        }
       }
     },
     quick_patterns: {
@@ -1455,6 +1370,63 @@
     if (reminder) notes.push(reminder);
     return notes.slice(0, limit);
   };
+  var normalizeRequiredPhraseEntries = (source, defaultLabel = "required phrase") => {
+    const groups = [];
+    const addGroup = (phrases, label = defaultLabel) => {
+      const merged = mergeUniqueStrings(phrases);
+      if (!merged.length) return;
+      groups.push({ label, phrases: merged });
+    };
+    const normalizeLabel = (label) => label && label.trim().length ? label.trim() : defaultLabel;
+    const normalizeString = (value) => typeof value === "string" ? value.trim() : "";
+    const splitOptionsFromString = (value) => {
+      if (!value) return [];
+      const hasDelimiter = /[,/|;]/.test(value) || /\bor\b/i.test(value);
+      if (!hasDelimiter) return [];
+      return value.split(/\s*(?:[,/|;]|\bor\b)\s*/i).map((segment) => segment.trim()).filter(Boolean);
+    };
+    const handleEntry = (entry, label = defaultLabel) => {
+      if (!entry) return;
+      if (Array.isArray(entry)) {
+        const phrases = entry.map((item) => normalizeString(item)).filter(Boolean);
+        if (phrases.length) addGroup(phrases, label);
+        return;
+      }
+      if (typeof entry === "object") {
+        const data = entry;
+        const customLabel = normalizeLabel(typeof data.label === "string" ? data.label : label);
+        const optionFields = ["any_of", "one_of", "phrases", "options"];
+        for (const field of optionFields) {
+          if (Array.isArray(data[field])) {
+            handleEntry(data[field], customLabel);
+            return;
+          }
+        }
+        if (typeof data.phrase === "string") {
+          const text2 = normalizeString(data.phrase);
+          if (text2) {
+            addGroup([text2], customLabel);
+          }
+        }
+        return;
+      }
+      const text = normalizeString(entry);
+      if (text) {
+        const options = splitOptionsFromString(text);
+        if (options.length > 1) {
+          addGroup(options, label);
+        } else {
+          addGroup([text], label);
+        }
+      }
+    };
+    if (Array.isArray(source)) {
+      source.forEach((entry) => handleEntry(entry, defaultLabel));
+    } else {
+      handleEntry(source, defaultLabel);
+    }
+    return groups;
+  };
   var toNumberOrUndefined = (value) => {
     if (typeof value === "number" && Number.isFinite(value)) return value;
     return void 0;
@@ -1589,18 +1561,28 @@
         const labelCandidate = formatGuideText(entry.ui_label) || toFriendlyCase(key);
         if (!labelCandidate) return null;
         const notes = [];
-        const blend = formatGuideText(entry.blend);
-        if (blend) notes.push(`Blend: ${blend}.`);
-        const when = formatGuideText(entry.when);
-        if (when) notes.push(`Context: ${when}.`);
-        const qualities = formatGuideText(entry.qualities);
-        if (qualities) notes.push(`Qualities: ${qualities}.`);
-        const how = formatGuideText(entry.how);
-        if (how) notes.push(`How: ${how}.`);
-        const avoid = formatGuideText(entry.avoid);
-        if (avoid) notes.push(`Avoid: ${avoid}.`);
-        const example = formatGuideText(entry.example);
-        if (example) notes.push(`Example tone: ${example}.`);
+        const addNote = (value, template) => {
+          const text = formatGuideText(value);
+          if (!text) return;
+          notes.push(template ? template(text) : text);
+        };
+        addNote(entry.blend, (text) => `Blend both qualities: ${text}.`);
+        addNote(
+          entry.traits,
+          (text) => `Let verbs and adjectives broadcast these traits: ${text}.`
+        );
+        addNote(
+          entry.syntactic_elements,
+          (text) => `Structure cue for this tone: ${text}.`
+        );
+        addNote(entry.when, (text) => `Typical context: ${text}.`);
+        addNote(entry.qualities, (text) => `Energy target: ${text}.`);
+        addNote(
+          entry.how,
+          (text) => text.endsWith(".") ? text : text + "."
+        );
+        addNote(entry.avoid, (text) => `Avoid: ${text}.`);
+        addNote(entry.example, (text) => `Sample tone line: ${text}.`);
         return { key, label: labelCandidate, notes };
       }).filter((tone) => Boolean(tone && tone.label));
       if (resolvedRequestedTone) {
@@ -1677,12 +1659,19 @@
       return { overview: "", requirements: [] };
     }
     const manualConstraints = guide.manualConstraints;
-    const manualRequiredSet = new Set(
-      manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.required, 50).map((phrase) => phrase.toLowerCase()) : []
+    const manualIncludeGroups = manualConstraints && typeof manualConstraints === "object" ? normalizeRequiredPhraseEntries(manualConstraints.required, "include phrase") : [];
+    const manualRequiredSet = /* @__PURE__ */ new Set();
+    manualIncludeGroups.forEach(
+      (group) => group.phrases.forEach((phrase) => {
+        const normalized = phrase.toLowerCase();
+        if (normalized) {
+          manualRequiredSet.add(normalized);
+        }
+      })
     );
-    const manualRequiredPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.required, 50) : [];
     const manualAvoidPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.avoid, 50) : [];
     const manualReminders = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.reminders, 50) : [];
+    const manualCoreInstructions = manualConstraints && typeof manualConstraints === "object" && Array.isArray(manualConstraints.core_instructions) ? manualConstraints.core_instructions.map((entry) => typeof entry === "string" ? entry.trim() : "").filter((entry) => entry.length > 0) : [];
     const manualPlayZones = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.play_zones, 10) : [];
     const manualNoPlayZones = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.no_play_zones, 10) : [];
     const manualImmutableRules = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.immutable_rules, 10) : [];
@@ -1912,11 +1901,28 @@
     }
     const validationCfg = guide.validation;
     if (validationCfg && typeof validationCfg === "object") {
-      const requiredPhrases = takeStrings(validationCfg.required_phrases, 6);
-      if (requiredPhrases.length) {
-        const requirementText = requiredPhrases.length === 1 ? `Include the phrase "${requiredPhrases[0]}" naturally in the copy.` : `Include these phrases naturally when they fit: ${requiredPhrases.join(", ")}.`;
-        requirements.push(requirementText);
-      }
+      const mustUsePhrases = normalizeRequiredPhraseEntries(
+        validationCfg.required_phrases,
+        "required phrase"
+      );
+      const optionalChoiceGroups = normalizeRequiredPhraseEntries(
+        validationCfg.required_phrase_groups,
+        "required phrase option"
+      );
+      const combinedRequiredGroups = [...mustUsePhrases, ...optionalChoiceGroups].slice(0, 6);
+      combinedRequiredGroups.forEach((group) => {
+        if (!group.phrases.length) return;
+        if (group.phrases.length === 1) {
+          requirements.push(`Include the phrase "${group.phrases[0]}" naturally in the copy.`);
+        } else {
+          const descriptor = group.label || "required phrase option";
+          requirements.push(
+            `Use at least one of these ${descriptor}s (rotate across variants when it makes sense): ${group.phrases.join(
+              ", "
+            )}.`
+          );
+        }
+      });
       const avoidBuckets = [
         takeStrings(validationCfg.avoid_phrases, 6),
         takeStrings(validationCfg.banned_phrases, 6),
@@ -1941,13 +1947,22 @@
         requirements.push(`Avoid these phrases entirely: ${avoidPhrasesFiltered.join(", ")}.`);
       }
     }
-    if (manualRequiredPhrases.length) {
-      const quoted = manualRequiredPhrases.map((phrase) => `"${phrase}"`).join(", ");
-      if (manualRequiredPhrases.length === 1) {
-        requirements.push(`Your rewrite must contain the exact phrase ${quoted} verbatim.`);
-      } else {
-        requirements.push(`Your rewrite must include ALL of these exact phrases verbatim: ${quoted}.`);
-      }
+    if (manualIncludeGroups.length) {
+      manualIncludeGroups.forEach((group) => {
+        if (!group.phrases.length) return;
+        if (group.phrases.length === 1) {
+          requirements.push(
+            `Optional keyword\u2014use it only when it makes the copy clearer: "${group.phrases[0]}".`
+          );
+        } else {
+          const descriptor = group.label || "keyword option";
+          requirements.push(
+            `Optional ${descriptor} set: ${group.phrases.join(
+              ", "
+            )}. Rotate them across variants when they genuinely help, but skip them if they feel forced.`
+          );
+        }
+      });
     }
     const manualAvoidPhrasesFiltered = manualAvoidPhrases.filter((phrase) => !isVoiceDescriptorWord(phrase));
     if (manualAvoidPhrasesFiltered.length) {
@@ -1959,6 +1974,13 @@
       manualReminders.forEach((reminder) => {
         const text = reminder.endsWith(".") ? reminder : reminder + ".";
         requirements.push(text);
+      });
+    }
+    if (manualCoreInstructions.length) {
+      manualCoreInstructions.forEach((instruction) => {
+        if (instruction) {
+          requirements.push(instruction);
+        }
       });
     }
     collectRewriteExamples(guide).forEach((example) => {
@@ -2238,16 +2260,38 @@
     }
     return result;
   };
-  var tryParseJson = (value) => {
+  var tryParseJson = (value, depth = 0, options) => {
     if (typeof value !== "string") return null;
     const trimmed = normaliseJsonQuotes(value.trim());
     if (!trimmed) return null;
     try {
-      return JSON.parse(trimmed);
+      const parsed = JSON.parse(trimmed);
+      if (typeof parsed === "string" && depth < 2 && (parsed.trim().startsWith("{") || parsed.trim().startsWith("["))) {
+        const nested = tryParseJson(parsed, depth + 1, options);
+        if (nested) {
+          return nested;
+        }
+      }
+      return parsed;
     } catch (err) {
+      if ((options == null ? void 0 : options.stageLabel) && (options == null ? void 0 : options.logError)) {
+        const message = err && typeof err === "object" && "message" in err ? String(err.message) : String(err);
+        options.logError(options.stageLabel, trimmed, message);
+      }
       try {
-        return JSON.parse(sanitiseJsonStringLiterals(trimmed));
+        const parsed = JSON.parse(sanitiseJsonStringLiterals(trimmed));
+        if (typeof parsed === "string" && depth < 2 && (parsed.trim().startsWith("{") || parsed.trim().startsWith("["))) {
+          const nested = tryParseJson(parsed, depth + 1, options);
+          if (nested) {
+            return nested;
+          }
+        }
+        return parsed;
       } catch (err2) {
+        if ((options == null ? void 0 : options.stageLabel) && (options == null ? void 0 : options.logError)) {
+          const message = err2 && typeof err2 === "object" && "message" in err2 ? String(err2.message) : String(err2);
+          options.logError(options.stageLabel, trimmed, message);
+        }
         return null;
       }
     }
@@ -2306,6 +2350,49 @@
     }
     return blocks;
   };
+  var extractVariantsJsonBlock = (source) => {
+    if (!source) return null;
+    const lower = source.toLowerCase();
+    const marker = lower.indexOf('"variants"');
+    if (marker < 0) return null;
+    const start = source.lastIndexOf("{", marker);
+    if (start < 0) return null;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < source.length; i += 1) {
+      const char = source[i];
+      if (char === '"' && !escaped) {
+        inString = !inString;
+      }
+      if (!inString) {
+        if (char === "{") {
+          depth += 1;
+        } else if (char === "}") {
+          depth -= 1;
+          if (depth <= 0) {
+            return source.slice(start, i + 1);
+          }
+        }
+      }
+      if (char === "\\" && !escaped) {
+        escaped = true;
+      } else {
+        escaped = false;
+      }
+    }
+    return null;
+  };
+  var logVariantParsingIssue = (stage, snippet, error) => {
+    if (!snippet) return;
+    try {
+      const preview = snippet.length > 360 ? snippet.slice(0, 360) + "\u2026" : snippet;
+      const label = error ? `${stage} (${error})` : stage;
+      console.warn(`[rewrite] ${label}: ${preview}`);
+    } catch (err) {
+      console.warn("[rewrite] logging failed", err);
+    }
+  };
   var normalizeParsedVariants = (candidate) => {
     if (!candidate) return [];
     const potentialVariants = Array.isArray(candidate.variants) ? candidate.variants : Array.isArray(candidate) ? candidate : [];
@@ -2327,28 +2414,48 @@
     const trimmed = response.trim();
     if (!trimmed) return [];
     const parseSource = stripModelResponsePreface(trimmed) || trimmed;
-    let parsed = tryParseJson(parseSource);
-    if (!parsed) {
-      const extracted = extractJsonSubstring(parseSource);
-      if (extracted) {
-        parsed = tryParseJson(extracted);
+    const attemptParse = (payload, label) => {
+      if (!payload) return null;
+      return tryParseJson(payload, 0, {
+        stageLabel: label,
+        logError: logVariantParsingIssue
+      });
+    };
+    const extractNormalized = (candidate) => {
+      if (!candidate) return null;
+      const normalized = normalizeParsedVariants(candidate);
+      return normalized.length ? normalized : null;
+    };
+    const attemptNormalized = (payload, label) => {
+      const candidate = attemptParse(payload, label);
+      return extractNormalized(candidate);
+    };
+    const variantsBlock = extractVariantsJsonBlock(parseSource);
+    if (variantsBlock) {
+      const blockNormalized = attemptNormalized(variantsBlock, "variants block parse");
+      if (blockNormalized) {
+        return blockNormalized;
       }
     }
-    if (parsed) {
-      const normalized = normalizeParsedVariants(parsed);
-      if (normalized.length) {
-        return normalized;
+    let parsedNormalized = attemptNormalized(parseSource, "raw response JSON parse");
+    if (!parsedNormalized) {
+      const substring = extractJsonSubstring(parseSource);
+      if (substring) {
+        parsedNormalized = attemptNormalized(substring, "substring parse");
       }
+    }
+    if (parsedNormalized) {
+      return parsedNormalized;
     }
     const looseObjects = extractLooseVariantObjects(parseSource);
     if (looseObjects.length) {
       const approximations = [];
       looseObjects.forEach((block) => {
-        const parsed2 = tryParseJson(block);
-        if (!parsed2 || typeof parsed2 !== "object") return;
-        const tone = typeof parsed2.tone === "string" ? String(parsed2.tone) : "";
-        const length = typeof parsed2.length === "string" ? String(parsed2.length) : "";
-        const text = typeof parsed2.text === "string" ? String(parsed2.text).trim() : "";
+        const parsed = tryParseJson(block);
+        if (!parsed || typeof parsed !== "object") return;
+        const tone = typeof parsed.tone === "string" ? String(parsed.tone) : "";
+        const length = typeof parsed.length === "string" ? String(parsed.length) : "";
+        const text = typeof parsed.text === "string" ? String(parsed.text).trim() : "";
         if (text) {
           approximations.push({ tone, length, text });
         }
@@ -2357,7 +2464,50 @@
         return approximations;
       }
     }
+    const plaintextCandidates = extractPlaintextVariantCandidates(parseSource);
+    if (plaintextCandidates.length) {
+      logVariantParsingIssue("plaintext candidate fallback", parseSource);
+      return plaintextCandidates.map((text) => ({
+        tone: fallbackTone,
+        length: fallbackLength,
+        text
+      }));
+    }
+    logVariantParsingIssue("final fallback", parseSource);
     return parseSource ? [{ tone: fallbackTone, length: fallbackLength, text: parseSource }] : [];
+  };
+  var flattenVariantOutputs = (entries) => {
+    if (!entries.length) return entries;
+    const flattened = [];
+    let changed = false;
+    entries.forEach((entry) => {
+      const trimmed = (entry || "").trim();
+      if (trimmed.startsWith("{") && trimmed.includes('"variants"')) {
+        const block = extractVariantsJsonBlock(trimmed) || trimmed;
+        const parsed = tryParseJson(block);
+        const normalized = parsed ? normalizeParsedVariants(parsed) : [];
+        if (normalized.length) {
+          normalized.forEach((variant) => flattened.push(variant.text));
+          changed = true;
+          return;
+        }
+      }
+      flattened.push(entry);
+    });
+    return changed ? flattened : entries;
+  };
+  var dedupeVariantOutputs = (entries) => {
+    if (!entries.length) return entries;
+    const seen = /* @__PURE__ */ new Set();
+    const deduped = [];
+    entries.forEach((entry) => {
+      const key = normalizeVariantForComparison(entry);
+      if (!key) return;
+      if (seen.has(key)) return;
+      seen.add(key);
+      deduped.push(entry);
+    });
+    return deduped;
   };
   var extractPlaintextVariantCandidates = (raw) => {
     if (!raw) return [];
@@ -2368,6 +2518,10 @@
     }
     const isInstructionalBlock = (value) => /^###\s+VARIANT/i.test(value) || /^TASK_SPEC/i.test(value) || /^Respond\s+with/i.test(value) || /^Return each variant/i.test(value) || /^Rewrite the copy/i.test(value) || /^JSON_RESPONSE_TEMPLATE/i.test(value) || /^Your variants array/i.test(value) || /^Keep these exact source terms/i.test(value);
     const isLikelyCopyLine = (value) => value.length >= 15 && /\s/.test(value);
+    const isMetaComment = (value) => {
+      const lower = value.toLowerCase();
+      return lower.includes("source copy") || lower.includes("assumed intent") || lower.includes("not provided in the prompt") || lower.includes("based on the instructions");
+    };
     const cleanedBlocks = blocks.map(
       (block) => block.replace(/[*_`]/g, "").replace(/^\d+[\.)-]*\s*/, "").replace(/^[-•*]+\s*/, "").replace(/\s+/g, " ").trim()
     ).filter((block) => block && !isInstructionalBlock(block));
@@ -2377,6 +2531,7 @@
     return cleanedBlocks.filter((block) => {
       if (!isLikelyCopyLine(block)) return false;
       const lower = block.toLowerCase();
+      if (isMetaComment(block)) return false;
       if (lower.startsWith('"tone"') || lower.startsWith('"length"') || lower.startsWith('"text"'))
         return false;
       if (/^(tone|length|text)\s*[:=]/i.test(block)) return false;
@@ -2414,7 +2569,6 @@
     const promptCfg = guide.rewritePrompt || {};
     const derived = deriveGuidePrompt(guide);
     const manualConstraints = guide.manualConstraints;
-    const manualRequiredPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.required, 10) : [];
     const manualAvoidPhrases = manualConstraints && typeof manualConstraints === "object" ? takeStrings(manualConstraints.avoid, 10) : [];
     const forcedTone = typeof (options == null ? void 0 : options.targetToneName) === "string" && options.targetToneName.trim().length ? options.targetToneName.trim() : "";
     const toneNotesSource = options == null ? void 0 : options.toneNotes;
@@ -2437,10 +2591,10 @@
     pushRequirement(TASK_SPEC_REMINDER);
     pushRequirement(JSON_RESPONSE_TEMPLATE);
     pushRequirement(
-      "Provide a mix of short, medium, and longer rewrites, but output only the final copy text with no labels or descriptors."
+      "For every JSON variant, keep the text value limited to the final UX copy only\u2014no labels, intros, or commentary."
     );
     pushRequirement(
-      "Output exactly one rewrite for this request\u2014no introductions, lists, or conversational framing."
+      "Each JSON variant must contain exactly one rewrite; never include multiple options, bullet lists, or extra framing."
     );
     pushRequirement(
       "Speak directly to the end-user; never mention rewrites, options, or that you're providing variations."
@@ -2451,7 +2605,16 @@
     pushRequirement(
       "Skip pleasantries or commentary about what the reader is doing (e.g., \u201CIt's great you're looking\u2026\u201D); lead with the product benefit or action."
     );
+    pushRequirement(
+      "Never mention missing source copy, assumed intent, or that you're inferring context\u2014just deliver the final rewrite, even if the prompt feels incomplete."
+    );
     pushRequirement("Use at most two short sentences and state each fact only once (no repetition).");
+    pushRequirement(
+      "Change the sentence rhythm, verbs, and descriptive words for each tone so the emotional intent is obvious; never recycle the same hero verb across variants."
+    );
+    pushRequirement(
+      "Keep the meaning and include all required keywords, but rephrase everything else using different wording; do not reuse longer phrases (more than 2\u20133 words) from the original unless they are required keywords or product names."
+    );
     if (intent === "prompt") {
       pushRequirement(
         "Create original UX copy that fulfils the user brief; treat their text as instructions, not content to restate."
@@ -2462,6 +2625,9 @@
     if (forcedTone) {
       pushRequirement(
         `Write this variant strictly in the ${forcedTone} tone, but never mention the tone name or describe it in the output.`
+      );
+      pushRequirement(
+        "Make the tone felt through word choice, cadence, and punctuation; use the tone brief (traits, structure cue, how-to) to guide vocabulary."
       );
       toneNotes.forEach((note) => pushRequirement(note));
     } else if (toneNames.length) {
@@ -2482,7 +2648,7 @@
       );
     }
     pushRequirement(
-      "Return each variant on its own line with no bullets, numbering, headers, or conversational lead-ins\u2014only the rewritten copy."
+      "Never print standalone variant text outside the JSON response\u2014populate only the JSON `variants[].text` fields."
     );
     pushRequirement(
       "Vary the opening words across variants; if one starts with a specific word or phrase (e.g., \u201CRemember needing\u2026\u201D), every other rewrite must begin differently and avoid repeating that same opener."
@@ -2561,7 +2727,7 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
     };
   };
   var runRewriteCycle = async (msg, resetCycle) => {
-    var _a, _b;
+    var _a, _b, _c, _d;
     const key = String(msg.key || "");
     const text = sanitisePromptText(String(msg.text || ""));
     const guideline = msg.guideline || guideline_default || {};
@@ -2569,6 +2735,7 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
     let encounteredError = false;
     const PROMPT_TOKEN_LIMIT = 6e3;
     const TOKEN_APPROX_DIVISOR = 4;
+    const PROMPT_CHAR_LIMIT = PROMPT_TOKEN_LIMIT * TOKEN_APPROX_DIVISOR;
     const cycleVersion = deriveGuideVersion(guideline);
     const cycleSignature = buildCycleSignature(text, cycleVersion);
     if (resetCycle || cycleSignature !== toneCycleSignature) {
@@ -2644,6 +2811,10 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
       const key2 = normalizeVariantForComparison(text2);
       return key2 ? variantFingerprints.has(key2) : false;
     };
+    const isDisallowedVariantText = (value) => {
+      const lower = value.toLowerCase();
+      return lower.includes("source copy") || lower.includes("assumed intent") || lower.includes("not provided in the prompt");
+    };
     const sourceLabel = intent === "prompt" ? "User prompt:\n" : "User copy:\n";
     try {
       const cycleInstruction = (toneGuide, toneConfig) => buildRewriteInstructions(toneGuide, {
@@ -2670,22 +2841,53 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
         "Respond with valid JSON exactly matching JSON_RESPONSE_TEMPLATE.",
         "Your variants array must contain one entry per task above, in the same order.",
         "Each entry must include the tone and length from its TASK_SPEC block.",
-        "Every variant must sound distinct\u2014rewrite it if any two openings or phrasings feel similar."
+        "Every variant must sound distinct\u2014rewrite it if any two openings or phrasings feel similar.",
+        "Let each tone's traits dictate different verbs, cadence, and punctuation so the emotional energy clearly shifts between variants."
       ].join(" ");
-      const buildMultiTonePrompt = (useCoreText = false) => {
-        const sections = toneTasks.map((task, idx) => buildTaskSection(task, idx, useCoreText)).join("\n\n");
-        return sections + "\n\n" + uniquenessReminder + "\n\n" + sourceLabel + text;
+      const buildPromptSegments = (tasks, useCoreText = false) => {
+        const sections = tasks.map((task, idx) => buildTaskSection(task, idx, useCoreText)).join("\n\n");
+        const instructionsBlock = `${sections}
+
+${uniquenessReminder}`.trim();
+        const sourceBlock = `${sourceLabel}${text}`;
+        const fullPrompt = instructionsBlock ? `${instructionsBlock}
+
+${sourceBlock}` : sourceBlock;
+        return {
+          full: fullPrompt,
+          instructions: instructionsBlock,
+          source: sourceBlock
+        };
       };
-      const composePrompt = () => {
-        const primary = buildMultiTonePrompt(false);
-        if (Math.floor(primary.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT) {
-          return primary;
+      const isWithinPromptLimit = (value) => Math.floor(value.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT;
+      const clampPromptToLimit = (segments) => {
+        const sourceBlock = segments.source;
+        const hasSource = sourceBlock.trim().length > 0;
+        if (!hasSource) {
+          return segments.full.slice(0, PROMPT_CHAR_LIMIT).trim();
         }
-        const fallback = buildMultiTonePrompt(true);
-        if (Math.floor(fallback.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT) {
-          return fallback;
+        if (sourceBlock.length >= PROMPT_CHAR_LIMIT) {
+          return sourceBlock.slice(0, PROMPT_CHAR_LIMIT);
         }
-        return fallback.slice(0, PROMPT_TOKEN_LIMIT * TOKEN_APPROX_DIVISOR).trim();
+        const delimiter = "\n\n";
+        const instructionsBudget = Math.max(
+          PROMPT_CHAR_LIMIT - sourceBlock.length - delimiter.length,
+          0
+        );
+        const trimmedInstructions = instructionsBudget > 0 ? segments.instructions.slice(0, instructionsBudget).trimEnd() : "";
+        const prefix = trimmedInstructions ? `${trimmedInstructions}${delimiter}` : "";
+        return `${prefix}${sourceBlock}`;
+      };
+      const composePrompt = (tasks) => {
+        const primary = buildPromptSegments(tasks, false);
+        if (isWithinPromptLimit(primary.full)) {
+          return primary.full;
+        }
+        const fallback = buildPromptSegments(tasks, true);
+        if (isWithinPromptLimit(fallback.full)) {
+          return fallback.full;
+        }
+        return clampPromptToLimit(fallback);
       };
       const findMatchingTask = (tone) => {
         const normalized = normalizeToneKeyValue(tone);
@@ -2704,6 +2906,7 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
         entries.forEach((entry) => {
           const rawText = typeof entry.text === "string" ? entry.text.trim() : "";
           if (!rawText) return;
+          if (isDisallowedVariantText(rawText)) return;
           if (!allowDuplicates && hasSeenVariant(rawText)) return;
           const targetTask = findMatchingTask(entry.tone) || toneTasks.find((task) => !task.resultText);
           if (!targetTask) return;
@@ -2714,31 +2917,58 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
           targetTask.resultText = cleaned;
         });
       };
-      for (let attempt = 1; attempt <= MAX_VALIDATION_ATTEMPTS; attempt++) {
-        const variantText = await callModel(composePrompt());
+      const getTaskResultTexts = () => toneTasks.map((task) => task.resultText || "");
+      const pruneDuplicateTaskResults = () => {
+        const seen = /* @__PURE__ */ new Set();
+        let cleared = false;
+        toneTasks.forEach((task) => {
+          const text2 = (task.resultText || "").trim();
+          if (!text2) return;
+          const key2 = normalizeVariantForComparison(text2);
+          if (!key2) return;
+          if (seen.has(key2)) {
+            task.resultText = "";
+            cleared = true;
+          } else {
+            seen.add(key2);
+          }
+        });
+        return cleared;
+      };
+      const desiredVariantCount = selectedToneConfigs.length;
+      const hasCompleteSet = () => toneTasks.every((task) => (task.resultText || "").trim().length > 0);
+      const uniqueVariantCount = () => dedupeVariantOutputs(getTaskResultTexts().filter((value) => value.trim().length > 0)).length;
+      const selectPendingTasks = () => toneTasks.filter((task) => !(task.resultText || "").trim());
+      let attempt = 0;
+      while (uniqueVariantCount() < desiredVariantCount && attempt < MAX_VALIDATION_ATTEMPTS) {
+        const pendingTasks = selectPendingTasks();
+        if (!pendingTasks.length) {
+          if (!pruneDuplicateTaskResults()) {
+            break;
+          }
+          continue;
+        }
+        attempt += 1;
+        const variantText = await callModel(composePrompt(pendingTasks));
         const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
         if (!cleanedVariant) {
           continue;
         }
         const parsedVariants = parseModelResponseVariants(
           cleanedVariant,
-          ((_a = toneTasks[0]) == null ? void 0 : _a.instructions.toneKey) || "",
-          ((_b = toneTasks[0]) == null ? void 0 : _b.instructions.lengthKey) || determineTaskSpecLengthKey(null)
+          ((_a = pendingTasks[0]) == null ? void 0 : _a.instructions.toneKey) || ((_b = toneTasks[0]) == null ? void 0 : _b.instructions.toneKey) || "",
+          ((_c = pendingTasks[0]) == null ? void 0 : _c.instructions.lengthKey) || ((_d = toneTasks[0]) == null ? void 0 : _d.instructions.lengthKey) || determineTaskSpecLengthKey(null)
         );
         assignVariants(parsedVariants, false);
-        if (toneTasks.every((task) => task.resultText)) {
-          break;
-        }
         const fallbackEntries = extractPlaintextVariantCandidates(
           stripModelResponsePreface(cleanedVariant)
         ).map((text2) => ({
           text: text2
         }));
         assignVariants(fallbackEntries, false);
-        if (toneTasks.every((task) => task.resultText)) {
-          break;
-        }
+        pruneDuplicateTaskResults();
       }
+      pruneDuplicateTaskResults();
       toneTasks.forEach((task) => {
         variants.push(task.resultText || "No response.");
       });
@@ -2746,7 +2976,9 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
       if (toneCycleIndex >= toneConfigs.length) {
         toneCycleCompleted = true;
       }
-      const suggestionLines = variants.map((line, idx) => `${idx + 1}. ${line}`);
+      const flattenedVariants = flattenVariantOutputs(variants);
+      const uniqueVariants = dedupeVariantOutputs(flattenedVariants);
+      const suggestionLines = uniqueVariants.map((line, idx) => `${idx + 1}. ${line}`);
       if (!suggestionLines.length) {
         encounteredError = true;
         output = "No response.";
@@ -2782,7 +3014,7 @@ ${priorityRules.map((rule) => "- " + rule).join("\n")}
       await figma.loadFontAsync(font);
     }
   };
-  var MAX_VALIDATION_ATTEMPTS = 2;
+  var MAX_VALIDATION_ATTEMPTS = 6;
   var UI_WIDTH = 720;
   var MIN_UI_HEIGHT = 348;
   var MAX_UI_HEIGHT = 900;
