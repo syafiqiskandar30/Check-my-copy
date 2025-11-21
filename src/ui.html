@@ -23,45 +23,329 @@
     background: var(--bg);
     color: var(--text);
     overflow-x: hidden;
+    overflow-y: hidden;
+    min-height: 100%;
+    height: 100%;
+  }
+  .tab-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 12px 16px 4px;
   }
   .tabs {
-    display: flex;
-    gap: 6px;
-    padding: 4px;
-    margin: 12px;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+    border-radius: 12px;
+    background: #f5f5f5;
+    padding: 0;
   }
   .tab {
-    flex: 1;
-    text-align: center;
-    padding: 9px 16px;
-    border-radius: 8px;
+    margin: 0;
+    padding: 12px;
     cursor: pointer;
     user-select: none;
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-weight: 500;
-    font-size: 15px;
-    line-height: 18px;
-    color: #788494;
-    transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #94a3b8;
+    background: #f5f5f5;
+    border-radius: 12px;
+    transition: color 0.15s ease, background 0.15s ease;
   }
   .tab.active {
-    background: #fff;
-    color: #2d333a;
+    color: #00b0ff;
+    font-weight: 500;
+    background: #e6f8ff;
   }
-  .panel {
+  .tab-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tab-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #f5f5f5;
+    background: #fff;
+    color: #94a3b8;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+  }
+  .tab-action.length-toggle.active,
+  .tab-action.keyword-toggle.active {
+    border-color: #00b0ff;
+    color: #0f172a;
+    box-shadow: 0 0 0 1px rgba(0, 176, 255, 0.25);
+  }
+  .tab-action.length-toggle.has-selection,
+  .tab-action.keyword-toggle.has-selection {
+    background: rgba(0, 176, 255, 0.1);
+    border-color: transparent;
+    box-shadow: none;
+    color: #0f172a;
+  }
+  .tab-action:focus-visible {
+    outline: 2px solid #00b0ff;
+    outline-offset: 2px;
+  }
+  .tab-action.has-selection:focus-visible,
+  .tab-action.active:focus-visible {
+    outline: none;
+  }
+  .tab-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+  }
+  .tab-action-icon svg,
+  .tab-action-icon img {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+  .length-toggle .length-icon {
     display: none;
   }
-  .panel.active {
+  .length-toggle:not(.has-selection) .length-icon--dropdown,
+  .length-toggle.has-selection .length-icon--remove {
     display: block;
+  }
+  .keyword-toggle .keyword-icon {
+    display: none;
+  }
+  .keyword-toggle:not(.has-selection) .keyword-icon--plus,
+  .keyword-toggle.has-selection .keyword-icon--remove {
+    display: block;
+  }
+  .keyword-dropdown {
+    position: relative;
+  }
+  .keyword-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 280px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 24px 40px rgba(15, 23, 42, 0.15);
+    padding: 14px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 12;
+    max-height: 228px;
+    overflow-y: auto;
+    scrollbar-color: #eceef1 transparent;
+    scrollbar-width: thin;
+    box-sizing: border-box;
+    padding-right: 20px;
+  }
+  .keyword-menu::-webkit-scrollbar {
+    width: 8px;
+  }
+  .keyword-menu::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .keyword-menu::-webkit-scrollbar-thumb {
+    background: #eceef1;
+    border-radius: 999px;
+  }
+  .keyword-menu.visible {
+    display: flex;
+  }
+  .keyword-menu-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .keyword-menu .keyword-label-row {
+    justify-content: flex-start;
+  }
+  .keyword-menu .keyword-label-row label {
+    color: #788494;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .keyword-menu .chip-input {
+    border-color: #e0e7ff;
+    background: transparent;
+    padding: 8px;
+  }
+  .keyword-menu .chip-input:focus-within {
+    border-color: #00b0ff;
+    box-shadow: 0 0 0 1px rgba(0, 176, 255, 0.25);
+  }
+  .length-dropdown {
+    position: relative;
+  }
+  .length-toggle-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+  .keyword-toggle span {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+    font-weight: 400;
+    color: inherit;
+    transition: color 0.2s ease;
+  }
+  .length-toggle-title {
+    font-weight: 400;
+    font-size: 14px;
+    color: #94a3b8;
+  }
+  .tab-action.length-toggle.has-selection .length-toggle-title,
+  .tab-action.length-toggle.active .length-toggle-title {
+    color: #00b0ff;
+    font-weight: 500;
+  }
+  .tab-action.keyword-toggle.has-selection span {
+    color: #00b0ff;
+    font-weight: 500;
+  }
+  .length-toggle-selection {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin-left: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    position: relative;
+    background: rgba(0, 176, 255, 0.1);
+    color: #00b0ff;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .tab-action.length-toggle.has-selection .length-toggle-selection {
+    gap: 0;
+    display: none;
+  }
+  .length-toggle-selection.visible {
+    display: inline-flex;
+  }
+  .length-toggle-selection-remove {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .length-toggle-selection-remove img {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+  .tab-action.length-toggle.has-selection .length-toggle-selection-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .length-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    width: 140px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+    padding: 0;
+    display: none;
+    flex-direction: column;
+    z-index: 10;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .length-menu.visible {
+    display: flex;
+  }
+  .length-menu-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  .length-option {
+    width: calc(100% + 8px);
+    margin-right: -8px;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #000;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 17px;
+  }
+  .length-option:hover,
+  .length-option:focus-visible,
+  .length-option.selected:hover {
+    outline: none;
+    background: #ebf9ff;
+    border-radius: 0;
+  }
+  .length-option.selected {
+    color: #00b0ff;
+    font-weight: 500;
+    background: transparent;
+  }
+  .panel {
+    padding: 0 16px 16px;
+    display: none;
+    height: calc(100% - 56px);
+    overflow: hidden;
+    flex-direction: column;
+  }
+  .panel.active {
+    display: flex;
   }
   .rewrite-screen {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s ease;
     pointer-events: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   .rewrite-screen.active {
     opacity: 1;
@@ -73,6 +357,9 @@
   }
   .rewrite-screen.loading-screen {
     display: flex;
+  }
+  .rewrite-screen-container {
+    height: 100%;
   }
   .loading-screen {
     min-height: 320px;
@@ -137,28 +424,9 @@
   .suggestions-screen {
     padding: 16px 0 16px;
   }
-  .suggestions-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .suggestions-header h2 {
-    margin: 0;
-    color: #000;
-    font-size: 18px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 27px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
   .field-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 6px;
+    display: none;
+    padding-left: 12px;
   }
   .field-label {
     color: #525b65;
@@ -217,6 +485,106 @@
   .guideline-status.error .status-dot {
     background: #f87171;
   }
+  .copy-field {
+    position: relative;
+    flex: 1;
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+    border: 1px solid #F5F5F5;
+    border-bottom: none;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .copy-field textarea {
+    flex: 1;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 17px;
+    color: #0f172a;
+    background: transparent;
+    resize: none;
+    min-height: 0;
+    margin: 0;
+    padding-right: 12px;
+    padding-bottom: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    width: calc(100% + 12px);
+    box-sizing: border-box;
+    margin-right: -12px;
+    scrollbar-color: #eceef1 transparent;
+    scrollbar-width: thin;
+  }
+  .copy-field textarea::-webkit-scrollbar {
+    width: 8px;
+  }
+  .copy-field textarea::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .copy-field textarea::-webkit-scrollbar-thumb {
+    background: #eceef1;
+    border-radius: 999px;
+  }
+  .copy-field textarea::placeholder {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 17px;
+  }
+  .copy-field textarea:focus {
+    outline: none;
+  }
+  .copy-field::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 0;
+    height: 48px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 85%);
+    pointer-events: none;
+  }
+  .rewrite-footer {
+    background: #fff;
+    border: 1px solid #e3e8f2;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+  }
+  .rewrite-footer .rewrite-btn {
+    width: auto;
+    margin: 0;
+    padding: 12px 28px;
+  }
+  .rewrite-icon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: contain;
+  }
+  .guideline-icon {
+    display: none;
+  }
+  .guideline-icon--enabled {
+    display: block;
+  }
+  body.guideline-fallback .guideline-icon--enabled,
+  body.guideline-error .guideline-icon--enabled {
+    display: none;
+  }
+  body.guideline-fallback .guideline-icon--disabled,
+  body.guideline-error .guideline-icon--disabled {
+    display: block;
+  }
   .rewrite-btn {
     width: 100%;
     margin-top: 16px;
@@ -234,6 +602,9 @@
     text-align: center;
     position: relative;
     overflow: hidden;
+  }
+  .rewrite-btn.secondary.hidden {
+    display: none;
   }
   .rewrite-btn:disabled:not(.is-loading) {
     cursor: default;
@@ -276,26 +647,28 @@
     }
   }
   .suggestions {
-    margin-top: 0;
+    margin-top: 8px;
     border: 0;
-    padding-top: 0;
+    padding: 0 0 16px;
+    flex: 1;
+    overflow-y: auto;
   }
   .suggestion-body {
-    min-height: 0;
+    min-height: auto;
     padding: 0;
     color: var(--subtle);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
   .suggestion-note {
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid #fde1c3;
     background: #fff8f1;
     color: #9a3412;
     font-size: 13px;
     line-height: 18px;
-    padding: 10px 12px;
+    padding: 12px 12px;
   }
   .suggestion-body.centered {
     padding: 16px;
@@ -316,29 +689,32 @@
     color: #d1d5db;
   }
   .suggestions-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 12px;
   }
   .suggestion-card {
     border-radius: 12px;
-    border: 1px solid #f1f1f3;
-    background: #f8f8fa;
+    border: 1px solid #f5f5f5;
+    background: #ffffff00;
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     color: #1f2933;
     transition: opacity 0.3s ease, transform 0.3s ease;
     cursor: default;
+    height: 100%;
+    justify-content: space-between;
   }
   .suggestion-card p {
     margin: 0;
     font-size: 14px;
+    flex: 1;
   }
   .suggestion-meta {
     display: flex;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 4px;
     align-self: stretch;
     color: #788494;
@@ -364,6 +740,8 @@
   .suggestion-card.skeleton {
     position: relative;
     overflow: hidden;
+    height: 100%;
+    justify-content: space-between;
   }
   .suggestion-card.revealing {
     opacity: 0;
@@ -458,31 +836,6 @@
     font-size: 12px;
     color: var(--subtle);
   }
-  .context-field {
-    margin-top: 24px;
-  }
-  .context-field label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-    color: #525b65;
-  }
-  .context-area {
-    width: 100%;
-    border: 1px solid #f5f5f5;
-    border-radius: 4px;
-    background: #fff;
-    padding: 12px;
-    font-size: 14px;
-    line-height: 20px;
-    font-family: inherit;
-    resize: none;
-  }
-  .context-area::placeholder {
-    color: #94a3b8;
-  }
   .length-row {
     margin-top: 16px;
     display: flex;
@@ -516,30 +869,6 @@
     color: #1f2933;
   }
   .length-hint {
-    margin: 0;
-    font-size: 12px;
-    color: #94a3b8;
-    line-height: 18px;
-  }
-  .element-row {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .element-label-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .element-label-row label {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-    color: #525b65;
-  }
-  .element-hint {
     margin: 0;
     font-size: 12px;
     color: #94a3b8;
@@ -584,6 +913,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    margin-top: 8px;
   }
   .chip-input input {
     border: none;
@@ -601,25 +931,54 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 4px 8px;
-    border-radius: 999px;
-    background: #eef2ff;
-    color: #1f2933;
+    border-radius: 12px;
     font-size: 13px;
     line-height: 18px;
+    padding: 8px;
+  }
+  .keyword-chip.include-chip {
+    background: rgba(0, 176, 255, 0.1);
+    color: #00b0ff;
+  }
+  .keyword-chip.avoid-chip {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
   }
   .keyword-chip button {
     border: none;
     background: transparent;
-    color: #6b7280;
-    font-size: 14px;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
     padding: 0;
-    line-height: 1;
+    cursor: pointer;
+  }
+  .keyword-chip button img {
+    width: 16px;
+    height: 16px;
+    display: block;
   }
   .keyword-chip button:focus-visible {
     outline: 2px solid #00b0ff;
     outline-offset: 2px;
+  }
+  .chip-list {
+    max-height: 160px;
+    overflow-y: auto;
+    scrollbar-color: #eceef1 transparent;
+    scrollbar-width: thin;
+  }
+  .chip-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  .chip-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .chip-list::-webkit-scrollbar-thumb {
+    background: #eceef1;
+    border-radius: 999px;
   }
   .char-counter {
     font-size: 12px;
@@ -628,9 +987,99 @@
   }
 </style>
 
-<div class="tabs">
-  <div id="tab-rewrite" class="tab active">Rewrite</div>
-  <div id="tab-settings" class="tab">Settings</div>
+<div class="tab-bar">
+  <div class="tabs">
+    <div id="tab-rewrite" class="tab active">Rewrite</div>
+    <div id="tab-suggestions" class="tab">Suggestions</div>
+    <div id="tab-settings" class="tab">Settings</div>
+  </div>
+  <div class="tab-actions">
+    <div class="length-dropdown">
+      <button
+        type="button"
+        id="lengthToggle"
+        class="tab-action length-toggle"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+      <span class="length-toggle-text">
+        <span class="length-toggle-title">Length</span>
+      </span>
+      <span class="length-toggle-selection" data-length-selection>
+        <span class="length-toggle-selection-label"></span>
+        <span class="length-toggle-selection-remove" role="button" tabindex="0" aria-label="Clear length selection">
+          <img src="Icons/Remove.svg" alt="" aria-hidden="true" />
+        </span>
+      </span>
+        <span class="tab-action-icon" aria-hidden="true">
+          <svg class="length-icon length-icon--dropdown" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8Z" fill="#00B0FF" />
+            <path d="M9.62024 5.94997C10.0665 5.50366 10.7902 5.50366 11.2365 5.94997C11.6828 6.39628 11.6828 7.1199 11.2365 7.56621L8.71104 10.0917C8.32051 10.4822 7.68735 10.4822 7.29682 10.0917L4.7715 7.56633C4.32519 7.12002 4.32519 6.3964 4.7715 5.95009C5.21782 5.50378 5.94143 5.50378 6.38775 5.95009L8.00393 7.56627L9.62024 5.94997Z" fill="white" />
+          </svg>
+          <svg class="length-icon length-icon--remove" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8Z" fill="#00B0FF" />
+            <path d="M9.62055 11.2326C10.0669 11.6789 10.7905 11.6789 11.2368 11.2326C11.6831 10.7863 11.6831 10.0627 11.2368 9.61636L9.62049 8.00005L11.2368 6.38375C11.6831 5.93744 11.6831 5.21382 11.2368 4.7675C10.7905 4.32119 10.0669 4.32119 9.62055 4.7675L8.00425 6.38381L6.38807 4.76763C5.94175 4.32131 5.21814 4.32131 4.77182 4.76763C4.32551 5.21394 4.32551 5.93756 4.77182 6.38387L6.38801 8.00005L4.77182 9.61624C4.32551 10.0626 4.32551 10.7862 4.77182 11.2325C5.21814 11.6788 5.94175 11.6788 6.38807 11.2325L8.00425 9.6163L9.62055 11.2326Z" fill="white" />
+          </svg>
+        </span>
+      </button>
+      <div id="lengthMenu" class="length-menu" role="menu" aria-hidden="true">
+      <div id="lengthMenuList" class="length-menu-list" role="none"></div>
+      </div>
+    </div>
+    <div class="keyword-dropdown">
+      <button
+        type="button"
+        id="keywordToggle"
+        class="tab-action keyword-toggle"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        <span>Keywords</span>
+        <span class="tab-action-icon" aria-hidden="true">
+          <svg class="keyword-icon keyword-icon--plus" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill="#00B0FF"/>
+            <path d="M11.4287 9.13869C12.0599 9.13869 12.5716 8.62701 12.5716 7.99583C12.5716 7.36465 12.0599 6.85297 11.4287 6.85297L9.14291 6.85297V4.56717C9.14291 3.93599 8.63124 3.42432 8.00005 3.42432C7.36887 3.42432 6.8572 3.93599 6.8572 4.56717V6.85297H4.57157C3.94039 6.85297 3.42871 7.36465 3.42871 7.99583C3.42871 8.62701 3.94039 9.13869 4.57157 9.13869H6.8572V11.4243C6.8572 12.0555 7.36887 12.5672 8.00005 12.5672C8.63124 12.5672 9.14291 12.0555 9.14291 11.4243V9.13869H11.4287Z" fill="white"/>
+          </svg>
+          <svg class="keyword-icon keyword-icon--remove" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8Z" fill="#00B0FF"/>
+            <path d="M9.62055 11.2326C10.0669 11.6789 10.7905 11.6789 11.2368 11.2326C11.6831 10.7863 11.6831 10.0627 11.2368 9.61636L9.62049 8.00005L11.2368 6.38375C11.6831 5.93744 11.6831 5.21382 11.2368 4.7675C10.7905 4.32119 10.0669 4.32119 9.62055 4.7675L8.00425 6.38381L6.38807 4.76763C5.94175 4.32131 5.21814 4.32131 4.77182 4.76763C4.32551 5.21394 4.32551 5.93756 4.77182 6.38387L6.38801 8.00005L4.77182 9.61624C4.32551 10.0626 4.32551 10.7862 4.77182 11.2325C5.21814 11.6788 5.94175 11.6788 6.38807 11.2325L8.00425 9.6163L9.62055 11.2326Z" fill="white"/>
+          </svg>
+        </span>
+      </button>
+      <div class="keyword-menu" id="keywordMenu" aria-hidden="true">
+        <div class="keyword-menu-card">
+          <div class="keyword-field">
+            <div class="keyword-label-row">
+              <label for="requiredKeywordInput">Include</label>
+            </div>
+          <div class="chip-input" data-field="required">
+            <input
+              id="requiredKeywordInput"
+              type="text"
+              placeholder="Add keywords"
+              autocomplete="off"
+            />
+          </div>
+          <div id="requiredKeywordChips" class="chip-list"></div>
+        </div>
+          <div class="keyword-field">
+            <div class="keyword-label-row">
+              <label for="avoidKeywordInput">Exclude</label>
+            </div>
+          <div class="chip-input" data-field="avoid">
+            <input
+              id="avoidKeywordInput"
+              type="text"
+              placeholder="Add keywords"
+              autocomplete="off"
+            />
+          </div>
+          <div id="avoidKeywordChips" class="chip-list"></div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="panel-rewrite" class="panel active">
@@ -640,98 +1089,44 @@
         <label id="inputLabel" class="field-label" for="inputText">Enter copy</label>
         <div id="inputCharCount" class="char-counter">0 characters</div>
       </div>
-      <textarea
-        id="inputText"
-        class="auto-textarea"
-        rows="2"
-        placeholder="Type your copy or select a text layer in figma"
-      ></textarea>
-      <!-- tone controls removed -->
-      <div class="context-field">
-        <label for="usageContextInput">Context and custom instructions</label>
+      <div class="copy-field">
         <textarea
-          id="usageContextInput"
-          class="context-area auto-textarea"
+          id="inputText"
+          class="auto-textarea"
           rows="2"
-          placeholder="Use on fuelling flow.&#10;Do not use word &ldquo;free&rdquo;."
+          placeholder="Select a text layer in figma, type your copy, add instructions."
         ></textarea>
       </div>
-      <div class="length-row">
-        <div class="length-label-row">
-          <label for="lengthSelect">Target length</label>
-          <span id="lengthRangeLabel" class="length-range">Auto mix</span>
-        </div>
-        <select id="lengthSelect" class="length-select">
-          <option value="">Auto (mix short + medium + long)</option>
-        </select>
-        <p id="lengthHint" class="length-hint">We'll mix short, medium, and long suggestions automatically.</p>
-      </div>
-      <div class="element-row">
-        <div class="element-label-row">
-          <label for="elementSelect">Element</label>
-          <span id="elementLabel" class="length-range">All elements</span>
-        </div>
-        <select id="elementSelect" class="length-select">
-          <option value="">All elements (library hints included)</option>
-        </select>
-        <p id="elementHint" class="element-hint">
-          Use the sentence library above to guide tone and structure for each element.
-        </p>
-      </div>
-      <div class="keyword-section">
-        <div class="keyword-field">
-          <div class="keyword-label-row">
-            <label for="requiredKeywordInput">Must-include phrases</label>
-            <p class="keyword-hint">Press Enter to add</p>
-          </div>
-          <div class="chip-input" data-field="required">
-            <div id="requiredKeywordChips" class="chip-list"></div>
-            <input
-              id="requiredKeywordInput"
-              type="text"
-              placeholder="Add keyword or phrase"
-              autocomplete="off"
-            />
-          </div>
-        </div>
-        <div class="keyword-field">
-          <div class="keyword-label-row">
-            <label for="avoidKeywordInput">Avoid phrases</label>
-            <p class="keyword-hint">Press Enter to add</p>
-          </div>
-          <div class="chip-input" data-field="avoid">
-            <div id="avoidKeywordChips" class="chip-list"></div>
-            <input
-              id="avoidKeywordInput"
-              type="text"
-              placeholder="Add banned word or phrase"
-              autocomplete="off"
-            />
-          </div>
-        </div>
-      </div>
-
-      <button id="rewrite" class="rewrite-btn" disabled aria-live="polite">
-        <span class="rewrite-label">Rewrite</span>
-        <span id="rewriteShimmerText" class="rewrite-shimmer" aria-hidden="true">Crafting copy…</span>
-      </button>
-    </div>
-
-    <div id="suggestionsScreen" class="rewrite-screen suggestions-screen" hidden>
-      <div class="suggestions-header">
-        <button type="button" id="backToForm" class="back-button" aria-label="Back to rewrite form">
-          <span class="sr-only">Back</span>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <path d="M15.5303 4.46967C15.2641 4.2034 14.8474 4.1792 14.5538 4.39705L14.4697 4.46967L7.46967 11.4697C7.2034 11.7359 7.1792 12.1526 7.39705 12.4462L7.46967 12.5303L14.4697 19.5303C14.7626 19.8232 15.2374 19.8232 15.5303 19.5303C15.7966 19.2641 15.8208 18.8474 15.6029 18.5538L15.5303 18.4697L9.061 12L15.5303 5.53033C15.7966 5.26406 15.8208 4.8474 15.6029 4.55379L15.5303 4.46967Z" fill="#2d333a"/>
+      <div class="rewrite-footer">
+        <span class="rewrite-icon" aria-hidden="true">
+          <svg class="guideline-icon guideline-icon--enabled" width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0.5" y="0.5" width="23" height="24" rx="3.5" stroke="#00B0FF"/>
+            <path d="M7.19061 18H5.55993L9.22399 7.81818H10.9988L14.6629 18H13.0322L10.1537 9.66761H10.0741L7.19061 18ZM7.46404 14.0128H12.7538V15.3054H7.46404V14.0128ZM17.6695 7.81818V18H16.1333V7.81818H17.6695Z" fill="#00B0FF"/>
           </svg>
+          <svg class="guideline-icon guideline-icon--disabled" width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0.5" y="0.5" width="23" height="24" rx="3.5" stroke="#ECEEF1"/>
+            <path d="M7.19061 18H5.55993L9.22399 7.81818H10.9988L14.6629 18H13.0322L10.1537 9.66761H10.0741L7.19061 18ZM7.46404 14.0128H12.7538V15.3054H7.46404V14.0128ZM17.6695 7.81818V18H16.1333V7.81818H17.6695Z" fill="#ECEEF1"/>
+          </svg>
+        </span>
+        <button id="rewrite" class="rewrite-btn" disabled aria-live="polite">
+          <span class="rewrite-label">Rewrite</span>
+          <span id="rewriteShimmerText" class="rewrite-shimmer" aria-hidden="true">Crafting copy…</span>
         </button>
-        <h2>Suggestions</h2>
       </div>
-      <section class="suggestions">
-        <div id="suggestionBody" class="suggestion-body centered"></div>
-      </section>
+      <!-- tone controls removed -->
+
     </div>
+
   </div>
+</div>
+
+<div id="panel-suggestions" class="panel">
+  <section class="suggestions">
+    <div id="suggestionBody" class="suggestion-body centered"></div>
+  </section>
+  <button id="cycleTone" class="rewrite-btn secondary" disabled aria-live="polite">
+    <span class="rewrite-label">Next tones</span>
+  </button>
 </div>
 
 <div id="panel-settings" class="panel">
@@ -752,50 +1147,38 @@
   // tab switching
   const tabs = {
     rewrite: { tab: document.getElementById("tab-rewrite"), panel: document.getElementById("panel-rewrite") },
-    settings:{ tab: document.getElementById("tab-settings"), panel: document.getElementById("panel-settings") },
+    suggestions: { tab: document.getElementById("tab-suggestions"), panel: document.getElementById("panel-suggestions") },
+    settings: { tab: document.getElementById("tab-settings"), panel: document.getElementById("panel-settings") },
   };
   function activate(name){
     Object.values(tabs).forEach(({tab,panel})=>{
       tab.classList.remove("active"); panel.classList.remove("active");
     });
-    tabs[name].tab.classList.add("active"); tabs[name].panel.classList.add("active");
-  }
-  tabs.rewrite.tab.onclick=()=>activate("rewrite");
-  tabs.settings.tab.onclick=()=>{
-    activate("settings");
-  };
-
-  // rewrite flow
-  const btnRewrite = document.getElementById("rewrite");
-  const suggestionBody = document.getElementById("suggestionBody");
-  const rewriteHomeScreen = document.getElementById("rewriteHome");
-  const suggestionsScreen = document.getElementById("suggestionsScreen");
-  const backToFormBtn = document.getElementById("backToForm");
-  const rewriteShimmerText = document.getElementById("rewriteShimmerText");
-  const screenViews = {
-    home: rewriteHomeScreen,
-    suggestions: suggestionsScreen,
-  };
-  const SCREEN_FADE_MS = 250;
-  const viewHideTimers = new WeakMap();
-  const cancelPendingHide = (view) => {
-    const timerId = viewHideTimers.get(view);
-    if (timerId) {
-      clearTimeout(timerId);
-      viewHideTimers.delete(view);
+    const target = tabs[name];
+    if (target) {
+      target.tab.classList.add("active");
+      target.panel.classList.add("active");
     }
+  }
+  tabs.rewrite.tab.onclick = () => activate("rewrite");
+  tabs.suggestions.tab.onclick = () => activate("suggestions");
+  tabs.settings.tab.onclick = () => activate("settings");
+
+  const btnRewrite = document.getElementById("rewrite");
+  const btnCycleTone = document.getElementById("cycleTone");
+  const suggestionBody = document.getElementById("suggestionBody");
+  const rewriteShimmerText = document.getElementById("rewriteShimmerText");
+  let lastRewriteRequest = null;
+  let rewriteInProgress = false;
+  const updateCycleButtonState = () => {
+    if (!btnCycleTone) return;
+    btnCycleTone.disabled = rewriteInProgress || !lastRewriteRequest;
   };
-  const scheduleHide = (view) => {
-    if (!view) return;
-    cancelPendingHide(view);
-    const timerId = setTimeout(() => {
-      if (!view.classList.contains("active")) {
-        view.hidden = true;
-      }
-      viewHideTimers.delete(view);
-    }, SCREEN_FADE_MS + 75);
-    viewHideTimers.set(view, timerId);
+  const setCycleToneVisibility = (visible) => {
+    if (!btnCycleTone) return;
+    btnCycleTone.classList.toggle("hidden", !visible);
   };
+  setCycleToneVisibility(false);
   const scrollToTop = () => {
     if (typeof window === "undefined") return;
     requestAnimationFrame(() => {
@@ -806,47 +1189,38 @@
       if (typeof window.scrollTo === "function") {
         window.scrollTo(0, 0);
       }
-    });
-  };
-  const showScreen = (name) => {
-    const target = screenViews[name];
-    if (!target) return;
-    if (target.classList.contains("active")) return;
-    Object.entries(screenViews).forEach(([key, view]) => {
-      if (!view) return;
-      const isActive = key === name;
-      if (isActive) {
-        cancelPendingHide(view);
-        view.hidden = false;
-        requestAnimationFrame(() => view.classList.add("active"));
-      } else if (view.classList.contains("active")) {
-        view.classList.remove("active");
-        scheduleHide(view);
-      } else {
-        view.classList.remove("active");
-        view.hidden = true;
+      const suggestionsSection = document.querySelector("#panel-suggestions .suggestions");
+      if (suggestionsSection instanceof HTMLElement) {
+        suggestionsSection.scrollTop = 0;
       }
     });
-    if (name === "suggestions" || name === "home") {
-      scrollToTop();
-    }
   };
-  const showHomeScreen = () => showScreen("home");
-  const showSuggestionsScreen = () => showScreen("suggestions");
-  backToFormBtn?.addEventListener("click", () => {
-    showHomeScreen();
-  });
-  showHomeScreen();
+  const openSuggestionsTab = () => {
+    activate("suggestions");
+    scrollToTop();
+  };
+  const openRewriteTab = () => {
+    activate("rewrite");
+    scrollToTop();
+  };
+  updateCycleButtonState();
   const inputField = document.getElementById("inputText");
   const inputLabelEl = document.getElementById("inputLabel");
   const inputCharCounter = document.getElementById("inputCharCount");
-  const lengthSelect = document.getElementById("lengthSelect");
-  const lengthRangeLabel = document.getElementById("lengthRangeLabel");
-  const lengthHintEl = document.getElementById("lengthHint");
-  const elementSelect = document.getElementById("elementSelect");
-  const elementLabel = document.getElementById("elementLabel");
-  const elementHintEl = document.getElementById("elementHint");
-  const MIN_SUGGESTIONS = 5;
+  const lengthDropdownEl = document.querySelector(".length-dropdown");
+  const lengthToggleBtn = document.getElementById("lengthToggle");
+  const lengthToggleTitle = lengthToggleBtn?.querySelector(".length-toggle-title");
+  const lengthToggleRemoveIcon = lengthToggleBtn?.querySelector(".length-icon--remove");
+  const lengthMenu = document.getElementById("lengthMenu");
+  const lengthMenuList = document.getElementById("lengthMenuList");
+  const lengthSelectionContainer = document.querySelector(".length-toggle-selection");
+  const lengthSelectionLabel = document.querySelector(".length-toggle-selection-label");
+  const lengthSelectionRemove = document.querySelector(".length-toggle-selection-remove");
+  const keywordDropdownEl = document.querySelector(".keyword-dropdown");
+  const keywordToggleBtn = document.getElementById("keywordToggle");
+  const keywordToggleRemoveIcon = keywordToggleBtn?.querySelector(".keyword-icon--remove");
+  const keywordMenu = document.getElementById("keywordMenu");
+  const MIN_SUGGESTIONS = 4;
   const SUGGESTION_STORAGE_KEY = "setel.rewrite.lastSuggestions";
   const toneFallbacks = [
     ["Friendly", "Caring"],
@@ -866,11 +1240,10 @@
   const generationMode = MODE_REWRITE;
   const MODE_CONFIG = {
     label: "Enter copy",
-    placeholder: "Paste copy or select a text layer in Figma",
+    placeholder: "Select a text layer in figma, type your copy, add instructions.",
     buttonLabel: "Rewrite",
     loadingText: "Crafting copy…",
   };
-  let rewriteInProgress = false;
   const getModeConfig = () => MODE_CONFIG;
   const updateModeUI = () => {
     const config = getModeConfig();
@@ -908,6 +1281,7 @@
       updateModeUI();
     }
     updateRewriteButtonState();
+    updateCycleButtonState();
   };
   const autoResizeTextarea = (element, minHeight = MIN_INPUT_HEIGHT) => {
     if (!element) return;
@@ -925,54 +1299,6 @@
   const saveStatus = document.getElementById("saveStatus");
   const guidelineStatus = document.getElementById("guidelineStatus");
   const guidelineStatusText = guidelineStatus?.querySelector(".guideline-text");
-  const usageContextInput = document.getElementById("usageContextInput");
-  const MIN_CONTEXT_HEIGHT = 72;
-  const CONTEXT_LINE_HEIGHT = 20;
-  const CONTEXT_VERTICAL_PADDING = 24;
-  const DEFAULT_CONTEXT_PLACEHOLDER = "";
-  const DEFAULT_PLACEHOLDER_LINES = 1;
-  let contextPlaceholderSizer = null;
-  const updateContextPlaceholder = (text, lineCount = DEFAULT_PLACEHOLDER_LINES) => {
-    if (!usageContextInput) return;
-    usageContextInput.placeholder = text;
-    const totalLines = Math.max(lineCount, DEFAULT_PLACEHOLDER_LINES);
-    let minHeight = Math.max(
-      MIN_CONTEXT_HEIGHT,
-      CONTEXT_VERTICAL_PADDING + totalLines * CONTEXT_LINE_HEIGHT
-    );
-    if (!contextPlaceholderSizer) {
-      contextPlaceholderSizer = document.createElement("div");
-      contextPlaceholderSizer.setAttribute("aria-hidden", "true");
-      contextPlaceholderSizer.style.position = "absolute";
-      contextPlaceholderSizer.style.visibility = "hidden";
-      contextPlaceholderSizer.style.whiteSpace = "pre-wrap";
-      contextPlaceholderSizer.style.wordBreak = "break-word";
-      contextPlaceholderSizer.style.top = "-9999px";
-      contextPlaceholderSizer.style.left = "-9999px";
-      contextPlaceholderSizer.style.pointerEvents = "none";
-      contextPlaceholderSizer.style.boxSizing = "border-box";
-      document.body.appendChild(contextPlaceholderSizer);
-    }
-    const computed = getComputedStyle(usageContextInput);
-    contextPlaceholderSizer.style.font = computed.font || "";
-    contextPlaceholderSizer.style.lineHeight = computed.lineHeight || "";
-    contextPlaceholderSizer.style.padding = computed.padding || "";
-    contextPlaceholderSizer.style.width = `${usageContextInput.clientWidth}px`;
-    contextPlaceholderSizer.textContent = text;
-    const measuredHeight = contextPlaceholderSizer.scrollHeight;
-    minHeight = Math.max(minHeight, measuredHeight);
-    usageContextInput.style.minHeight = `${minHeight}px`;
-    if (!usageContextInput.value.trim().length) {
-      usageContextInput.style.height = `${minHeight}px`;
-    }
-  };
-  if (usageContextInput) {
-    updateContextPlaceholder(DEFAULT_CONTEXT_PLACEHOLDER, DEFAULT_PLACEHOLDER_LINES);
-  }
-  const resizeContextInput = () => {
-    autoResizeTextarea(usageContextInput, MIN_CONTEXT_HEIGHT);
-  };
-  let usageContextValue = "";
   const requiredKeywordInput = document.getElementById("requiredKeywordInput");
   const avoidKeywordInput = document.getElementById("avoidKeywordInput");
   const requiredKeywordChips = document.getElementById("requiredKeywordChips");
@@ -981,6 +1307,8 @@
     required: [],
     avoid: [],
   };
+  const hasManualKeywords = () =>
+    (manualKeywordState.required?.length || 0) + (manualKeywordState.avoid?.length || 0) > 0;
   const keywordInputs = {
     required: requiredKeywordInput,
     avoid: avoidKeywordInput,
@@ -991,6 +1319,10 @@
   };
   const keywordTypes = ["required", "avoid"];
   const sanitizeKeyword = (value = "") => value.replace(/\s+/g, " ").trim();
+  const updateKeywordToggleState = () => {
+    const hasKeywords = hasManualKeywords();
+    keywordToggleBtn?.classList.toggle("has-selection", hasKeywords);
+  };
   const renderKeywordChips = (type) => {
     const listEl = keywordChipLists[type];
     if (!listEl) return;
@@ -999,21 +1331,56 @@
     keywords.forEach((keyword, index) => {
       const chip = document.createElement("span");
       chip.className = "keyword-chip";
+      chip.classList.add(type === "required" ? "include-chip" : "avoid-chip");
       const label = document.createElement("span");
       label.textContent = keyword;
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "chip-remove";
       removeBtn.setAttribute("aria-label", `Remove keyword "${keyword}"`);
-      removeBtn.textContent = "×";
+      const iconName = type === "required" ? "Icons/Remove.svg" : "Icons/Remove(red).svg";
+    if (type === "required") {
+      removeBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8Z" fill="#00B0FF"/>
+          <path d="M9.62055 11.2326C10.0669 11.6789 10.7905 11.6789 11.2368 11.2326C11.6831 10.7863 11.6831 10.0627 11.2368 9.61636L9.62049 8.00005L11.2368 6.38375C11.6831 5.93744 11.6831 5.21382 11.2368 4.7675C10.7905 4.32119 10.0669 4.32119 9.62055 4.7675L8.00425 6.38381L6.38807 4.76763C5.94175 4.32131 5.21814 4.32131 4.77182 4.76763C4.32551 5.21394 4.32551 5.93756 4.77182 6.38387L6.38801 8.00005L4.77182 9.61624C4.32551 10.0626 4.32551 10.7862 4.77182 11.2325C5.21814 11.6788 5.94175 11.6788 6.38807 11.2325L8.00425 9.6163L9.62055 11.2326Z" fill="white"/>
+        </svg>
+      `;
+    } else {
+      removeBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8Z" fill="#F44336"/>
+          <path d="M9.62055 11.2326C10.0669 11.6789 10.7905 11.6789 11.2368 11.2326C11.6831 10.7863 11.6831 10.0627 11.2368 9.61636L9.62049 8.00005L11.2368 6.38375C11.6831 5.93744 11.6831 5.21382 11.2368 4.7675C10.7905 4.32119 10.0669 4.32119 9.62055 4.7675L8.00425 6.38381L6.38807 4.76763C5.94175 4.32131 5.21814 4.32131 4.77182 4.76763C4.32551 5.21394 4.32551 5.93756 4.77182 6.38387L6.38801 8.00005L4.77182 9.61624C4.32551 10.0626 4.32551 10.7862 4.77182 11.2325C5.21814 11.6788 5.94175 11.6788 6.38807 11.2325L8.00425 9.6163L9.62055 11.2326Z" fill="white"/>
+        </svg>
+      `;
+    }
       removeBtn.addEventListener("click", () => {
         manualKeywordState[type].splice(index, 1);
         renderKeywordChips(type);
+        handleGuidelineControlsChanged();
       });
       chip.appendChild(label);
       chip.appendChild(removeBtn);
       listEl.appendChild(chip);
     });
+    updateKeywordToggleState();
+  };
+  const clearAllManualKeywords = () => {
+    let changed = false;
+    keywordTypes.forEach((type) => {
+      if (manualKeywordState[type].length) {
+        manualKeywordState[type].length = 0;
+        changed = true;
+      }
+      const input = keywordInputs[type];
+      if (input) input.value = "";
+      renderKeywordChips(type);
+    });
+    if (!changed) {
+      updateKeywordToggleState();
+    } else {
+      handleGuidelineControlsChanged();
+    }
   };
   const addManualKeyword = (type, rawValue) => {
     const keyword = sanitizeKeyword(rawValue);
@@ -1023,6 +1390,7 @@
     if (exists) return false;
     keywords.push(keyword);
     renderKeywordChips(type);
+    handleGuidelineControlsChanged();
     return true;
   };
   const commitManualKeywordFromInput = (type) => {
@@ -1050,6 +1418,7 @@
     ) {
       manualKeywordState[type].pop();
       renderKeywordChips(type);
+      handleGuidelineControlsChanged();
       event.preventDefault();
     }
   };
@@ -1059,6 +1428,7 @@
     input.addEventListener("keydown", (event) => handleKeywordInputKeydown(event, type));
     input.addEventListener("blur", () => commitManualKeywordFromInput(type));
   });
+  updateKeywordToggleState();
   const formatCharCount = (count) => `${count} character${count === 1 ? "" : "s"}`;
   const updateInputCharCount = () => {
     if (!inputCharCounter) return;
@@ -1095,11 +1465,8 @@
     resetSuggestionCardInteractivity(card);
     card.innerHTML = `
       <div class="skeleton-line skeleton-block long"></div>
-      <div class="skeleton-line skeleton-block"></div>
-      <div class="skeleton-line skeleton-block short"></div>
+      <div class="skeleton-line skeleton-block long"></div>
       <div class="skeleton-meta">
-        <span class="skeleton-pill skeleton-block"></span>
-        <span class="skeleton-pill skeleton-block short"></span>
         <span class="skeleton-pill skeleton-block"></span>
       </div>
     `;
@@ -1271,41 +1638,102 @@
   let lengthOverviewText = initialLengthState.overview;
   let selectedLengthId = "";
   const getLengthPresetById = (value) => lengthPresets.find((preset) => preset.id === value);
-  const updateLengthDisplays = () => {
-    const activePreset = selectedLengthId ? getLengthPresetById(selectedLengthId) : null;
-    if (lengthRangeLabel) {
-      lengthRangeLabel.textContent = activePreset ? activePreset.rangeLabel : "Auto mix";
+  const updateSelectedLengthUI = () => {
+    if (!lengthSelectionContainer || !lengthSelectionLabel) return;
+    const preset = selectedLengthId ? getLengthPresetById(selectedLengthId) : null;
+    const hasPreset = Boolean(preset && preset.label);
+    lengthToggleBtn?.classList.toggle("has-selection", hasPreset);
+    lengthToggleTitle && (lengthToggleTitle.textContent = hasPreset ? preset?.label : "Length");
+    lengthToggleBtn?.setAttribute("aria-label", hasPreset ? `Length: ${preset?.label}` : "Length");
+    if (hasPreset) {
+      lengthSelectionLabel.textContent = preset.label;
+      lengthSelectionContainer.classList.add("visible");
+      return;
     }
-    if (lengthHintEl) {
-      if (activePreset) {
-        lengthHintEl.textContent = activePreset.summary || lengthOverviewText;
-      } else {
-        const rangeSummary = lengthPresets
-          .map((preset) => `${preset.label} ${preset.rangeLabel}`.trim())
-          .filter(Boolean)
-          .join(", ");
-        const base = lengthOverviewText || "We'll mix short, medium, and long suggestions automatically.";
-        lengthHintEl.textContent = rangeSummary ? `${base} (${rangeSummary}).` : base;
-      }
+    lengthSelectionLabel.textContent = "";
+    lengthSelectionContainer.classList.remove("visible");
+  };
+  const clearLengthSelection = () => {
+    selectedLengthId = "";
+    updateLengthDisplays();
+    lengthToggleBtn?.focus();
+    handleGuidelineControlsChanged();
+  };
+  const updateLengthDisplays = () => {
+    if (lengthMenuList) {
+      const activeId = selectedLengthId || "";
+      lengthMenuList.querySelectorAll(".length-option").forEach((option) => {
+        option.classList.toggle("selected", option.getAttribute("data-length-id") === activeId);
+      });
+    }
+    updateSelectedLengthUI();
+  };
+  let lengthMenuVisible = false;
+  const setLengthMenuVisibility = (visible) => {
+    lengthMenuVisible = visible;
+    if (lengthMenu) {
+      lengthMenu.classList.toggle("visible", visible);
+      lengthMenu.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    if (lengthToggleBtn) {
+      lengthToggleBtn.setAttribute("aria-expanded", visible ? "true" : "false");
+      lengthToggleBtn.classList.toggle("active", visible);
     }
   };
-  const renderLengthSelectOptions = () => {
-    if (!lengthSelect) return;
-    const previous = lengthSelect.value;
-    lengthSelect.innerHTML = "";
-    const autoOption = document.createElement("option");
-    autoOption.value = "";
-    autoOption.textContent = "Auto (mix short + medium + long)";
-    lengthSelect.appendChild(autoOption);
+  const closeLengthMenu = () => setLengthMenuVisibility(false);
+  const toggleLengthMenu = () => setLengthMenuVisibility(!lengthMenuVisible);
+  let keywordMenuVisible = false;
+  const setKeywordMenuVisibility = (visible) => {
+    keywordMenuVisible = visible;
+    if (keywordMenu) {
+      keywordMenu.classList.toggle("visible", visible);
+      keywordMenu.setAttribute("aria-hidden", visible ? "false" : "true");
+    }
+    if (keywordToggleBtn) {
+      keywordToggleBtn.setAttribute("aria-expanded", visible ? "true" : "false");
+    }
+  };
+  const toggleKeywordMenu = (event) => {
+    event?.stopPropagation();
+    if (!keywordMenuVisible) {
+      closeLengthMenu();
+    }
+    setKeywordMenuVisibility(!keywordMenuVisible);
+  };
+  const closeKeywordMenu = () => setKeywordMenuVisibility(false);
+  const handleKeywordIconClick = (event) => {
+    if (!hasManualKeywords()) return;
+    event.stopPropagation();
+    event.preventDefault();
+    clearAllManualKeywords();
+  };
+  keywordToggleRemoveIcon?.addEventListener("click", handleKeywordIconClick);
+  const renderLengthMenuOptions = () => {
+    if (!lengthMenuList) return;
+    lengthMenuList.innerHTML = "";
+    const addOption = ({ id, label }) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "length-option";
+      btn.setAttribute("data-length-id", id || "");
+      btn.textContent = label;
+      btn.addEventListener("click", () => {
+        selectedLengthId = id || "";
+        updateLengthDisplays();
+        closeLengthMenu();
+        handleGuidelineControlsChanged();
+      });
+      lengthMenuList.appendChild(btn);
+    };
     lengthPresets.forEach((preset) => {
-      const option = document.createElement("option");
-      option.value = preset.id;
-      option.textContent = `${preset.label} (${preset.rangeLabel || "range"})`;
-      lengthSelect.appendChild(option);
+      addOption({
+        id: preset.id,
+        label: preset.label,
+      });
     });
-    const validPrevious = previous && getLengthPresetById(previous) ? previous : "";
-    lengthSelect.value = validPrevious;
-    selectedLengthId = validPrevious;
+    if (selectedLengthId && !getLengthPresetById(selectedLengthId)) {
+      selectedLengthId = "";
+    }
     updateLengthDisplays();
   };
   const applyLengthGuide = (guide) => {
@@ -1321,108 +1749,56 @@
     if (!getLengthPresetById(selectedLengthId)) {
       selectedLengthId = "";
     }
-    renderLengthSelectOptions();
+    renderLengthMenuOptions();
   };
-  renderLengthSelectOptions();
-  lengthSelect?.addEventListener("change", () => {
-    selectedLengthId = lengthSelect.value || "";
-    updateLengthDisplays();
-  });
+  renderLengthMenuOptions();
 
-  const makeElementLabel = (value) => {
-    const cleaned = cleanString(value);
-    if (!cleaned) return "";
-    return cleaned
-      .split(/[_\s]+/g)
-      .filter(Boolean)
-      .map((segment) => {
-        const lower = segment.toLowerCase();
-        return lower.charAt(0).toUpperCase() + lower.slice(1);
-      })
-      .join(" ");
-  };
-  const normalizeSentenceLibrary = (guide) => {
-    const entries =
-      guide && typeof guide === "object" && guide.sentence_library && typeof guide.sentence_library === "object"
-        ? guide.sentence_library.elements
-        : null;
-    const options = [];
-    if (entries && typeof entries === "object") {
-      Object.entries(entries).forEach(([id, spec]) => {
-        if (!Array.isArray(spec)) return;
-        const label = makeElementLabel(id) || cleanString(id);
-        if (!label) return;
-        const hints = spec
-          .map((item) => {
-            if (!item || typeof item !== "object") return "";
-            const example = cleanString(item.example);
-            if (!example) return "";
-            const why = cleanString(item.why);
-            return why ? `${example} (${why})` : example;
-          })
-          .filter(Boolean);
-        if (!hints.length) return;
-        options.push({
-          id,
-          label,
-          hint: hints[0],
-          extras: hints.slice(1),
-        });
-      });
+  const handleLengthIconClick = (event) => {
+    if (!selectedLengthId) {
+      return;
     }
-    return {
-      options,
-    };
+    event.stopPropagation();
+    event.preventDefault();
+    clearLengthSelection();
+    closeLengthMenu();
   };
-  let sentenceLibraryOptions = [];
-  let selectedElementId = "";
-  const getElementOptionById = (value) => sentenceLibraryOptions.find((option) => option.id === value);
-  const updateElementDisplays = () => {
-    const active = selectedElementId ? getElementOptionById(selectedElementId) : null;
-    if (elementLabel) {
-      elementLabel.textContent = active ? active.label : "All elements";
+  lengthToggleRemoveIcon?.addEventListener("click", handleLengthIconClick);
+  lengthToggleBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeKeywordMenu();
+    toggleLengthMenu();
+  });
+  lengthSelectionRemove?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    clearLengthSelection();
+  });
+  lengthSelectionRemove?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      clearLengthSelection();
     }
-    if (elementHintEl) {
-      if (active) {
-        elementHintEl.textContent = active.hint;
-      } else if (sentenceLibraryOptions.length) {
-        elementHintEl.textContent = "Library hints for every element influence the prompt.";
-      } else {
-        elementHintEl.textContent = "Sentence library examples load once the style guide is ready.";
-      }
+  });
+  keywordToggleBtn?.addEventListener("click", toggleKeywordMenu);
+  lengthMenu?.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+  keywordMenu?.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+  document.addEventListener("click", (event) => {
+    if (lengthDropdownEl && !lengthDropdownEl.contains(event.target)) {
+      closeLengthMenu();
     }
-  };
-  const renderElementSelectOptions = () => {
-    if (!elementSelect) return;
-    const previous = elementSelect.value;
-    elementSelect.innerHTML = "";
-    const autoOption = document.createElement("option");
-    autoOption.value = "";
-    autoOption.textContent = "All elements (library hints included)";
-    elementSelect.appendChild(autoOption);
-    sentenceLibraryOptions.forEach((option) => {
-      const opt = document.createElement("option");
-      opt.value = option.id;
-      opt.textContent = option.label;
-      elementSelect.appendChild(opt);
-    });
-    const validPrevious = previous && getElementOptionById(previous) ? previous : "";
-    elementSelect.value = validPrevious;
-    selectedElementId = validPrevious;
-    updateElementDisplays();
-  };
-  const applySentenceLibrary = (guide) => {
-    const normalized = normalizeSentenceLibrary(guide);
-    sentenceLibraryOptions = normalized.options;
-    if (!getElementOptionById(selectedElementId)) {
-      selectedElementId = "";
+    if (keywordDropdownEl && !keywordDropdownEl.contains(event.target)) {
+      closeKeywordMenu();
     }
-    renderElementSelectOptions();
-  };
-  renderElementSelectOptions();
-  elementSelect?.addEventListener("change", () => {
-    selectedElementId = elementSelect.value || "";
-    updateElementDisplays();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeLengthMenu();
+      closeKeywordMenu();
+    }
   });
 
   const shortenHelperText = (text) => {
@@ -1444,19 +1820,6 @@
     return candidate.replace(/[.:;]+$/, "").trim();
   };
 
-  const updateContextHints = () => {
-    if (!usageContextInput) return;
-    const helperLines = (guidelineMeta.rewriteRequirements || [])
-      .map((req) => shortenHelperText(req))
-      .filter(Boolean)
-      .slice(0, 3);
-    if (!helperLines.length) {
-      updateContextPlaceholder(DEFAULT_CONTEXT_PLACEHOLDER, DEFAULT_PLACEHOLDER_LINES);
-      return;
-    }
-    updateContextPlaceholder(helperLines.join("\n"), helperLines.length);
-  };
-
   const applyGuidelineMeta = (guide) => {
     const rewritePrompt = guide?.rewritePrompt || {};
     guidelineMeta.rewriteOverview =
@@ -1467,21 +1830,15 @@
           .filter(Boolean)
       : [];
     applyLengthGuide(guide);
-    applySentenceLibrary(guide);
-    updateContextHints();
   };
-
-  window.addEventListener("resize", () => {
-    if (usageContextInput && !usageContextInput.value.trim().length) {
-      updateContextHints();
-    }
-  });
 
   const setGuidelineIndicator = (state, text) => {
     if (!guidelineStatus || !guidelineStatusText) return;
     guidelineStatus.classList.remove("loaded", "fallback", "error");
     guidelineStatus.classList.add(state);
     guidelineStatusText.textContent = text;
+    document.body.classList.remove("guideline-loaded", "guideline-fallback", "guideline-error");
+    document.body.classList.add(`guideline-${state}`);
   };
 
   let guidelineReference = null;
@@ -1495,11 +1852,6 @@
     const payload = base && typeof base === "object" ? { ...base } : {};
     delete payload.tonePreference;
     delete payload.styleFilters;
-    if (usageContextValue) {
-      payload.usageContext = usageContextValue;
-    } else {
-      delete payload.usageContext;
-    }
     const manualRequired = manualKeywordState.required.slice();
     const manualAvoid = manualKeywordState.avoid.slice();
     if (manualRequired.length || manualAvoid.length) {
@@ -1540,12 +1892,6 @@
         avoid: manualAvoid,
       };
     }
-    const activeElement = selectedElementId ? getElementOptionById(selectedElementId) : null;
-    if (activeElement) {
-      payload.element_focus = activeElement.id;
-    } else if (payload.element_focus) {
-      delete payload.element_focus;
-    }
     const activeLengthPreset = selectedLengthId ? getLengthPresetById(selectedLengthId) : null;
     if (activeLengthPreset) {
       const lengthPreference = {
@@ -1566,6 +1912,12 @@
       delete payload.length_preference;
     }
     return payload;
+  };
+  const handleGuidelineControlsChanged = () => {
+    if (lastRewriteRequest) {
+      lastRewriteRequest.guideline = buildGuidelinePayload();
+    }
+    postToPlugin({ type: "reset-tone-cycle" });
   };
   setGuidelineIndicator("fallback", "Loading style guide…");
 
@@ -1623,6 +1975,7 @@
     if (restoreSuggestionsFromStorage()) {
       return;
     }
+    setCycleToneVisibility(false);
     clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered";
     suggestionBody.innerHTML = `
@@ -1632,7 +1985,8 @@
   };
 
   const renderLoading = (text, skeletonCount = MIN_SUGGESTIONS) => {
-    showSuggestionsScreen();
+    openSuggestionsTab();
+    setCycleToneVisibility(false);
     renderSkeletonPlaceholders(skeletonCount);
     const labelText = typeof text === "string" && text.trim() ? text : getModeLoadingText();
     if (rewriteShimmerText) {
@@ -1641,12 +1995,14 @@
   };
 
   const renderStatus = (text) => {
+    setCycleToneVisibility(false);
     clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered";
     suggestionBody.innerHTML = `<p>${text}</p>`;
   };
 
   const renderError = (text) => {
+    setCycleToneVisibility(false);
     clearSuggestionRevealTimers();
     suggestionBody.className = "suggestion-body centered error";
     suggestionBody.innerHTML = `<p>${text || "Something went wrong. Try again in a bit."}</p>`;
@@ -1662,9 +2018,9 @@
     if (!cards.length || !list) {
       skeletonActive = false;
       skeletonVisibleSince = 0;
-      const fallbackCards = items
-        .map(
-          (item) => `
+    const fallbackCards = items
+      .map(
+        (item) => `
         <article class="suggestion-card">
           <p>${item.text}</p>
           <div class="suggestion-meta">
@@ -1672,12 +2028,16 @@
           </div>
         </article>`
         ) 
-        .join("");
-      suggestionBody.className = "suggestion-body";
-      suggestionBody.innerHTML = `<div class="suggestions-list">${fallbackCards}</div>`;
-      return;
-    }
-    scheduleSuggestionReveal(cards, items, list);
+      .join("");
+    suggestionBody.className = "suggestion-body";
+    suggestionBody.innerHTML = `<div class="suggestions-list">${fallbackCards}</div>`;
+    setCycleToneVisibility(true);
+    updateCycleButtonState();
+    return;
+  }
+  scheduleSuggestionReveal(cards, items, list);
+  setCycleToneVisibility(true);
+  updateCycleButtonState();
   };
 
   const saveSuggestionsSnapshot = (payload) => {
@@ -1713,7 +2073,7 @@
     if (!Array.isArray(suggestions) || !suggestions.length) {
       return false;
     }
-    showSuggestionsScreen();
+    openSuggestionsTab();
     renderSuggestions(suggestions);
     return true;
   };
@@ -1730,161 +2090,36 @@
     return text.replace(/\s*\(\s*~?\d+\s*(?:char(?:s)?|character(?:s)?)\s*\)\s*$/i, "").trim();
   };
 
-  const looksLikeMeta = (line) => {
-    const lower = line.toLowerCase();
-    const normalized = lower.replace(/[’]/g, "'");
-    if (!lower) return true;
-    if (lower.length <= 2) return true;
-    const metaPrefixes = [
-      "here are",
-      "here's",
-      "these are",
-      "please note",
-      "okay, i'm",
-      "alright, i'm",
-      "i'm ready",
-      "let me",
-      "i will",
-      "i can",
-      "remember:",
-      "for reference",
-      "guideline:",
-      "dialog:",
-      "instruction:",
-    ];
-    if (metaPrefixes.some((p) => lower.startsWith(p))) return true;
-    if (/^option\s*\d+/i.test(lower)) return true;
-    if (lower.startsWith("option ") || lower.startsWith("option:")) return true;
-    if (lower.includes("option ") && lower.endsWith(":")) return true;
-    if (lower.includes("dialog") || lower.includes("instruction")) return true;
-    if (lower.endsWith(":") && (lower.includes("requirement") || lower.includes("suggestion"))) return true;
-    if (lower.includes("i've provided") || lower.includes("i have provided")) return true;
-    if (lower.includes("below are") || lower.includes("as requested")) return true;
-    const conversationalPatterns = [
-      /we understand\b/,
-      /we know\b/,
-      /we're here\b/,
-      /it's great you're\b/,
-      /it is great you're\b/,
-      /let's see\b/,
-      /let's find\b/,
-      /let's check\b/,
-      /let's explore\b/,
-      /let's walk\b/,
-      /let's take\b/,
-      /let's talk\b/,
-      /let's get you\b/,
-    ];
-    if (conversationalPatterns.some((pattern) => pattern.test(normalized))) return true;
-    return false;
-  };
-
-  const expandNumberedItems = (text) => {
-    if (!/\d+[\.)-]/.test(text)) return null;
-    const segments = text
-      .split(/\d+[\.)-]\s*/g)
-      .map((segment) => segment.trim())
-      .filter(Boolean);
-    return segments.length >= 2 ? segments : null;
-  };
-
   const classifyLength = (count) => {
     if (count <= 45) return "Short";
     if (count <= 80) return "Medium";
     return "Long";
   };
+  const removeLeadingIndex = (value = "") => value.replace(/^\s*\d+[\.\)\-]\s*/, "");
   const buildSuggestions = (raw) => {
     if (!raw) return [];
 
     const expandedRaw = raw.replace(/(\d+[\.)-])/g, "\n$1");
-    let blocks = expandedRaw.split(/\n{2,}/);
-    if (blocks.length === 1) {
-      blocks = expandedRaw.split(/\n+/);
+    let blockSegments = expandedRaw.split(/\n{2,}/);
+    if (blockSegments.length === 1) {
+      blockSegments = expandedRaw.split(/\n+/);
     }
-
-    const normalized = blocks
+    const blocks = blockSegments
       .map((block) => stripFormatting(block))
-      .filter(Boolean)
-      .filter((block) => !looksLikeMeta(block));
+      .map((block) => stripTrailingCharCount(block))
+      .map((block) => removeLeadingIndex(block))
+      .filter(Boolean);
 
-    const flattened = normalized.flatMap((text) => {
-      const expanded = expandNumberedItems(text);
-      return expanded && expanded.length ? expanded : [text];
-    });
-
-    const unique = [];
-    const seen = new Set();
-    flattened.forEach((text) => {
-      const clean = stripTrailingCharCount(stripFormatting(text));
-      if (!clean) return;
-      const key = clean.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(clean);
-      }
-    });
-
-    const enriched = unique.map((text) => {
+    return blocks.map((text, idx) => {
       const charCount = text.length;
       return {
         text,
         charCount,
         lengthLabel: classifyLength(charCount),
+        score: Math.max(80, 95 - idx * 2),
+        tones: toneFallbacks[idx % toneFallbacks.length],
       };
     });
-
-    const bucketOrder = ["Short", "Medium", "Long"];
-    const bucketTargets = {
-      Short: 3,
-      Medium: 3,
-      Long: 3,
-    };
-    const buckets = {
-      Short: [],
-      Medium: [],
-      Long: [],
-    };
-    enriched.forEach((item) => {
-      if (buckets[item.lengthLabel]) {
-        buckets[item.lengthLabel].push(item);
-      } else {
-        buckets.Long.push(item);
-      }
-    });
-
-    const selected = [];
-    const usedKeys = new Set();
-
-    bucketOrder.forEach((bucket) => {
-      const bucketItems = buckets[bucket] || [];
-      const target = bucketTargets[bucket] || 0;
-      let count = 0;
-      for (const item of bucketItems) {
-        const key = item.text.toLowerCase();
-        if (usedKeys.has(key)) continue;
-        selected.push(item);
-        usedKeys.add(key);
-        count += 1;
-        if (count >= target) break;
-      }
-    });
-
-    if (selected.length < MIN_SUGGESTIONS) {
-      enriched.forEach((item) => {
-        if (selected.length >= MIN_SUGGESTIONS) return;
-        const key = item.text.toLowerCase();
-        if (!usedKeys.has(key)) {
-          selected.push(item);
-          usedKeys.add(key);
-        }
-      });
-    }
-
-    return selected.slice(0, MIN_SUGGESTIONS).map((item, idx) => ({
-      ...item,
-      score: Math.max(80, 95 - idx * 2),
-      tones: toneFallbacks[idx % toneFallbacks.length],
-    }));
   };
 
   const applySelectionText = (text) => {
@@ -1892,14 +2127,6 @@
     inputField.value = text;
     inputField.dispatchEvent(new Event("input"));
   };
-
-  updateContextHints();
-
-  usageContextInput?.addEventListener("input", () => {
-    usageContextValue = usageContextInput.value.trim();
-    resizeContextInput();
-    updateContextHints();
-  });
 
   btnRewrite.onclick = async () => {
     commitAllManualKeywords();
@@ -1910,6 +2137,12 @@
     }
     const mode = generationMode;
     const guidelinePayload = buildGuidelinePayload();
+    lastRewriteRequest = {
+      text,
+      guideline: guidelinePayload,
+      mode,
+    };
+    updateCycleButtonState();
     setRewriteLoadingState(true);
     renderLoading();
 
@@ -1925,15 +2158,37 @@
 
     delete window.__pendingGuideline;
     delete window.__pendingMode;
+      postToPlugin({
+        type: "rewrite",
+        key,
+        text,
+        guideline: guidelinePayload,
+        mode,
+      });
+    };
+
+  btnCycleTone?.addEventListener("click", () => {
+    if (!lastRewriteRequest) return;
+    commitAllManualKeywords();
+    const key = geminiKeyInput ? geminiKeyInput.value.trim() : "";
+    if (!key) {
+      postToPlugin({ type: "load-key" });
+      renderLoading("Loading saved key…");
+      window.__pendingText = lastRewriteRequest.text;
+      window.__pendingGuideline = lastRewriteRequest.guideline;
+      window.__pendingMode = lastRewriteRequest.mode;
+      return;
+    }
+    setRewriteLoadingState(true);
+    renderLoading();
     postToPlugin({
-      type: "rewrite",
+      type: "cycle-tone",
       key,
-      text,
-      guideline: guidelinePayload,
-      mode,
-      elementFocus: selectedElementId,
+      text: lastRewriteRequest.text,
+      guideline: lastRewriteRequest.guideline,
+      mode: lastRewriteRequest.mode,
     });
-  };
+  });
 
   inputField.addEventListener("input", () => {
     const hasText = Boolean(inputField.value.trim());
@@ -1967,8 +2222,6 @@
         guidelineMeta.rewriteOverview = "";
         guidelineMeta.rewriteRequirements = [];
         applyLengthGuide(null);
-        applySentenceLibrary(null);
-        updateContextHints();
       } else if (msg.guideline) {
         guidelineReference = msg.guideline;
         setGuidelineIndicator("loaded", "Using structured style guide.");
@@ -1979,8 +2232,6 @@
         guidelineMeta.rewriteOverview = "";
         guidelineMeta.rewriteRequirements = [];
         applyLengthGuide(null);
-        applySentenceLibrary(null);
-        updateContextHints();
       }
       return;
     }
@@ -1997,7 +2248,7 @@
         saveStatus.textContent = "Load failed: " + msg.error;
         setRewriteLoadingState(false);
         if (window.__pendingText) {
-          showSuggestionsScreen();
+    openSuggestionsTab();
           renderStatus("Couldn't load your API key. Add it in Settings to try again.");
           delete window.__pendingText;
           delete window.__pendingGuideline;
@@ -2026,13 +2277,12 @@
             text,
             guideline: guide,
             mode: pendingMode,
-            elementFocus: selectedElementId,
           });
           setRewriteLoadingState(true);
           renderLoading();
         } else {
           setRewriteLoadingState(false);
-          showSuggestionsScreen();
+          openSuggestionsTab();
           renderStatus("Add your Gemini API key in Settings to generate copy suggestions.");
           delete window.__pendingText;
           delete window.__pendingGuideline;
@@ -2051,8 +2301,7 @@
           : "Unknown error.";
       console.error("Gemini rewrite error:", msg.error);
       setRewriteLoadingState(false);
-      activate("rewrite");
-      showSuggestionsScreen();
+      openSuggestionsTab();
       renderError("Generation failed: " + errText);
       return;
     }
@@ -2062,10 +2311,19 @@
       }
       return;
     }
+    if (msg?.type === "rewrite-soft-feedback") {
+      const records = Array.isArray(msg.records) ? msg.records : [];
+      if (records.length) {
+        window.softFeedbackLog = records;
+        console.info("Pronoun soft-feedback records:", records);
+      }
+      return;
+    }
+
     if (msg?.type === "rewrite-done") {
       const output = typeof msg.output === "string" ? msg.output.trim() : "";
       setRewriteLoadingState(false);
-      showSuggestionsScreen();
+      openSuggestionsTab();
       if (msg.error) {
         renderError(output);
       } else {
@@ -2075,14 +2333,12 @@
           saveSuggestionsSnapshot({
             suggestions,
             sourceText: inputField?.value?.trim() || "",
-            usageContext: usageContextValue,
             storedAt: Date.now(),
           });
         } else {
           renderError(output || "No response.");
         }
       }
-      activate("rewrite");
       return;
     }
   };
@@ -2093,9 +2349,9 @@
     saveStatus.textContent = "Loading…";
   });
 
+  activate("rewrite");
   updateInputCharCount();
   resizeRewriteInput();
-  resizeContextInput();
   renderEmptyState();
   postToPlugin({ type: "request-guideline" });
 </script>

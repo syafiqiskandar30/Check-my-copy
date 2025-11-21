@@ -3,6 +3,16 @@ import guidelineReference from "./guideline.json";
 
 const describeError = (err: any) =>
   err && err.message ? String(err.message) : String(err);
+let toneCycleIndex = 0;
+let toneCycleSignature = "";
+let toneCycleCompleted = false;
+const buildCycleSignature = (text: string, version: string) => `${text}|||${version}`;
+const deriveGuideVersion = (guide: any): string => {
+  if (!guide || typeof guide !== "object") return "";
+  const meta = (guide as any).meta;
+  if (!meta || typeof meta !== "object") return "";
+  return formatGuideText((meta as any).version) || "";
+};
 
 const takeStrings = (value: unknown, limit = 4): string[] => {
   if (!Array.isArray(value)) return [];
@@ -34,6 +44,235 @@ const mergeUniqueStrings = (...lists: string[][]): string[] => {
     });
   });
   return merged;
+};
+
+const sanitisePromptText = (input: string): string =>
+  String(input || "")
+    .replace(/\s+/g, " ")
+    .replace(/[\u0000-\u001F]/g, "")
+    .trim();
+
+const obliterateEmDash = (value: string): string => value.replace(/[–—]/g, "-");
+
+const normalizeVariantForComparison = (value: string): string =>
+  obliterateEmDash(String(value || ""))
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const normalizeToneKeyValue = (value?: string): string =>
+  typeof value === "string"
+    ? value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")
+    : "";
+
+const stripModelResponsePreface = (value: string): string => {
+  if (!value) return "";
+  let cleaned = value.trim();
+  if (/^```/.test(cleaned)) {
+    cleaned = cleaned.replace(/^```(?:json)?/i, "").trim();
+    if (cleaned.endsWith("```")) {
+      cleaned = cleaned.slice(0, -3).trim();
+    }
+  }
+  const removePreface = (keyword: string) => {
+    const regex = new RegExp(`^${keyword}\\b[:\\-\\s]*`, "i");
+    if (regex.test(cleaned)) {
+      const remainder = cleaned.replace(regex, "").trimStart();
+      if (remainder.startsWith("{") || remainder.startsWith("[")) {
+        cleaned = remainder.trim();
+      }
+    }
+  };
+  removePreface("json");
+  removePreface("response");
+  return cleaned;
+};
+
+const normaliseJsonQuotes = (value: string): string =>
+  value.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+
+const ACTION_TRIGGER_KEYWORDS = [
+  "pay",
+  "use",
+  "tap",
+  "scan",
+  "pump",
+  "top up",
+  "top-up",
+  "reload",
+  "load",
+  "link",
+  "activate",
+  "start",
+  "shop",
+  "buy",
+  "spend",
+  "transfer",
+  "withdraw",
+  "deposit",
+  "swipe",
+  "refuel",
+];
+
+const OUTCOME_KEYWORDS = [
+  "earn",
+  "collect",
+  "get",
+  "unlock",
+  "receive",
+  "redeem",
+  "enjoy",
+  "access",
+  "save",
+  "secure",
+  "claim",
+  "gain",
+  "stack",
+];
+
+const getPreviousNonWhitespaceChar = (input: string, index: number): string => {
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const char = input[i];
+    if (!/\s/.test(char)) {
+      return char;
+    }
+  }
+  return "";
+};
+
+type SourceTokenType = "number" | "allcaps" | "title" | "mixed" | "other";
+type SourceToken = {
+  value: string;
+  lower: string;
+  type: SourceTokenType;
+  isSentenceStart: boolean;
+};
+
+const classifySourceToken = (value: string): SourceTokenType => {
+  if (/^[0-9]+(?:[./][0-9]+)?$/.test(value)) return "number";
+  if (/^[A-Z0-9]+$/.test(value) && value.length > 1) return "allcaps";
+  if (/^[A-Z][a-z]+$/.test(value) && value.length > 1) return "title";
+  if (/[A-Z]/.test(value) && /[a-z]/.test(value)) return "mixed";
+  return "other";
+};
+
+const collectSourceKeywords = (text: string, limit = 6): string[] => {
+  const trimmed = typeof text === "string" ? text.trim() : "";
+  if (!trimmed) return [];
+  const tokens: SourceToken[] = [];
+  const wordRegex = /\b[^\s]+\b/g;
+  let match: RegExpExecArray | null;
+  while ((match = wordRegex.exec(trimmed))) {
+    const raw = match[0];
+    const cleaned = raw.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "");
+    if (!cleaned) continue;
+    const type = classifySourceToken(cleaned);
+    if (type === "other") continue;
+    const prevChar = getPreviousNonWhitespaceChar(trimmed, match.index || 0);
+    const isSentenceStart = !prevChar || /[.!?]/.test(prevChar);
+    tokens.push({
+      value: cleaned,
+      lower: cleaned.toLowerCase(),
+      type,
+      isSentenceStart,
+    });
+  }
+  const keywords: string[] = [];
+  const addKeyword = (value: string) => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue || keywords.length >= limit) return;
+    if (!keywords.some((existing) => existing.toLowerCase() === trimmedValue.toLowerCase())) {
+      keywords.push(trimmedValue);
+    }
+  };
+  tokens.forEach((token) => {
+    if (token.type === "number") {
+      addKeyword(token.value);
+    } else if (token.type === "allcaps" || token.type === "mixed") {
+      addKeyword(token.value);
+    } else if (token.type === "title" && !token.isSentenceStart) {
+      addKeyword(token.value);
+    }
+  });
+  let buffer: string[] = [];
+  tokens.forEach((token) => {
+    if (token.type === "title" && (!token.isSentenceStart || buffer.length > 0)) {
+      buffer.push(token.value);
+    } else {
+      if (buffer.length >= 2) {
+        addKeyword(buffer.join(" "));
+      }
+      buffer = [];
+    }
+  });
+  if (buffer.length >= 2) {
+    addKeyword(buffer.join(" "));
+  }
+  return keywords.slice(0, limit);
+};
+
+const sliceClauseFragment = (text: string, startIndex: number): string => {
+  if (!text || startIndex < 0 || startIndex >= text.length) return "";
+  const remainder = text.slice(startIndex);
+  const match = remainder.match(
+    /^(.*?)(?:,|;|:|\b(?:and|but|so|then|because|while|when|if)\b|\.|!|\?)/i
+  );
+  const fragment = match ? match[1] : remainder;
+  return fragment.replace(/\s+/g, " ").trim();
+};
+
+type SourceKeywordSnippet = {
+  keyword: string;
+  snippet: string;
+  index: number;
+};
+
+const findKeywordSnippet = (text: string, keywords: string[]): SourceKeywordSnippet | null => {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  let best: SourceKeywordSnippet | null = null;
+  keywords.forEach((keyword) => {
+    const idx = lower.indexOf(keyword);
+    if (idx >= 0 && (best === null || idx < best.index)) {
+      const snippet = sliceClauseFragment(text, idx);
+      if (snippet) {
+        best = { keyword, snippet, index: idx };
+      }
+    }
+  });
+  return best;
+};
+
+const deriveActionOutcomeHint = (text: string): string | null => {
+  if (!text) return null;
+  const trigger = findKeywordSnippet(text, ACTION_TRIGGER_KEYWORDS);
+  const outcome = findKeywordSnippet(text, OUTCOME_KEYWORDS);
+  if (trigger && outcome && trigger.index < outcome.index) {
+    return `Keep the trigger-to-reward promise explicit: ${trigger.snippet} leads to ${outcome.snippet}.`;
+  }
+  return null;
+};
+
+const VOICE_DESCRIPTOR_WORDS = new Set([
+  "warm",
+  "friendly",
+  "caring",
+  "human",
+  "conversational",
+]);
+
+const normalizeDescriptorValue = (value?: string) => {
+  if (!value || typeof value !== "string") return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, "");
+};
+
+const isVoiceDescriptorWord = (value?: string) => {
+  const normalized = normalizeDescriptorValue(value);
+  return Boolean(normalized && VOICE_DESCRIPTOR_WORDS.has(normalized));
 };
 
 const collectRewriteExamples = (guide: any, limit = 3): string[] => {
@@ -156,6 +395,7 @@ const collectGuideBannedTerms = (guide: any): string[] => {
     if (!value) return;
     const trimmed = value.trim();
     if (!trimmed) return;
+    if (isVoiceDescriptorWord(trimmed)) return;
     const normalized = trimmed.toLowerCase();
     if (!bucket.has(normalized)) {
       bucket.set(normalized, trimmed);
@@ -301,29 +541,60 @@ const getLengthPreference = (guide: any): LengthPreference | null => {
   };
 };
 
+const PRONOUN_PATTERN = /\b(?:we|us|our|ours|you|your|yours)\b/i;
+
 type ValidationRules = {
   bannedTerms: string[];
   requiredPhraseGroups: RequiredPhraseGroup[];
   maxSentences: number;
   maxChars: number;
   minChars: number;
+  pronounCheck: boolean;
 };
 
-const buildValidationRules = (guide: any): ValidationRules => {
+type ValidationResult = {
+  valid: boolean;
+  issues: string[];
+  softIssues: string[];
+};
+
+
+const buildValidationRules = (guide: any, sourceText?: string): ValidationRules => {
   const lengthPref = getLengthPreference(guide);
+  const baseBanned = collectGuideBannedTerms(guide);
+  const bannedTerms = new Map<string, string>();
+  const addBannedTerm = (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    const normalized = trimmed.toLowerCase();
+    if (!bannedTerms.has(normalized)) {
+      bannedTerms.set(normalized, trimmed);
+    }
+  };
+  baseBanned.forEach((term) => {
+    if (term && typeof term === "string") {
+      addBannedTerm(term);
+    }
+  });
+  const pronounCheck =
+    typeof sourceText === "string" && sourceText.trim().length > 0
+      ? !PRONOUN_PATTERN.test(sourceText)
+      : false;
   return {
-    bannedTerms: collectGuideBannedTerms(guide),
+    bannedTerms: Array.from(bannedTerms.values()),
     requiredPhraseGroups: collectRequiredPhraseGroups(guide),
     maxSentences: 2,
     maxChars: lengthPref?.maxChars ?? 0,
     minChars: lengthPref?.minChars ?? 0,
+    pronounCheck,
   };
 };
 
-const validateVariant = (variant: string, rules: ValidationRules) => {
+const validateVariant = (variant: string, rules: ValidationRules): ValidationResult => {
   const text = (variant || "").trim();
   const haystack = text.toLowerCase();
   const issues: string[] = [];
+  const softIssues: string[] = [];
   if (!text.length) {
     issues.push("Empty suggestion.");
   }
@@ -350,7 +621,11 @@ const validateVariant = (variant: string, rules: ValidationRules) => {
       issues.push(sample ? `Missing ${descriptor} (e.g., ${sample}).` : `Missing ${descriptor}.`);
     }
   });
-  return { valid: issues.length === 0, issues };
+  if (rules.pronounCheck && PRONOUN_PATTERN.test(text)) {
+    softIssues.push("Introduces first- or second-person pronouns that the source avoided.");
+  }
+  const valid = issues.length === 0 && softIssues.length === 0;
+  return { valid, issues, softIssues };
 };
 
 const toFriendlyCase = (value: string) =>
@@ -440,16 +715,41 @@ const DEFAULT_TONE_NAMES = [
   "Technical",
 ];
 
-const MAX_ACTIVE_TONES = 5;
+const MAX_ACTIVE_TONES = 16;
+const TONES_PER_CYCLE = 4;
 
-type ToneConfig = { label: string; notes: string[] };
+type ToneConfig = { key: string; label: string; notes: string[] };
 type RewriteIntent = "rewrite" | "prompt";
 
 const collectToneConfigs = (guide: any): ToneConfig[] => {
   const palette = guide?.tone_palette;
   const available = palette?.available_tones;
+  const requestedTonePreference =
+    typeof (guide as any).requestedTone === "string"
+      ? (guide as any).requestedTone.trim()
+      : typeof (guide as any).tonePreference === "string"
+      ? (guide as any).tonePreference.trim()
+      : "";
+  let resolvedRequestedTone = requestedTonePreference;
+  if (resolvedRequestedTone && available && typeof available === "object") {
+    if (!available[resolvedRequestedTone]) {
+      const fallbackKey =
+        "neutral_helpful" in available
+          ? "neutral_helpful"
+          : Object.keys(available)[0] || "";
+      if (fallbackKey && fallbackKey !== resolvedRequestedTone) {
+        if (typeof console !== "undefined" && typeof console.warn === "function") {
+          console.warn(
+            `Unknown tone "${resolvedRequestedTone}" requested; falling back to "${fallbackKey}".`
+          );
+        }
+        resolvedRequestedTone = fallbackKey;
+      }
+    }
+  }
+
   if (available && typeof available === "object") {
-    return Object.entries(available)
+    const toneList = Object.entries(available)
       .map(([key, entry]) => {
         if (!entry || typeof entry !== "object") return null;
         const labelCandidate = formatGuideText((entry as any).ui_label) || toFriendlyCase(key);
@@ -467,12 +767,44 @@ const collectToneConfigs = (guide: any): ToneConfig[] => {
         if (avoid) notes.push(`Avoid: ${avoid}.`);
         const example = formatGuideText((entry as any).example);
         if (example) notes.push(`Example tone: ${example}.`);
-        return { label: labelCandidate, notes };
+        return { key, label: labelCandidate, notes };
       })
-      .filter((tone): tone is ToneConfig => Boolean(tone && tone.label))
-      .slice(0, MAX_ACTIVE_TONES);
+      .filter((tone): tone is ToneConfig => Boolean(tone && tone.label));
+
+    if (resolvedRequestedTone) {
+      toneList.sort((a, b) => {
+        if (a.key === resolvedRequestedTone) return -1;
+        if (b.key === resolvedRequestedTone) return 1;
+        return 0;
+      });
+    }
+
+    if (toneList.length) {
+      const limit = Math.max(MAX_ACTIVE_TONES, toneList.length);
+      const selected = toneList.slice(0, limit);
+      if (selected.length < limit) {
+        const missingCount = limit - selected.length;
+        const filler = DEFAULT_TONE_NAMES.filter(
+          (label) =>
+            !selected.some((tone) => tone.label.toLowerCase() === label.toLowerCase())
+        )
+          .slice(0, missingCount)
+          .map((label) => ({
+            key: label.toLowerCase().replace(/\s+/g, "_"),
+            label,
+            notes: [],
+          }));
+        selected.push(...filler);
+      }
+      return selected;
+    }
   }
-  return DEFAULT_TONE_NAMES.slice(0, MAX_ACTIVE_TONES).map((label) => ({ label, notes: [] }));
+
+  return DEFAULT_TONE_NAMES.slice(0, MAX_ACTIVE_TONES).map((label) => ({
+    key: label.toLowerCase().replace(/\s+/g, "_"),
+    label,
+    notes: [],
+  }));
 };
 
 const collectScenarioHints = (guide: any, haystackRaw: string) => {
@@ -496,35 +828,21 @@ const collectScenarioHints = (guide: any, haystackRaw: string) => {
   return hints.slice(0, 3);
 };
 
-const collectSentenceLibraryHints = (guide: any, focusElement?: string) => {
+const collectSentenceLibraryHints = (guide: any): string[] => {
   if (!guide || typeof guide !== "object") return [];
   const library = guide.sentence_library;
   if (!library || typeof library !== "object") return [];
-  const elements = library.elements;
-  if (!elements || typeof elements !== "object") return [];
-  const normalizedFocus = focusElement ? focusElement.trim().toLowerCase() : "";
+  const clips = library.clips;
+  if (!Array.isArray(clips)) return [];
   const hints: string[] = [];
-  Object.entries(elements).forEach(([key, entry]) => {
-    if (!Array.isArray(entry)) return;
-    const label = toFriendlyCase(key.replace(/_/g, " "));
-    if (!label) return;
-    const examples = entry
-      .map((item) => {
-        if (!item || typeof item !== "object") return "";
-        const example = formatGuideText((item as any).example);
-        if (!example) return "";
-        const why = formatGuideText((item as any).why);
-        return why ? `${example} (${why})` : example;
-      })
-      .filter(Boolean)
-      .slice(0, 2);
-    if (!examples.length) return;
-    if (normalizedFocus && normalizedFocus === key.toLowerCase()) {
-      hints.push(`${label} focus: ${examples[0]}.`);
-    }
-    hints.push(`${label} reference: ${examples[0]}.`);
-    if (examples[1]) {
-      hints.push(`${label} idea: ${examples[1]}.`);
+  clips.forEach((entry) => {
+    if (!entry || typeof entry !== "object") return;
+    const example = formatGuideText((entry as any).example);
+    if (!example) return;
+    const why = formatGuideText((entry as any).why);
+    hints.push(`Sentence reference: ${example}.`);
+    if (why) {
+      hints.push(`Why it works: ${why}.`);
     }
   });
   return hints.slice(0, 12);
@@ -831,9 +1149,13 @@ const deriveGuidePrompt = (guide: any) => {
     typeof (guide.forbidden as any).banned_terms === "object"
       ? ((guide.forbidden as any).banned_terms as any).never_use
       : [];
-  const bannedTerms = takeStrings(bannedTermsSource, 6).filter(
-    (term) => !manualRequiredSet.has(term.trim().toLowerCase())
-  );
+  const bannedTerms = takeStrings(bannedTermsSource, 6).filter((term) => {
+    const normalized = term.trim().toLowerCase();
+    if (!normalized) return false;
+    if (manualRequiredSet.has(normalized)) return false;
+    if (isVoiceDescriptorWord(term)) return false;
+    return true;
+  });
   if (bannedTerms.length) {
     requirements.push(`Banned terms: ${bannedTerms.join(", ")}.`);
   }
@@ -867,8 +1189,9 @@ const deriveGuidePrompt = (guide: any) => {
         avoidPhrases.push(trimmed);
       })
     );
-    if (avoidPhrases.length) {
-      requirements.push(`Avoid these phrases entirely: ${avoidPhrases.join(", ")}.`);
+    const avoidPhrasesFiltered = avoidPhrases.filter((phrase) => !isVoiceDescriptorWord(phrase));
+    if (avoidPhrasesFiltered.length) {
+      requirements.push(`Avoid these phrases entirely: ${avoidPhrasesFiltered.join(", ")}.`);
     }
   }
   if (manualRequiredPhrases.length) {
@@ -879,8 +1202,11 @@ const deriveGuidePrompt = (guide: any) => {
       requirements.push(`Your rewrite must include ALL of these exact phrases verbatim: ${quoted}.`);
     }
   }
-  if (manualAvoidPhrases.length) {
-    requirements.push(`Never use these manual avoid phrases: ${manualAvoidPhrases.join(", ")}.`);
+  const manualAvoidPhrasesFiltered = manualAvoidPhrases.filter((phrase) => !isVoiceDescriptorWord(phrase));
+  if (manualAvoidPhrasesFiltered.length) {
+    requirements.push(
+      `Never use these manual avoid phrases: ${manualAvoidPhrasesFiltered.join(", ")}.`
+    );
   }
   if (manualReminders.length) {
     manualReminders.forEach((reminder) => {
@@ -888,8 +1214,14 @@ const deriveGuidePrompt = (guide: any) => {
       requirements.push(text);
     });
   }
-  collectRewriteExamples(guide).forEach((example) => requirements.push(example));
-  collectComponentGuidanceNotes(guide).forEach((note) => requirements.push(note));
+  collectRewriteExamples(guide).forEach((example) => {
+    const cleaned = sanitisePromptText(example);
+    if (cleaned) requirements.push(cleaned);
+  });
+  collectComponentGuidanceNotes(guide).forEach((note) => {
+    const cleaned = sanitisePromptText(note);
+    if (cleaned) requirements.push(cleaned);
+  });
 
   const preferredTerms = guide.preferred_terms;
   if (preferredTerms && typeof preferredTerms === "object") {
@@ -1135,7 +1467,7 @@ const deriveGuidePrompt = (guide: any) => {
 
   const overview =
     overviewParts.length > 0
-      ? `You are Setel’s UX writing assistant. ${overviewParts.join(" ")}`
+      ? `Rewrite the provided copy using Setel voice and guidelines: ${overviewParts.join(" ")}`
       : "";
 
   return { overview, requirements };
@@ -1145,20 +1477,297 @@ const getToneSequence = (guide: any): string[] => {
   return collectToneConfigs(guide).map((tone) => tone.label);
 };
 
-const buildRewriteInstructions = (
-  guide: any,
-  options?: {
-    sourceText?: string;
-    targetToneName?: string;
-    toneNotes?: string[];
-    intent?: RewriteIntent;
-    elementFocus?: string;
+type TaskSpecLength = "short" | "medium" | "long";
+type RewriteInstructionBundle = {
+  text: string;
+  coreText: string;
+  optionalText: string;
+  toneKey: string;
+  lengthKey: TaskSpecLength;
+};
+type BuildRewriteOptions = {
+  sourceText?: string;
+  targetToneName?: string;
+  targetToneKey?: string;
+  toneNotes?: string[];
+  intent?: RewriteIntent;
+};
+
+const TASK_SPEC_REMINDER = "Always follow TASK_SPEC exactly when choosing tone, length, and context.";
+const JSON_RESPONSE_TEMPLATE = `Respond ONLY with valid JSON in this format:
+{
+  "variants": [
+    {
+      "tone": "<TONE_KEY>",
+      "length": "<LENGTH_KEY>",
+      "text": "..."
+    }
+  ]
+}`;
+
+const determineTaskSpecLengthKey = (preference?: LengthPreference | null): TaskSpecLength => {
+  const label = (preference?.label || preference?.rangeHint || "").toLowerCase();
+  if (label.includes("short")) return "short";
+  if (label.includes("long")) return "long";
+  if (label.includes("medium")) return "medium";
+  if (preference?.maxChars && preference.maxChars <= 60) return "short";
+  if (preference?.maxChars && preference.maxChars <= 100) return "medium";
+  if (preference?.minChars && preference.minChars >= 120) return "long";
+  return "medium";
+};
+
+const buildTaskSpecBlock = (toneKey: string, lengthKey: TaskSpecLength): string =>
+  [
+    "TASK_SPEC:",
+    "  {",
+    '    "task": "rewrite",',
+    `    "tone": "${toneKey || "unspecified"}",`,
+    `    "length": "${lengthKey}"`,
+    "  }",
+    "END_TASK_SPEC",
+    "",
+  ].join("\n");
+
+type ModelVariant = {
+  tone?: string;
+  length?: string;
+  text: string;
+};
+
+const sanitiseJsonStringLiterals = (value: string): string => {
+  let result = "";
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < value.length; i += 1) {
+    const char = value[i];
+    if (char === '"' && !escaped) {
+      inString = !inString;
+    }
+    if (inString && (char === "\n" || char === "\r")) {
+      result += "\\n";
+      escaped = false;
+      continue;
+    }
+    if (char === "\\" && !escaped) {
+      escaped = true;
+    } else {
+      escaped = false;
+    }
+    result += char;
   }
-) => {
+  return result;
+};
+
+const tryParseJson = (value: string): unknown | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = normaliseJsonQuotes(value.trim());
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch (err) {
+    try {
+      return JSON.parse(sanitiseJsonStringLiterals(trimmed));
+    } catch (err2) {
+      return null;
+    }
+  }
+};
+
+const extractJsonSubstring = (value: string): string | null => {
+  const start = value.indexOf("{");
+  const end = value.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    return value.slice(start, end + 1);
+  }
+  return null;
+};
+
+const extractLooseVariantObjects = (source: string): string[] => {
+  if (!source) return [];
+  const marker = source.indexOf('"variants"');
+  if (marker < 0) return [];
+  const startBracket = source.indexOf("[", marker);
+  if (startBracket < 0) return [];
+  const blocks: string[] = [];
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let chunk = "";
+  for (let i = startBracket + 1; i < source.length; i += 1) {
+    const char = source[i];
+    if (char === '"' && !escaped) {
+      inString = !inString;
+    }
+    if (!inString && char === "{") {
+      if (depth === 0) {
+        chunk = "{";
+      } else {
+        chunk += "{";
+      }
+      depth += 1;
+    } else if (!inString && char === "}") {
+      if (depth > 0) {
+        chunk += "}";
+        depth -= 1;
+        if (depth === 0 && chunk) {
+          blocks.push(chunk);
+          chunk = "";
+        }
+      }
+    } else if (depth > 0) {
+      chunk += char;
+    }
+    if (!inString && depth === 0 && char === "]") {
+      break;
+    }
+    if (char === "\\" && !escaped) {
+      escaped = true;
+    } else {
+      escaped = false;
+    }
+  }
+  return blocks;
+};
+
+const normalizeParsedVariants = (candidate: unknown): ModelVariant[] => {
+  if (!candidate) return [];
+  const potentialVariants = Array.isArray((candidate as any).variants)
+    ? (candidate as any).variants
+    : Array.isArray(candidate)
+    ? (candidate as any)
+    : [];
+  if (!Array.isArray(potentialVariants)) return [];
+  const normalized: ModelVariant[] = [];
+  potentialVariants.forEach((entry) => {
+    if (!entry || typeof entry !== "object") return;
+    const rawText = typeof (entry as any).text === "string" ? (entry as any).text.trim() : "";
+    if (!rawText) return;
+    normalized.push({
+      tone: typeof (entry as any).tone === "string" ? (entry as any).tone : "",
+      length: typeof (entry as any).length === "string" ? (entry as any).length : "",
+      text: rawText,
+    });
+  });
+  return normalized;
+};
+
+const parseModelResponseVariants = (
+  response: string,
+  fallbackTone: string,
+  fallbackLength: TaskSpecLength
+): ModelVariant[] => {
+  const trimmed = response.trim();
+  if (!trimmed) return [];
+  const parseSource = stripModelResponsePreface(trimmed) || trimmed;
+  let parsed = tryParseJson(parseSource);
+  if (!parsed) {
+    const extracted = extractJsonSubstring(parseSource);
+    if (extracted) {
+      parsed = tryParseJson(extracted);
+    }
+  }
+  if (parsed) {
+    const normalized = normalizeParsedVariants(parsed);
+    if (normalized.length) {
+      return normalized;
+    }
+  }
+  const looseObjects = extractLooseVariantObjects(parseSource);
+  if (looseObjects.length) {
+    const approximations: ModelVariant[] = [];
+    looseObjects.forEach((block) => {
+      const parsed = tryParseJson(block);
+      if (!parsed || typeof parsed !== "object") return;
+      const tone = typeof (parsed as any).tone === "string" ? String((parsed as any).tone) : "";
+      const length = typeof (parsed as any).length === "string" ? String((parsed as any).length) : "";
+      const text =
+        typeof (parsed as any).text === "string" ? String((parsed as any).text).trim() : "";
+      if (text) {
+        approximations.push({ tone, length, text });
+      }
+    });
+    if (approximations.length) {
+      return approximations;
+    }
+  }
+  return parseSource
+    ? [{ tone: fallbackTone, length: fallbackLength, text: parseSource }]
+    : [];
+};
+
+const extractPlaintextVariantCandidates = (raw: string): string[] => {
+  if (!raw) return [];
+  const expanded = raw.replace(/(\d+[\.)-])/g, "\n$1");
+  let blocks = expanded.split(/\n{2,}/);
+  if (blocks.length === 1) {
+    blocks = expanded.split(/\n+/);
+  }
+  const isInstructionalBlock = (value: string) =>
+    /^###\s+VARIANT/i.test(value) ||
+    /^TASK_SPEC/i.test(value) ||
+    /^Respond\s+with/i.test(value) ||
+    /^Return each variant/i.test(value) ||
+    /^Rewrite the copy/i.test(value) ||
+    /^JSON_RESPONSE_TEMPLATE/i.test(value) ||
+    /^Your variants array/i.test(value) ||
+    /^Keep these exact source terms/i.test(value);
+  const isLikelyCopyLine = (value: string) => value.length >= 15 && /\s/.test(value);
+
+  const cleanedBlocks = blocks
+    .map((block) =>
+      block
+        .replace(/[*_`]/g, "")
+        .replace(/^\d+[\.)-]*\s*/, "")
+        .replace(/^[-•*]+\s*/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter((block) => block && !isInstructionalBlock(block));
+
+  if (cleanedBlocks.length <= 1) {
+    return cleanedBlocks.filter(isLikelyCopyLine);
+  }
+
+  return cleanedBlocks.filter((block) => {
+    if (!isLikelyCopyLine(block)) return false;
+    const lower = block.toLowerCase();
+    if (
+      lower.startsWith('"tone"') ||
+      lower.startsWith('"length"') ||
+      lower.startsWith('"text"')
+    )
+      return false;
+    if (/^(tone|length|text)\s*[:=]/i.test(block)) return false;
+    if (/^\{/.test(block) && block.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(block);
+        if (typeof parsed === "object" && parsed && typeof (parsed as any).text === "string") {
+          return true;
+        }
+      } catch (err) {
+        console.warn("Ignoring malformed JSON block from model output:", err);
+        return false;
+      }
+    }
+    return true;
+  });
+};
+
+const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): RewriteInstructionBundle => {
   const fallbackOverview =
-    "You are a UX writing assistant for Setel, Malaysia’s all‑in‑one motoring app at PETRONAS.";
+    "Rewrite provided copy for Setel, Malaysia’s all‑in‑one motoring app at PETRONAS, following every rule below.";
   if (!guide || typeof guide !== "object") {
-    return fallbackOverview;
+    const lengthKey = determineTaskSpecLengthKey(null);
+    const toneLabel = options?.targetToneKey || "neutral_helpful";
+    const fallbackSpec = buildTaskSpecBlock(toneLabel, lengthKey);
+    const text = `${fallbackSpec}${fallbackOverview}\n\n`;
+    return {
+      text,
+      coreText: text,
+      optionalText: "",
+      toneKey: toneLabel,
+      lengthKey,
+    };
   }
 
   const promptCfg = (guide as any).rewritePrompt || {};
@@ -1194,11 +1803,16 @@ const buildRewriteInstructions = (
     : [];
 
   const enrichedRequirements: string[] = [...derived.requirements];
+  const priorityRules: string[] = [];
   const pushRequirement = (value?: string) => {
     if (!value) return;
     const trimmed = value.trim();
     if (trimmed.length) enrichedRequirements.push(trimmed);
   };
+  const optionalGuidanceSections: string[] = [];
+  const toneSpecKey = options?.targetToneKey || "";
+  pushRequirement(TASK_SPEC_REMINDER);
+  pushRequirement(JSON_RESPONSE_TEMPLATE);
 
   pushRequirement(
     "Provide a mix of short, medium, and longer rewrites, but output only the final copy text with no labels or descriptors."
@@ -1235,15 +1849,24 @@ const buildRewriteInstructions = (
       )}); write each in its tone without referencing tone names in the copy.`
     );
   }
+  const cleanedManualAvoid = manualAvoidPhrases
+    .map((phrase) => phrase.trim())
+    .filter((phrase) => phrase && !isVoiceDescriptorWord(phrase));
+  if (cleanedManualAvoid.length === 1) {
+    priorityRules.push(
+      `Do not use the word or phrase "${cleanedManualAvoid[0]}" anywhere in your rewrite.`
+    );
+  } else if (cleanedManualAvoid.length > 1) {
+    priorityRules.push(
+      `Avoid using any of these words or phrases in your rewrite: ${cleanedManualAvoid.join(", ")}.`
+    );
+  }
   pushRequirement(
     "Return each variant on its own line with no bullets, numbering, headers, or conversational lead-ins—only the rewritten copy."
   );
-
-  const usageContext =
-    typeof (guide as any).usageContext === "string" ? (guide as any).usageContext.trim() : "";
-  if (usageContext) {
-    pushRequirement(`Follow this context and custom guidance: ${usageContext}`);
-  }
+  pushRequirement(
+    "Vary the opening words across variants; if one starts with a specific word or phrase (e.g., “Remember needing…”), every other rewrite must begin differently and avoid repeating that same opener."
+  );
 
   const selectedLength = getLengthPreference(guide);
   if (selectedLength) {
@@ -1258,31 +1881,328 @@ const buildRewriteInstructions = (
     pushRequirement([rangeLine, ...extraParts].join(" ").trim());
   }
 
-  const focusElement =
-    typeof options?.elementFocus === "string" && options.elementFocus.trim()
-      ? options.elementFocus.trim()
-      : "";
-  if (focusElement) {
-    pushRequirement(`Focus on ${toFriendlyCase(focusElement.replace(/_/g, " "))} patterns from the sentence library.`);
-  }
-  collectSentenceLibraryHints(guide, focusElement).forEach((hint) => pushRequirement(hint));
+  const sentenceHints = collectSentenceLibraryHints(guide);
+  sentenceHints.forEach((hint) => {
+    const cleaned = sanitisePromptText(hint);
+    if (cleaned) optionalGuidanceSections.push(cleaned);
+  });
 
   const haystackParts = [];
   if (options && typeof options.sourceText === "string") {
     haystackParts.push(options.sourceText);
   }
-  if (usageContext) {
-    haystackParts.push(usageContext);
-  }
   const haystackSource = haystackParts.join(" ");
-  collectScenarioHints(guide, haystackSource).forEach((hint) => pushRequirement(hint));
+  const trimmedSourceText = options && typeof options.sourceText === "string" ? options.sourceText.trim() : "";
+  const scenarioHints = collectScenarioHints(guide, haystackSource);
+  scenarioHints.forEach((hint) => {
+    const cleaned = sanitisePromptText(hint);
+    if (cleaned) optionalGuidanceSections.push(cleaned);
+  });
+  const pronounPattern = /\b(?:we|us|our|ours|you|your|yours)\b/i;
+  const sourceHasPronoun = trimmedSourceText.length > 0 ? pronounPattern.test(trimmedSourceText) : false;
+  const structureReminder = trimmedSourceText
+    ? "Preserve the structural pattern (pronoun pattern, sentence count, sentence type, and length band) from the original and keep your tone choices within those features."
+    : "";
 
   const finalRequirements = [...baseRequirements, ...enrichedRequirements];
+  if (trimmedSourceText && !sourceHasPronoun) {
+    finalRequirements.push(
+      "If the source copy avoids first- and second-person pronouns, keep your rewrite pronoun-free unless the same pronouns appear in the prompt."
+    );
+  }
+  if (structureReminder) {
+    finalRequirements.push(structureReminder);
+  }
+  if (trimmedSourceText) {
+    finalRequirements.push(`Core intent: ${ensureSentence(trimmedSourceText)}`);
+    const actionIntent = deriveActionOutcomeHint(trimmedSourceText);
+    if (actionIntent) {
+      finalRequirements.push(actionIntent);
+    }
+  }
+  const preservedTerms = collectSourceKeywords(trimmedSourceText);
+  if (preservedTerms.length) {
+    finalRequirements.push(
+      `Keep these exact source terms (and their casing) in every rewrite: ${preservedTerms.join(
+        ", "
+      )}.`
+    );
+  }
   const joinedRequirements = finalRequirements.length
     ? finalRequirements.map((req) => "- " + req).join("\n") + "\n\n"
     : "\n";
+  const priorityBlock = priorityRules.length
+    ? `Rewrite the copy below. Apply these priority instructions first:\n${priorityRules
+        .map((rule) => "- " + rule)
+        .join("\n")}\n\n`
+    : "Rewrite the copy below using Setel’s UX guidelines.\n\n";
+  const lengthKey = determineTaskSpecLengthKey(selectedLength);
+  const specBlock = buildTaskSpecBlock(toneSpecKey, lengthKey);
+  const overviewBlock = overview ? overview + "\n" : "\n";
+  const coreInstructionBody = priorityBlock + overviewBlock + joinedRequirements;
+  const coreText = specBlock + coreInstructionBody;
+  const optionalBlock =
+    optionalGuidanceSections.length > 0
+      ? optionalGuidanceSections.map((item) => "- " + item).join("\n") + "\n\n"
+      : "";
+  const text = coreText + optionalBlock;
+  return {
+    text,
+    coreText,
+    optionalText: optionalBlock,
+    toneKey: toneSpecKey,
+    lengthKey,
+  };
+};
 
-  return overview + "\n" + joinedRequirements;
+const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
+  const key: string = String(msg.key || "");
+  const text: string = sanitisePromptText(String(msg.text || ""));
+  const guideline = msg.guideline || guidelineReference || {};
+  let output = "";
+  let encounteredError = false;
+  const PROMPT_TOKEN_LIMIT = 6000;
+  const TOKEN_APPROX_DIVISOR = 4;
+  const cycleVersion = deriveGuideVersion(guideline);
+  const cycleSignature = buildCycleSignature(text, cycleVersion);
+  if (resetCycle || cycleSignature !== toneCycleSignature) {
+    toneCycleSignature = cycleSignature;
+    toneCycleIndex = 0;
+    toneCycleCompleted = false;
+  }
+
+  const endpoint =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" +
+    encodeURIComponent(key);
+
+  const callModel = async (prompt: string) => {
+    const body = {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 1.0,
+        top_p: 0.9,
+        maxOutputTokens: 512,
+      },
+    };
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error("API error " + res.status + ": " + (await res.text()));
+    }
+    const data = await res.json();
+    let textOut = "";
+    if (
+      data &&
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text
+    ) {
+      textOut = String(data.candidates[0].content.parts[0].text);
+    }
+    return textOut ? textOut.trim() : "No response.";
+  };
+
+  const intent: RewriteIntent = msg.mode === "prompt" ? "prompt" : "rewrite";
+  const toneConfigs = collectToneConfigs(guideline);
+  const cycleNotice = "You’ve reached the end of the tone cycle for this prompt—adjust your copy to start again.";
+
+  if (toneCycleCompleted || toneCycleIndex >= toneConfigs.length) {
+    toneCycleCompleted = true;
+    figma.notify(cycleNotice);
+    output = cycleNotice;
+    encounteredError = true;
+    figma.ui.postMessage({ type: "rewrite-done", output, error: encounteredError });
+    return;
+  }
+
+  const selectedToneConfigs = toneConfigs.slice(
+    toneCycleIndex,
+    toneCycleIndex + TONES_PER_CYCLE
+  );
+  if (!selectedToneConfigs.length) {
+    toneCycleCompleted = true;
+    figma.notify(cycleNotice);
+    output = cycleNotice;
+    encounteredError = true;
+    figma.ui.postMessage({ type: "rewrite-done", output, error: encounteredError });
+    return;
+  }
+
+  const variants: string[] = [];
+  const variantFingerprints = new Set<string>();
+  const markVariantSeen = (text: string) => {
+    const key = normalizeVariantForComparison(text);
+    if (key) {
+      variantFingerprints.add(key);
+    }
+  };
+  const hasSeenVariant = (text: string) => {
+    const key = normalizeVariantForComparison(text);
+    return key ? variantFingerprints.has(key) : false;
+  };
+
+  const sourceLabel = intent === "prompt" ? "User prompt:\n" : "User copy:\n";
+
+  try {
+    const cycleInstruction = (toneGuide: any, toneConfig: ToneConfig) =>
+      buildRewriteInstructions(toneGuide, {
+        sourceText: text,
+        targetToneName: toneConfig.label,
+        targetToneKey: toneConfig.key,
+        toneNotes: toneConfig.notes,
+        intent,
+      });
+
+    type ToneTask = {
+      toneConfig: ToneConfig;
+      instructions: RewriteInstructionBundle;
+      resultText: string;
+    };
+
+    const toneTasks: ToneTask[] = selectedToneConfigs.map((toneConfig) => {
+      const toneName = toneConfig.label;
+      const toneGuide =
+        guideline && typeof guideline === "object"
+          ? Object.assign({}, guideline, { tonePreference: toneName })
+          : { tonePreference: toneName };
+      return {
+        toneConfig,
+        instructions: cycleInstruction(toneGuide, toneConfig),
+        resultText: "",
+      };
+    });
+
+    const buildTaskSection = (task: ToneTask, index: number, useCoreText: boolean) => {
+      const body = useCoreText ? task.instructions.coreText : task.instructions.text;
+      return [`### VARIANT ${index + 1} – Tone ${task.toneConfig.label}`, body].join("\n");
+    };
+
+    const uniquenessReminder = [
+      "Respond with valid JSON exactly matching JSON_RESPONSE_TEMPLATE.",
+      "Your variants array must contain one entry per task above, in the same order.",
+      "Each entry must include the tone and length from its TASK_SPEC block.",
+      "Every variant must sound distinct—rewrite it if any two openings or phrasings feel similar.",
+    ].join(" ");
+
+    const buildMultiTonePrompt = (useCoreText = false) => {
+      const sections = toneTasks
+        .map((task, idx) => buildTaskSection(task, idx, useCoreText))
+        .join("\n\n");
+      return (
+        sections +
+        "\n\n" +
+        uniquenessReminder +
+        "\n\n" +
+        sourceLabel +
+        text
+      );
+    };
+
+    const composePrompt = () => {
+      const primary = buildMultiTonePrompt(false);
+      if (Math.floor(primary.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT) {
+        return primary;
+      }
+      const fallback = buildMultiTonePrompt(true);
+      if (Math.floor(fallback.length / TOKEN_APPROX_DIVISOR) <= PROMPT_TOKEN_LIMIT) {
+        return fallback;
+      }
+      return fallback.slice(0, PROMPT_TOKEN_LIMIT * TOKEN_APPROX_DIVISOR).trim();
+    };
+
+    const findMatchingTask = (tone?: string): ToneTask | null => {
+      const normalized = normalizeToneKeyValue(tone);
+      if (!normalized) return null;
+      return (
+        toneTasks.find((task) => {
+          if (task.resultText) return false;
+          const candidates = [
+            normalizeToneKeyValue(task.instructions.toneKey),
+            normalizeToneKeyValue(task.toneConfig.key),
+            normalizeToneKeyValue(task.toneConfig.label),
+          ].filter(Boolean);
+          return candidates.some((candidate) => candidate === normalized);
+        }) || null
+      );
+    };
+
+    const assignVariants = (entries: ModelVariant[], allowDuplicates = false) => {
+      entries.forEach((entry) => {
+        const rawText = typeof entry.text === "string" ? entry.text.trim() : "";
+        if (!rawText) return;
+        if (!allowDuplicates && hasSeenVariant(rawText)) return;
+        const targetTask = findMatchingTask(entry.tone) || toneTasks.find((task) => !task.resultText);
+        if (!targetTask) return;
+        const cleaned = obliterateEmDash(rawText);
+        if (!allowDuplicates) {
+          markVariantSeen(cleaned);
+        }
+        targetTask.resultText = cleaned;
+      });
+    };
+
+    for (let attempt = 1; attempt <= MAX_VALIDATION_ATTEMPTS; attempt++) {
+      const variantText = await callModel(composePrompt());
+      const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
+      if (!cleanedVariant) {
+        continue;
+      }
+      const parsedVariants = parseModelResponseVariants(
+        cleanedVariant,
+        toneTasks[0]?.instructions.toneKey || "",
+        toneTasks[0]?.instructions.lengthKey || determineTaskSpecLengthKey(null)
+      );
+      assignVariants(parsedVariants, false);
+      if (toneTasks.every((task) => task.resultText)) {
+        break;
+      }
+      const fallbackEntries = extractPlaintextVariantCandidates(
+        stripModelResponsePreface(cleanedVariant)
+      ).map((text) => ({
+        text,
+      }));
+      assignVariants(fallbackEntries, false);
+      if (toneTasks.every((task) => task.resultText)) {
+        break;
+      }
+    }
+
+    toneTasks.forEach((task) => {
+      variants.push(task.resultText || "No response.");
+    });
+
+    toneCycleIndex += selectedToneConfigs.length;
+    if (toneCycleIndex >= toneConfigs.length) {
+      toneCycleCompleted = true;
+    }
+
+    const suggestionLines: string[] = variants.map((line, idx) => `${idx + 1}. ${line}`);
+    if (!suggestionLines.length) {
+      encounteredError = true;
+      output = "No response.";
+    } else {
+      output = suggestionLines.join("\n\n");
+    }
+  } catch (err: any) {
+    encounteredError = true;
+    output = "Request failed: " + describeError(err);
+  }
+
+  figma.ui.postMessage({ type: "rewrite-done", output, error: encounteredError });
 };
 
 const loadFontsForNode = async (node: TextNode) => {
@@ -1310,8 +2230,8 @@ const loadFontsForNode = async (node: TextNode) => {
 };
 
 const MAX_VALIDATION_ATTEMPTS = 2;
-const UI_WIDTH = 400;
-const MIN_UI_HEIGHT = 400;
+const UI_WIDTH = 720;
+const MIN_UI_HEIGHT = 348;
 const MAX_UI_HEIGHT = 900;
 
 figma.on("run", () => {
@@ -1395,136 +2315,15 @@ figma.on("run", () => {
         return;
       }
 
-      // REWRITE: Call Gemini
-      if (msg.type === "rewrite") {
-        const key: string = String(msg.key || "");
-        const text: string = String(msg.text || "");
-        const guideline = msg.guideline || guidelineReference || {};
-        let output = "";
-        let encounteredError = false;
+      if (msg.type === "rewrite" || msg.type === "cycle-tone") {
+        await runRewriteCycle(msg, msg.type === "rewrite");
+        return;
+      }
 
-        const endpoint =
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" +
-          encodeURIComponent(key);
-
-        const callModel = async (prompt: string) => {
-          const body = {
-            contents: [
-              {
-                parts: [
-                  {
-                    text: prompt,
-                  },
-                ],
-              },
-            ],
-          };
-          const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) {
-            throw new Error("API error " + res.status + ": " + (await res.text()));
-          }
-          const data = await res.json();
-          let textOut = "";
-          if (
-            data &&
-            data.candidates &&
-            data.candidates[0] &&
-            data.candidates[0].content &&
-            data.candidates[0].content.parts &&
-            data.candidates[0].content.parts[0] &&
-            data.candidates[0].content.parts[0].text
-          ) {
-            textOut = String(data.candidates[0].content.parts[0].text);
-          }
-          return textOut ? textOut.trim() : "No response.";
-        };
-
-        try {
-          const intent: RewriteIntent = msg.mode === "prompt" ? "prompt" : "rewrite";
-          const toneConfigs = collectToneConfigs(guideline);
-          const validationRules = buildValidationRules(guideline);
-          const validationFailures: string[] = [];
-          const variants: string[] = [];
-          for (const toneConfig of toneConfigs) {
-            const toneName = toneConfig.label;
-            const toneGuide =
-              guideline && typeof guideline === "object"
-                ? Object.assign({}, guideline, { tonePreference: toneName })
-                : { tonePreference: toneName };
-            const instructions = buildRewriteInstructions(toneGuide, {
-              sourceText: text,
-              targetToneName: toneName,
-              toneNotes: toneConfig.notes,
-              intent,
-              elementFocus: msg.elementFocus,
-            });
-            const composePrompt = (feedback?: string) => {
-              let prompt =
-                instructions +
-                "Return exactly one unique variant with no extra commentary.\n\n" +
-                (intent === "prompt" ? "User prompt:\n" : "User copy:\n") +
-                text;
-              if (feedback && feedback.trim().length) {
-                prompt += `\n\n${feedback.trim()}`;
-              }
-              return prompt;
-            };
-            let accepted = false;
-            let lastIssues: string[] = [];
-            let feedback: string | undefined;
-            for (let attempt = 1; attempt <= MAX_VALIDATION_ATTEMPTS; attempt++) {
-              const variantText = await callModel(composePrompt(feedback));
-              const cleanedVariant = typeof variantText === "string" ? variantText.trim() : "";
-              if (!cleanedVariant) {
-                lastIssues = ["Empty response from model."];
-              } else {
-                const validation = validateVariant(cleanedVariant, validationRules);
-                if (validation.valid) {
-                  variants.push(cleanedVariant);
-                  accepted = true;
-                  break;
-                }
-                lastIssues = validation.issues;
-                if (attempt < MAX_VALIDATION_ATTEMPTS) {
-                  feedback = `The previous answer failed validation because: ${validation.issues.join(
-                    "; "
-                  )}. Provide a brand-new rewrite that fixes every issue.`;
-                }
-              }
-            }
-            if (!accepted) {
-              const failureMessage = lastIssues.length
-                ? lastIssues.join("; ")
-                : "Model returned no usable text.";
-              validationFailures.push(`Tone "${toneName}" filtered out (${failureMessage}).`);
-            }
-          }
-          if (!variants.length) {
-            encounteredError = true;
-            output =
-              validationFailures.length > 0
-                ? "Validation blocked every suggestion:\n- " + validationFailures.join("\n- ")
-                : "No response.";
-          } else {
-            if (validationFailures.length) {
-              figma.notify(
-                `Filtered ${validationFailures.length} variant${
-                  validationFailures.length > 1 ? "s" : ""
-                } that broke the guide.`
-              );
-            }
-            output = variants.map((line, idx) => `${idx + 1}. ${line}`).join("\n\n");
-          }
-        } catch (err: any) {
-          encounteredError = true;
-          output = "Request failed: " + describeError(err);
-        }
-
-        figma.ui.postMessage({ type: "rewrite-done", output, error: encounteredError });
+      if (msg.type === "reset-tone-cycle") {
+        toneCycleSignature = "";
+        toneCycleIndex = 0;
+        toneCycleCompleted = false;
         return;
       }
 
