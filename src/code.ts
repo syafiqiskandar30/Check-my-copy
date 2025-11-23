@@ -9,9 +9,11 @@ let toneCycleCompleted = false;
 const buildCycleSignature = (text: string, version: string) => `${text}|||${version}`;
 const deriveGuideVersion = (guide: any): string => {
   if (!guide || typeof guide !== "object") return "";
+  const direct = formatGuideText((guide as any).version);
+  if (direct) return direct;
   const meta = (guide as any).meta;
   if (!meta || typeof meta !== "object") return "";
-  return formatGuideText((meta as any).version) || "";
+  return formatGuideText((meta as any).version) || formatGuideText((meta as any).last_updated) || "";
 };
 
 const takeStrings = (value: unknown, limit = 4): string[] => {
@@ -468,26 +470,21 @@ const collectGuideBannedTerms = (guide: any): string[] => {
     }
   };
   const addList = (values: string[]) => values.forEach((value) => addValue(value));
-  const forbidden = guide.forbidden || {};
-  addList(takeStrings(forbidden.never_do, 100));
-  if (forbidden.banned_terms && typeof forbidden.banned_terms === "object") {
-    addList(takeStrings((forbidden.banned_terms as any).never_use, 100));
+
+  const forbiddenSource = guide.forbidden_language || guide.forbidden || {};
+  addList(takeStrings((forbiddenSource as any).never_do, 100));
+  const bannedTerms = (forbiddenSource as any).banned_terms;
+  if (bannedTerms && typeof bannedTerms === "object") {
+    addList(takeStrings((bannedTerms as any).never_use, 100));
+    addList(takeStrings((bannedTerms as any).marketing_phrases, 100));
+    addList(takeStrings((bannedTerms as any).corporate_buzzwords, 100));
   }
-  const quickPatterns = guide.quick_patterns || {};
-  addList(takeStrings(quickPatterns.red_light_phrases, 100));
-  const speech = guide.human_speech_patterns || {};
-  if (speech.the_marketing_trap && typeof speech.the_marketing_trap === "object") {
-    addList(takeStrings((speech.the_marketing_trap as any).banned_corporate_formulas, 100));
+
+  const manualConstraints = (guide as any).manualConstraints;
+  if (manualConstraints && typeof manualConstraints === "object") {
+    addList(takeStrings((manualConstraints as any).avoid, 100));
   }
-  if (speech.cliche_phrases_to_avoid && typeof speech.cliche_phrases_to_avoid === "object") {
-    addList(takeStrings((speech.cliche_phrases_to_avoid as any).never_use, 100));
-  }
-  const preferredTerms = guide.preferred_terms;
-  if (preferredTerms && typeof preferredTerms === "object") {
-    Object.values(preferredTerms).forEach((entry) => {
-      extractTermOptions(entry).forEach((token) => addValue(token));
-    });
-  }
+
   const brandVocabulary = guide.brand_vocabulary;
   if (brandVocabulary && typeof brandVocabulary === "object") {
     const requiredTerms = (brandVocabulary as any).required_terms;
@@ -498,6 +495,7 @@ const collectGuideBannedTerms = (guide: any): string[] => {
       });
     }
   }
+
   const validationCfg = (guide as any).validation;
   if (validationCfg && typeof validationCfg === "object") {
     const avoidLists = [
@@ -509,21 +507,20 @@ const collectGuideBannedTerms = (guide: any): string[] => {
     ];
     avoidLists.forEach((list) => list.forEach((value) => addValue(value)));
   }
-  const manualConstraints = (guide as any).manualConstraints;
-  if (manualConstraints && typeof manualConstraints === "object") {
-    const manualGroups = normalizeRequiredPhraseEntries(
-      (manualConstraints as any).required,
-      "include phrase"
-    );
-    manualGroups.forEach((group) =>
-      group.phrases.forEach((phrase) => {
-        const lowered = phrase.toLowerCase();
-        if (lowered && bucket.has(lowered)) {
-          bucket.delete(lowered);
-        }
-      })
-    );
-  }
+
+  const manualRequiredGroups = normalizeRequiredPhraseEntries(
+    (manualConstraints as any)?.required,
+    "include phrase"
+  );
+  manualRequiredGroups.forEach((group) =>
+    group.phrases.forEach((phrase) => {
+      const lowered = phrase.toLowerCase();
+      if (lowered && bucket.has(lowered)) {
+        bucket.delete(lowered);
+      }
+    })
+  );
+
   return [...bucket.values()];
 };
 
@@ -836,8 +833,12 @@ const collectToneConfigs = (guide: any): ToneConfig[] => {
         const labelCandidate = formatGuideText((entry as any).ui_label) || toFriendlyCase(key);
         if (!labelCandidate) return null;
         const notes: string[] = [];
-        const addNote = (value?: string, template?: (text: string) => string) => {
-          const text = formatGuideText(value);
+        const addNote = (
+          value?: string,
+          template?: (text: string) => string,
+          limit = 4
+        ) => {
+          const text = formatGuideText(value, limit);
           if (!text) return;
           notes.push(template ? template(text) : text);
         };
@@ -848,7 +849,7 @@ const collectToneConfigs = (guide: any): ToneConfig[] => {
         );
         addNote(
           (entry as any).syntactic_elements,
-          (text) => `Structure cue for this tone: ${text}.`
+          (text) => `Stylistic rhythm cue (flexible, not a fixed template): ${text}.`
         );
         addNote((entry as any).when, (text) => `Typical context: ${text}.`);
         addNote((entry as any).qualities, (text) => `Energy target: ${text}.`);
@@ -856,8 +857,16 @@ const collectToneConfigs = (guide: any): ToneConfig[] => {
           (entry as any).how,
           (text) => (text.endsWith(".") ? text : text + ".")
         );
+        addNote(
+          (entry as any).tone_markers,
+          (text) => `Optional flavour—feel free to riff on this vibe without repeating the markers: ${text}.`,
+          8
+        );
         addNote((entry as any).avoid, (text) => `Avoid: ${text}.`);
-        addNote((entry as any).example, (text) => `Sample tone line: ${text}.`);
+        addNote(
+          (entry as any).example,
+          (text) => `Tone example for inspiration only—do not copy or template: ${text}.`
+        );
         return { key, label: labelCandidate, notes };
       })
       .filter((tone): tone is ToneConfig => Boolean(tone && tone.label));
@@ -931,10 +940,9 @@ const collectSentenceLibraryHints = (guide: any): string[] => {
     const example = formatGuideText((entry as any).example);
     if (!example) return;
     const why = formatGuideText((entry as any).why);
-    hints.push(`Sentence reference: ${example}.`);
-    if (why) {
-      hints.push(`Why it works: ${why}.`);
-    }
+    const intro = `Example line for inspiration only—do not copy or template it: "${example}".`;
+    const reason = why ? `Why it works: ${why}.` : "";
+    hints.push([intro, reason].filter(Boolean).join(" "));
   });
   return hints.slice(0, 12);
 };
@@ -944,11 +952,11 @@ const deriveGuidePrompt = (guide: any) => {
     return { overview: "", requirements: [] as string[] };
   }
 
-  const manualConstraints = (guide as any).manualConstraints;
-  const manualIncludeGroups =
-    manualConstraints && typeof manualConstraints === "object"
-      ? normalizeRequiredPhraseEntries((manualConstraints as any).required, "include phrase")
-      : [];
+  const manualConstraints = (guide as any).manualConstraints || {};
+  const manualIncludeGroups = normalizeRequiredPhraseEntries(
+    (manualConstraints as any).required,
+    "include phrase"
+  );
   const manualRequiredSet = new Set<string>();
   manualIncludeGroups.forEach((group) =>
     group.phrases.forEach((phrase) => {
@@ -958,32 +966,17 @@ const deriveGuidePrompt = (guide: any) => {
       }
     })
   );
-  const manualAvoidPhrases =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).avoid, 50)
-      : [];
-  const manualReminders =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).reminders, 50)
-      : [];
-  const manualCoreInstructions: string[] =
-    manualConstraints && typeof manualConstraints === "object" && Array.isArray((manualConstraints as any).core_instructions)
-      ? (manualConstraints as any).core_instructions
-          .map((entry: unknown) => (typeof entry === "string" ? entry.trim() : ""))
-          .filter((entry: string): entry is string => entry.length > 0)
-      : [];
-  const manualPlayZones =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).play_zones, 10)
-      : [];
-  const manualNoPlayZones =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).no_play_zones, 10)
-      : [];
-  const manualImmutableRules =
-    manualConstraints && typeof manualConstraints === "object"
-      ? takeStrings((manualConstraints as any).immutable_rules, 10)
-      : [];
+  const manualAvoidPhrases = takeStrings((manualConstraints as any).avoid, 50);
+  const manualReminders = takeStrings((manualConstraints as any).reminders, 50);
+  const manualCoreInstructions: string[] = Array.isArray((manualConstraints as any).core_instructions)
+    ? (manualConstraints as any).core_instructions
+        .map((entry: unknown) => (typeof entry === "string" ? entry.trim() : ""))
+        .filter((entry: string): entry is string => entry.length > 0)
+    : [];
+  const manualMust = takeStrings((manualConstraints as any).must, 50);
+  const manualImmutableRules = takeStrings((manualConstraints as any).immutable_rules, 20);
+  const manualPlayZones = takeStrings((manualConstraints as any).play_zones, 10);
+  const manualNoPlayZones = takeStrings((manualConstraints as any).no_play_zones, 10);
   const requirements: string[] = [];
   const overviewParts: string[] = [];
   const coreIdentity = guide.core_identity || {};
@@ -1035,134 +1028,23 @@ const deriveGuidePrompt = (guide: any) => {
 
   const companyProfile = guide.company_profile;
   if (companyProfile && typeof companyProfile === "object") {
-    const industry = formatGuideText((companyProfile as any).industry);
-    const companyType = formatGuideText((companyProfile as any).type);
     const audience = formatGuideText((companyProfile as any).target_audience);
-    let descriptor = "";
-    if (industry && companyType) {
-      descriptor = `Setel is a ${companyType} company in the ${industry} space.`;
-    } else if (industry) {
-      descriptor = `Setel operates in the ${industry} space.`;
-    } else if (companyType) {
-      descriptor = `Setel is a ${companyType} company.`;
-    }
-    if (descriptor) {
-      overviewParts.push(descriptor);
-    }
     if (audience) {
       requirements.push(`Write for ${audience}.`);
     }
   }
 
-  const aiRole = guide.your_role_as_ai;
-  if (aiRole && typeof aiRole === "object") {
-    const roleOverview = [
-      typeof aiRole.what_you_do === "string" ? aiRole.what_you_do.trim() : "",
-      typeof aiRole.what_you_output === "string" ? aiRole.what_you_output.trim() : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    if (roleOverview) {
-      overviewParts.push(roleOverview);
-    }
-    [
-      aiRole.how_you_think,
-      aiRole.critical_reminder,
-      aiRole.your_value,
-    ]
-      .filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
-      .forEach((entry) => requirements.push(entry.trim()));
-    const modeTrap = (aiRole as any).the_mode_switch_trap;
-    if (modeTrap && typeof modeTrap === "object") {
-      const modeLines = [];
-      if (typeof modeTrap.problem === "string") modeLines.push(modeTrap.problem.trim());
-      if (typeof modeTrap.solution === "string") modeLines.push(modeTrap.solution.trim());
-      if (modeLines.length) requirements.push(modeLines.join(" "));
-      if (typeof modeTrap.test === "string") requirements.push(modeTrap.test.trim());
-    }
-    const workingWithHumans = (aiRole as any).working_with_humans;
-    if (workingWithHumans && typeof workingWithHumans === "object") {
-      Object.values(workingWithHumans)
-        .filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
-        .forEach((entry) => requirements.push(entry.trim()));
-    }
+  if (manualCoreInstructions.length) {
+    manualCoreInstructions.forEach((instruction) => requirements.push(ensureSentence(instruction)));
   }
-
-  const decisionFramework = guide.decision_framework || {};
-  const selfChecks = takeStrings(decisionFramework.self_check_questions, 4);
-  if (selfChecks.length) {
-    requirements.push(`Before finalising, ask yourself: ${selfChecks.join("; ")}.`);
+  if (manualMust.length) {
+    requirements.push(`Must do: ${manualMust.join("; ")}.`);
   }
-  if (decisionFramework && typeof decisionFramework === "object") {
-    const optionRules = decisionFramework.when_generating_options;
-    if (optionRules && typeof optionRules === "object") {
-      Object.values(optionRules)
-        .filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
-        .forEach((entry) => requirements.push(entry.trim()));
-    }
+  if (manualImmutableRules.length) {
+    requirements.push(`Immutable: ${manualImmutableRules.join("; ")}.`);
   }
-
-  const writingPrinciples = guide.writing_principles;
-  if (writingPrinciples && typeof writingPrinciples === "object") {
-    Object.values(writingPrinciples)
-      .map((item) => (item && typeof item === "object" ? (item as any).rule : ""))
-      .filter((rule): rule is string => typeof rule === "string" && rule.trim().length > 0)
-      .slice(0, 6)
-      .forEach((rule) => {
-        const trimmed = rule.trim();
-        requirements.push(trimmed.endsWith(".") ? trimmed : trimmed + ".");
-      });
-  }
-
-  const quickPatterns = guide.quick_patterns || {};
-  const greenPhrases = takeStrings(quickPatterns.green_light_phrases, 4);
-  if (greenPhrases.length) {
-    requirements.push(`Lean on reassuring phrases like ${greenPhrases.join(", ")}.`);
-  }
-  const redPhrases = takeStrings(quickPatterns.red_light_phrases, 4);
-  if (redPhrases.length) {
-    requirements.push(`Avoid harsh phrases like ${redPhrases.join(", ")}.`);
-  }
-  if (quickPatterns.reframe_templates && typeof quickPatterns.reframe_templates === "object") {
-    const from = (quickPatterns.reframe_templates as any).from;
-    const to = (quickPatterns.reframe_templates as any).to;
-    if (typeof from === "string" && typeof to === "string") {
-      requirements.push(`Reframe "${from}" into "${to}".`);
-    }
-  }
-
-  const languageRules = guide.language_rules || {};
-  const languageBits: string[] = [];
-  if (typeof languageRules.english_variant === "string") {
-    languageBits.push(`Use ${languageRules.english_variant}.`);
-  }
-  if (typeof languageRules.tense === "string") {
-    languageBits.push(languageRules.tense);
-  }
-  if (typeof languageRules.voice === "string") {
-    languageBits.push(languageRules.voice);
-  }
-  if (typeof languageRules.okay_spelling === "string") {
-    languageBits.push(languageRules.okay_spelling.trim());
-  }
-  if (typeof languageRules.topup_usage === "string") {
-    languageBits.push(languageRules.topup_usage.trim());
-  }
-  if (languageBits.length) {
-    requirements.push(languageBits.join(" "));
-  }
-  const acronyms = languageRules.acronyms;
-  if (acronyms && typeof acronyms === "object") {
-    const acronymRules: string[] = [];
-    if (typeof (acronyms as any).first_use === "string") {
-      acronymRules.push((acronyms as any).first_use.trim());
-    }
-    if (typeof (acronyms as any).format === "string") {
-      acronymRules.push((acronyms as any).format.trim());
-    }
-    if (acronymRules.length) {
-      requirements.push(`Acronyms: ${acronymRules.join(" ")}`);
-    }
+  if (manualReminders.length) {
+    manualReminders.forEach((reminder) => requirements.push(ensureSentence(reminder)));
   }
 
   const formatting = guide.formatting_rules || {};
@@ -1171,6 +1053,7 @@ const deriveGuidePrompt = (guide: any) => {
     const capRules: string[] = [];
     if (typeof capitalisation.default === "string") capRules.push(`Default text: ${capitalisation.default}.`);
     if (typeof capitalisation.buttons === "string") capRules.push(`Buttons: ${capitalisation.buttons}.`);
+    if (typeof capitalisation.proper_nouns === "string") capRules.push(`Proper nouns: ${capitalisation.proper_nouns}.`);
     if (capRules.length) {
       requirements.push(capRules.join(" "));
     }
@@ -1197,68 +1080,28 @@ const deriveGuidePrompt = (guide: any) => {
       requirements.push(parts + ".");
     }
   }
+  if (typeof formatting.units === "string") {
+    requirements.push(`Units: ${formatting.units}.`);
+  }
+  if (typeof formatting.mobile_numbers === "string") {
+    requirements.push(`Mobile numbers: ${formatting.mobile_numbers}.`);
+  }
+  if (formatting.punctuation && typeof formatting.punctuation === "object") {
+    const punct: string[] = [];
+    Object.entries(formatting.punctuation)
+      .filter(([, value]) => typeof value === "string")
+      .forEach(([key, value]) => punct.push(`${toFriendlyCase(key)}: ${String(value).trim()}`));
+    if (punct.length) {
+      requirements.push(`Punctuation: ${punct.join("; ")}.`);
+    }
+  }
 
-  const pronouns = guide.pronouns || {};
+  const pronouns = guide.pronoun_rules || guide.pronouns || {};
   const pronounRules = Object.entries(pronouns)
     .map(([key, value]) => (typeof value === "string" ? `${key.replace(/_/g, " ")}: ${value}` : ""))
     .filter(Boolean);
   if (pronounRules.length) {
     requirements.push(`Pronouns: ${pronounRules.join("; ")}.`);
-  }
-
-  const creativeFreedom = guide.creative_freedom;
-  const fallbackPlayZones =
-    creativeFreedom && typeof creativeFreedom === "object"
-      ? takeStrings((creativeFreedom as any).where_you_can_play, 6)
-      : [];
-  const fallbackNoPlayZones =
-    creativeFreedom && typeof creativeFreedom === "object"
-      ? takeStrings((creativeFreedom as any).where_you_cannot_play, 6)
-      : [];
-  const fallbackImmutable =
-    creativeFreedom && typeof creativeFreedom === "object"
-      ? takeStrings((creativeFreedom as any).immutable_rules, 6)
-      : [];
-  const playZones = mergeUniqueStrings(manualPlayZones, fallbackPlayZones);
-  if (playZones.length) {
-    requirements.push(`You can experiment more with tone when working on: ${playZones.join(", ")}.`);
-  }
-  const noPlayZones = mergeUniqueStrings(manualNoPlayZones, fallbackNoPlayZones);
-  if (noPlayZones.length) {
-    requirements.push(`Stay literal and conservative for: ${noPlayZones.join(", ")}.`);
-  }
-  const immutableRules = mergeUniqueStrings(manualImmutableRules, fallbackImmutable);
-  if (immutableRules.length) {
-    requirements.push(`Immutable rules you must never break: ${immutableRules.join(", ")}.`);
-  }
-
-  const forbiddenSource =
-    guide && typeof guide === "object" && guide.forbidden && typeof guide.forbidden === "object"
-      ? (guide.forbidden as any).never_do
-      : [];
-  const forbidden = takeStrings(forbiddenSource, 6);
-  if (forbidden.length) {
-    requirements.push(`Never do: ${forbidden.join(", ")}.`);
-  }
-
-  const bannedTermsSource =
-    guide &&
-    typeof guide === "object" &&
-    guide.forbidden &&
-    typeof guide.forbidden === "object" &&
-    (guide.forbidden as any).banned_terms &&
-    typeof (guide.forbidden as any).banned_terms === "object"
-      ? ((guide.forbidden as any).banned_terms as any).never_use
-      : [];
-  const bannedTerms = takeStrings(bannedTermsSource, 6).filter((term) => {
-    const normalized = term.trim().toLowerCase();
-    if (!normalized) return false;
-    if (manualRequiredSet.has(normalized)) return false;
-    if (isVoiceDescriptorWord(term)) return false;
-    return true;
-  });
-  if (bannedTerms.length) {
-    requirements.push(`Banned terms: ${bannedTerms.join(", ")}.`);
   }
 
   const validationCfg = guide.validation;
@@ -1331,45 +1174,6 @@ const deriveGuidePrompt = (guide: any) => {
     requirements.push(
       `Never use these manual avoid phrases: ${manualAvoidPhrasesFiltered.join(", ")}.`
     );
-  }
-  if (manualReminders.length) {
-    manualReminders.forEach((reminder) => {
-      const text = reminder.endsWith(".") ? reminder : reminder + ".";
-      requirements.push(text);
-    });
-  }
-  if (manualCoreInstructions.length) {
-    manualCoreInstructions.forEach((instruction) => {
-      if (instruction) {
-        requirements.push(instruction);
-      }
-    });
-  }
-  collectRewriteExamples(guide).forEach((example) => {
-    const cleaned = sanitisePromptText(example);
-    if (cleaned) requirements.push(cleaned);
-  });
-  collectComponentGuidanceNotes(guide).forEach((note) => {
-    const cleaned = sanitisePromptText(note);
-    if (cleaned) requirements.push(cleaned);
-  });
-
-  const preferredTerms = guide.preferred_terms;
-  if (preferredTerms && typeof preferredTerms === "object") {
-    const replacements = Object.entries(preferredTerms)
-      .map(([preferred, avoid]) => {
-        const preferredLabel = preferred.replace(/_/g, " ");
-        if (typeof avoid === "string" && avoid.trim().length) {
-          const cleaned = avoid.replace(/^not\s+/i, "").trim();
-          return cleaned ? `${preferredLabel} (not ${cleaned})` : preferredLabel;
-        }
-        return preferredLabel;
-      })
-      .filter(Boolean)
-      .slice(0, 5);
-    if (replacements.length) {
-      requirements.push(`Preferred terms: ${replacements.join(", ")}.`);
-    }
   }
 
   const brandVocabulary = guide.brand_vocabulary || {};
@@ -1455,145 +1259,49 @@ const deriveGuidePrompt = (guide: any) => {
       .forEach(([key, value]) => requirements.push(`${toFriendlyCase(key)}: ${String(value).trim()}`));
   }
 
+  const forbiddenSource = guide.forbidden_language || guide.forbidden || {};
+  const forbidden = takeStrings((forbiddenSource as any).never_do, 12);
+  if (forbidden.length) {
+    requirements.push(`Never do: ${forbidden.join(", ")}.`);
+  }
+  const bannedTermsSource =
+    forbiddenSource && typeof forbiddenSource === "object" && (forbiddenSource as any).banned_terms
+      ? ((forbiddenSource as any).banned_terms as any).never_use
+      : [];
+  const bannedTerms = takeStrings(bannedTermsSource, 10).filter((term) => {
+    const normalized = term.trim().toLowerCase();
+    if (!normalized) return false;
+    if (manualRequiredSet.has(normalized)) return false;
+    if (isVoiceDescriptorWord(term)) return false;
+    return true;
+  });
+  if (bannedTerms.length) {
+    requirements.push(`Banned terms: ${bannedTerms.join(", ")}.`);
+  }
+  const marketingBans = takeStrings((forbiddenSource as any)?.banned_terms?.marketing_phrases, 10);
+  if (marketingBans.length) {
+    requirements.push(`Avoid marketing phrases like: ${marketingBans.join(", ")}.`);
+  }
+  const corporateBans = takeStrings((forbiddenSource as any)?.banned_terms?.corporate_buzzwords, 10);
+  if (corporateBans.length) {
+    requirements.push(`Avoid corporate buzzwords such as: ${corporateBans.join(", ")}.`);
+  }
+
+  if (manualAvoidPhrases.length) {
+    requirements.push(`Manual avoid list: ${manualAvoidPhrases.join(", ")}.`);
+  }
+  if (manualPlayZones.length) {
+    requirements.push(`Tone play zones: ${manualPlayZones.join(", ")}.`);
+  }
+  if (manualNoPlayZones.length) {
+    requirements.push(`No play zones: ${manualNoPlayZones.join(", ")}.`);
+  }
+
   const tonePalette = guide.tone_palette;
   if (tonePalette && typeof tonePalette === "object") {
     if (typeof (tonePalette as any).how_to_use === "string") {
       requirements.push((tonePalette as any).how_to_use.trim());
     }
-  }
-
-  const contextSensing = guide.context_sensing;
-  if (contextSensing && typeof contextSensing === "object") {
-    Object.values(contextSensing)
-      .map((entry) => {
-        if (!entry || typeof entry !== "object") return "";
-        const toneMix = typeof (entry as any).tone_mix === "string" ? (entry as any).tone_mix.trim() : "";
-        const avoid = takeStrings((entry as any).avoid, 3);
-        if (!toneMix) return "";
-        const avoidText = avoid.length ? ` Avoid: ${avoid.join(", ")}.` : "";
-        return `When context matches ${toneMix}, blend tones accordingly.${avoidText}`;
-      })
-      .filter(Boolean)
-      .slice(0, 2)
-      .forEach((text) => requirements.push(text));
-  }
-
-  const humanSpeech = guide.human_speech_patterns;
-  if (humanSpeech && typeof humanSpeech === "object") {
-    if (typeof humanSpeech.core_truth === "string") {
-      requirements.push(humanSpeech.core_truth.trim());
-    }
-    const marketingTrap = (humanSpeech as any).the_marketing_trap;
-    if (marketingTrap && typeof marketingTrap === "object") {
-      if (Array.isArray(marketingTrap.banned_corporate_formulas)) {
-        const banned = takeStrings(marketingTrap.banned_corporate_formulas, 6);
-        if (banned.length) {
-          requirements.push(`Avoid marketing formulas like ${banned.join(", ")}.`);
-        }
-      }
-      if (typeof marketingTrap.why_they_fail === "string") {
-        requirements.push(marketingTrap.why_they_fail.trim());
-      }
-    }
-    const replacements = humanSpeech.simple_verb_replacements;
-    if (replacements && typeof replacements === "object") {
-      Object.entries(replacements)
-        .slice(0, 5)
-        .forEach(([from, to]) => {
-          if (Array.isArray(to) && to.length) {
-            const friendlyFrom = from.replace(/_becomes$/, "").replace(/_/g, " ");
-            requirements.push(`${friendlyFrom} → ${takeStrings(to, 3).join(", ")}.`);
-          }
-        });
-    }
-    const sentencePatterns = humanSpeech.sentence_structure_patterns;
-    if (sentencePatterns && typeof sentencePatterns === "object") {
-      const natural = takeStrings(sentencePatterns.natural_patterns, 3);
-      if (natural.length) {
-        requirements.push(`Favor sentence patterns like: ${natural.join("; ")}.`);
-      }
-      const avoidPatterns = takeStrings(sentencePatterns.unnatural_patterns_to_avoid, 3);
-      if (avoidPatterns.length) {
-        requirements.push(`Avoid sentence patterns such as: ${avoidPatterns.join("; ")}.`);
-      }
-    }
-    const oneSyllable = humanSpeech.the_one_syllable_challenge;
-    if (oneSyllable && typeof oneSyllable === "object") {
-      if (typeof oneSyllable.rule === "string") requirements.push(oneSyllable.rule.trim());
-      if (typeof oneSyllable.practice === "string") requirements.push(oneSyllable.practice.trim());
-    }
-    const wordHierarchy = humanSpeech.word_length_hierarchy;
-    if (wordHierarchy && typeof wordHierarchy === "object") {
-      const hierarchyLines: string[] = [];
-      Object.entries(wordHierarchy)
-        .slice(0, 4)
-        .forEach(([tier, text]) => {
-          if (typeof text === "string") {
-            hierarchyLines.push(`${toFriendlyCase(tier)}: ${text}`);
-          }
-        });
-      if (hierarchyLines.length) {
-        requirements.push(`Word lengths → ${hierarchyLines.join("; ")}.`);
-      }
-    }
-    const nounTrap = humanSpeech.the_noun_trap;
-    if (nounTrap && typeof nounTrap === "object") {
-      if (typeof nounTrap.rule === "string") requirements.push(nounTrap.rule.trim());
-      if (typeof nounTrap.test === "string") requirements.push(nounTrap.test.trim());
-    }
-    const cliche = humanSpeech.cliche_phrases_to_avoid;
-    if (cliche && typeof cliche === "object") {
-      const neverUse = takeStrings(cliche.never_use, 6);
-      if (neverUse.length) {
-        requirements.push(`Never use cliché phrases such as: ${neverUse.join(", ")}.`);
-      }
-      if (typeof cliche.what_to_do === "string") requirements.push(cliche.what_to_do.trim());
-    }
-    const adjectiveOveruse = humanSpeech.adjective_overuse;
-    if (adjectiveOveruse && typeof adjectiveOveruse === "object") {
-      if (typeof adjectiveOveruse.rule === "string") requirements.push(adjectiveOveruse.rule.trim());
-    }
-    const coffeeTest = humanSpeech.the_coffee_shop_test;
-    if (coffeeTest && typeof coffeeTest === "object" && typeof coffeeTest.instruction === "string") {
-      requirements.push(coffeeTest.instruction.trim());
-    }
-  }
-
-  const antiPatterns = guide.anti_patterns;
-  if (antiPatterns && typeof antiPatterns === "object") {
-    const bannedOpeners = antiPatterns.banned_opening_patterns;
-    if (bannedOpeners && typeof bannedOpeners === "object") {
-      const starters = takeStrings(bannedOpeners.never_start_sentences_with, 6);
-      if (starters.length) {
-        requirements.push(`Never start sentences with: ${starters.join(", ")}.`);
-      }
-      const alt = takeStrings(bannedOpeners.instead_start_with, 5);
-      if (alt.length) {
-        requirements.push(`Start with natural hooks like: ${alt.join(", ")}.`);
-      }
-    }
-    const momTest = antiPatterns.the_mom_test;
-    if (momTest && typeof momTest === "object") {
-      if (typeof momTest.instruction === "string") requirements.push(momTest.instruction.trim());
-      const banned = takeStrings(momTest.mom_would_never_say, 4);
-      if (banned.length) requirements.push(`Mom would never say: ${banned.join(", ")}.`);
-      if (typeof momTest.bonus_test === "string") requirements.push(momTest.bonus_test.trim());
-    }
-    const billboard = antiPatterns.the_billboard_test;
-    if (billboard && typeof billboard === "object") {
-      if (typeof billboard.question === "string" && typeof billboard.if_yes === "string") {
-        requirements.push(`${billboard.question.trim()} ${billboard.if_yes.trim()}`);
-      }
-    }
-  }
-
-  const beforeAfter = guide.before_after_real_examples;
-  if (beforeAfter && typeof beforeAfter === "object") {
-    Object.values(beforeAfter)
-      .map((entry) => (entry && typeof entry === "object" ? (entry as any).principle : ""))
-      .filter((principle): principle is string => typeof principle === "string" && principle.trim().length > 0)
-      .slice(0, 4)
-      .forEach((principle) => requirements.push(principle.trim()));
   }
 
   const overview =
@@ -2069,6 +1777,12 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
     manualConstraints && typeof manualConstraints === "object"
       ? takeStrings((manualConstraints as any).avoid, 10)
       : [];
+  const baseRequirements: string[] = Array.isArray(promptCfg.requirements)
+    ? promptCfg.requirements.filter(
+        (item: unknown): item is string => typeof item === "string" && item.trim().length > 0
+      )
+    : [];
+  const guardrailRequirements: string[] = [...baseRequirements, ...derived.requirements];
   const forcedTone =
     typeof options?.targetToneName === "string" && options.targetToneName.trim().length
       ? options.targetToneName.trim()
@@ -2083,72 +1797,111 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
     (typeof promptCfg.overview === "string" && promptCfg.overview.trim().length
       ? promptCfg.overview.trim()
       : derived.overview) || fallbackOverview;
-
-  const baseRequirements: string[] = Array.isArray(promptCfg.requirements)
-    ? promptCfg.requirements.filter(
-        (item: unknown): item is string => typeof item === "string" && item.trim().length > 0
-      )
-    : [];
-
-  const enrichedRequirements: string[] = [...derived.requirements];
   const priorityRules: string[] = [];
-  const pushRequirement = (value?: string) => {
-    if (!value) return;
-    const trimmed = value.trim();
-    if (trimmed.length) enrichedRequirements.push(trimmed);
-  };
   const optionalGuidanceSections: string[] = [];
+  const roleVoiceRules: string[] = [
+    "You are a senior UX writer for Setel—warm, friendly, caring, and human. Avoid corporate or marketing jargon.",
+  ];
+  const coreRewriteRules: string[] = [];
+  const toneGuidance: string[] = [];
+  const structuralGuidance: string[] = [];
+  const outputFormatRules: string[] = [];
   const toneSpecKey = options?.targetToneKey || "";
-  pushRequirement(TASK_SPEC_REMINDER);
-  pushRequirement(JSON_RESPONSE_TEMPLATE);
+  const addRoleVoice = (value?: string) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (trimmed) roleVoiceRules.push(trimmed);
+  };
+  const addCoreRule = (value?: string) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (trimmed) coreRewriteRules.push(trimmed);
+  };
+  const addToneGuidance = (value?: string) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (trimmed) toneGuidance.push(trimmed);
+  };
+  const addStructuralGuidance = (value?: string) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (trimmed) structuralGuidance.push(trimmed);
+  };
+  const addOutputRule = (value?: string) => {
+    const trimmed = typeof value === "string" ? value.trim() : "";
+    if (trimmed) outputFormatRules.push(trimmed);
+  };
 
-  pushRequirement(
+  const overviewLine =
+    overview && overview !== fallbackOverview
+      ? overview.replace(/^Rewrite the provided copy using\s*/i, "Core voice reminder—use ")
+      : "Core voice reminder—use Setel voice and stay on-brand.";
+  addRoleVoice(overviewLine);
+
+  addOutputRule(TASK_SPEC_REMINDER);
+  addOutputRule(JSON_RESPONSE_TEMPLATE);
+  addOutputRule(
     "For every JSON variant, keep the text value limited to the final UX copy only—no labels, intros, or commentary."
   );
-  pushRequirement(
+  addOutputRule(
     "Each JSON variant must contain exactly one rewrite; never include multiple options, bullet lists, or extra framing."
   );
-  pushRequirement(
+  addOutputRule("Never print standalone variant text outside the JSON response.");
+
+  addCoreRule(
     "Speak directly to the end-user; never mention rewrites, options, or that you're providing variations."
   );
-  pushRequirement(
+  addCoreRule(
     "Remove conversational framing or meta-commentary entirely—no phrases like “We understand…”, “Let’s…”, “Here’s…”, or anything that references the request; start immediately with the final UX copy."
   );
-  pushRequirement(
+  addCoreRule(
     "Skip pleasantries or commentary about what the reader is doing (e.g., “It's great you're looking…”); lead with the product benefit or action."
   );
-  pushRequirement(
+  addCoreRule(
     "Never mention missing source copy, assumed intent, or that you're inferring context—just deliver the final rewrite, even if the prompt feels incomplete."
   );
-  pushRequirement("Use at most two short sentences and state each fact only once (no repetition).");
-  pushRequirement(
+  addCoreRule("Preserve the meaning, required keywords, and pronoun pattern from the source.");
+  addCoreRule(
+    "Preserve sentence count and sentence type (statement, question, or command) while staying within the same length band."
+  );
+  addCoreRule(
+    "Rewrite with fresh wording and a different angle—never lift more than 2–3 consecutive words from the source unless they are required terms or product names."
+  );
+  addCoreRule("Avoid repeating the same hero verb or key noun within a sentence; rotate vocabulary.");
+  addCoreRule(
+    "Vary the opening words across variants so no two rewrites share the same opener or rhythm."
+  );
+  addCoreRule(
+    "Within these constraints, choose fresh wording and a different angle so each variant feels like it was written by a different human, not just a paraphrase."
+  );
+  addCoreRule(
+    "Stay inside the banned terms, required keywords, pronoun rules, and length limits while picking new verbs, benefits, and entry points."
+  );
+  addCoreRule(
     "Change the sentence rhythm, verbs, and descriptive words for each tone so the emotional intent is obvious; never recycle the same hero verb across variants."
   );
-  pushRequirement(
-    "Keep the meaning and include all required keywords, but rephrase everything else using different wording; do not reuse longer phrases (more than 2–3 words) from the original unless they are required keywords or product names."
-  );
   if (intent === "prompt") {
-    pushRequirement(
+    addCoreRule(
       "Create original UX copy that fulfils the user brief; treat their text as instructions, not content to restate."
     );
   } else {
-    pushRequirement("Rewrite the provided copy so it keeps the same intent and facts while following every rule above.");
+    addCoreRule("Rewrite the provided copy so it keeps the same intent and facts while following every rule above.");
   }
   if (forcedTone) {
-    pushRequirement(
-      `Write this variant strictly in the ${forcedTone} tone, but never mention the tone name or describe it in the output.`
+    addToneGuidance(
+      `Apply the ${forcedTone} tone through rhythm, phrasing, and word choice—never mention or describe the tone name in the output.`
     );
-    pushRequirement(
-      "Make the tone felt through word choice, cadence, and punctuation; use the tone brief (traits, structure cue, how-to) to guide vocabulary."
-    );
-    toneNotes.forEach((note) => pushRequirement(note));
   } else if (toneNames.length) {
-    pushRequirement(
+    addToneGuidance(
       `Provide one variant per tone (in this order: ${toneNames.join(
         ", "
-      )}); write each in its tone without referencing tone names in the copy.`
+      )}); make each tone feel distinct without naming the tone in the copy.`
     );
   }
+  addToneGuidance(
+    "Use tone briefs as stylistic cues—adjust energy, formality, and vocabulary without copying any structural template."
+  );
+  addToneGuidance(
+    "Tone markers are optional flavour; you may echo their vibe but do not repeat them verbatim or treat them as required tokens."
+  );
+  toneNotes.forEach((note) => addToneGuidance(note));
+
   const cleanedManualAvoid = manualAvoidPhrases
     .map((phrase) => phrase.trim())
     .filter((phrase) => phrase && !isVoiceDescriptorWord(phrase));
@@ -2161,90 +1914,77 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
       `Avoid using any of these words or phrases in your rewrite: ${cleanedManualAvoid.join(", ")}.`
     );
   }
-  pushRequirement(
-    "Never print standalone variant text outside the JSON response—populate only the JSON `variants[].text` fields."
-  );
-  pushRequirement(
-    "Vary the opening words across variants; if one starts with a specific word or phrase (e.g., “Remember needing…”), every other rewrite must begin differently and avoid repeating that same opener."
-  );
 
   const selectedLength = getLengthPreference(guide);
   if (selectedLength) {
-    const descriptor = selectedLength.label ? `${selectedLength.label} length` : "Target length";
+    const descriptor = selectedLength.label ? `${selectedLength.label} length target` : "Target length band";
     const rangeLine = selectedLength.rangeHint
-      ? `${descriptor}: ${selectedLength.rangeHint}.`
-      : `${descriptor}.`;
-    const extraParts = [
-      ensureSentence(selectedLength.structure),
-      ensureSentence(selectedLength.description),
-    ].filter(Boolean);
-    pushRequirement([rangeLine, ...extraParts].join(" ").trim());
+      ? `Stay within ${selectedLength.rangeHint}.`
+      : "Stay within the defined character band.";
+    addStructuralGuidance([descriptor + ".", rangeLine, "Match sentence count and type without copying structure."].join(" "));
   }
+  addStructuralGuidance(
+    "Keep sentences tight—keep each sentence brief and avoid padding or repetition, even when multiple sentences are needed."
+  );
 
-  const sentenceHints = collectSentenceLibraryHints(guide);
-  sentenceHints.forEach((hint) => {
-    const cleaned = sanitisePromptText(hint);
-    if (cleaned) optionalGuidanceSections.push(cleaned);
-  });
-
-  const haystackParts = [];
-  if (options && typeof options.sourceText === "string") {
-    haystackParts.push(options.sourceText);
-  }
-  const haystackSource = haystackParts.join(" ");
+  const haystackSource = options?.sourceText || "";
   const trimmedSourceText = options && typeof options.sourceText === "string" ? options.sourceText.trim() : "";
-  const scenarioHints = collectScenarioHints(guide, haystackSource);
-  scenarioHints.forEach((hint) => {
-    const cleaned = sanitisePromptText(hint);
-    if (cleaned) optionalGuidanceSections.push(cleaned);
-  });
   const pronounPattern = /\b(?:we|us|our|ours|you|your|yours)\b/i;
   const sourceHasPronoun = trimmedSourceText.length > 0 ? pronounPattern.test(trimmedSourceText) : false;
   const structureReminder = trimmedSourceText
-    ? "Preserve the structural pattern (pronoun pattern, sentence count, sentence type, and length band) from the original and keep your tone choices within those features."
+    ? "Preserve pronoun pattern, sentence count, sentence type, and the same length band as the source, but feel free to change clause order and phrasing."
     : "";
 
-  const finalRequirements = [...baseRequirements, ...enrichedRequirements];
   if (trimmedSourceText && !sourceHasPronoun) {
-    finalRequirements.push(
+    addCoreRule(
       "If the source copy avoids first- and second-person pronouns, keep your rewrite pronoun-free unless the same pronouns appear in the prompt."
     );
   }
   if (structureReminder) {
-    finalRequirements.push(structureReminder);
+    addStructuralGuidance(structureReminder);
   }
   if (trimmedSourceText) {
-    finalRequirements.push(`Core intent: ${ensureSentence(trimmedSourceText)}`);
+    addCoreRule(`Source copy intent: ${ensureSentence(trimmedSourceText)}`);
     const actionIntent = deriveActionOutcomeHint(trimmedSourceText);
     if (actionIntent) {
-      finalRequirements.push(actionIntent);
+      addCoreRule(actionIntent);
     }
   }
   const preservedTerms = collectSourceKeywords(trimmedSourceText);
   if (preservedTerms.length) {
-    finalRequirements.push(
-      `Keep these exact source terms (and their casing) in every rewrite: ${preservedTerms.join(
-        ", "
-      )}.`
+    addCoreRule(
+      `Keep these exact source terms (and their casing) in every rewrite: ${preservedTerms.join(", ")}.`
     );
   }
-  const joinedRequirements = finalRequirements.length
-    ? finalRequirements.map((req) => "- " + req).join("\n") + "\n\n"
-    : "\n";
-  const priorityBlock = priorityRules.length
-    ? `Rewrite the copy below. Apply these priority instructions first:\n${priorityRules
-        .map((rule) => "- " + rule)
-        .join("\n")}\n\n`
-    : "Rewrite the copy below using Setel’s UX guidelines.\n\n";
+  guardrailRequirements.unshift(...priorityRules);
+
+  const formatSection = (label: string, items: string[]) =>
+    items.length
+      ? `${label}:\n${items.map((item) => "- " + item).join("\n")}\n\n`
+      : "";
+
   const lengthKey = determineTaskSpecLengthKey(selectedLength);
   const specBlock = buildTaskSpecBlock(toneSpecKey, lengthKey);
-  const overviewBlock = overview ? overview + "\n" : "\n";
-  const coreInstructionBody = priorityBlock + overviewBlock + joinedRequirements;
-  const coreText = specBlock + coreInstructionBody;
+  const instructionHeader =
+    intent === "prompt"
+      ? "Create original UX copy using Setel’s UX guidelines and the rules below."
+      : "Rewrite the copy below using Setel’s UX guidelines and the rules below.";
+  const sections = [
+    formatSection("Role & core voice", roleVoiceRules),
+    formatSection("Core rewrite rules", coreRewriteRules),
+    formatSection("Tone application", toneGuidance),
+    formatSection("Structural targets", structuralGuidance),
+    formatSection("Language, formatting, and brand guardrails", guardrailRequirements),
+    formatSection("Output & response format", outputFormatRules),
+  ].join("");
   const optionalBlock =
     optionalGuidanceSections.length > 0
-      ? optionalGuidanceSections.map((item) => "- " + item).join("\n") + "\n\n"
+      ? `Optional inspiration (for vibe only—do not copy or template these lines):\n${optionalGuidanceSections
+          .map((item) => "- " + item)
+          .join("\n")}\n\n`
       : "";
+  const coreInstructionBody = `${instructionHeader}\n\n${sections}`;
+  const coreText = specBlock + coreInstructionBody;
   const text = coreText + optionalBlock;
   return {
     text,
@@ -2288,7 +2028,7 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
         },
       ],
       generationConfig: {
-        temperature: 1.0,
+        temperature: 0.45,
         top_p: 0.9,
         maxOutputTokens: 512,
       },
@@ -2364,7 +2104,10 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
     );
   };
 
-  const sourceLabel = intent === "prompt" ? "User prompt:\n" : "User copy:\n";
+  const sourceLabel =
+    intent === "prompt"
+      ? "User prompt (for intent context—do not parrot the wording):\n"
+      : "Source copy (reference only—do not reuse phrases longer than 2–3 words):\n";
 
   try {
     const cycleInstruction = (toneGuide: any, toneConfig: ToneConfig) =>

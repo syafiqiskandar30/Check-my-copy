@@ -1558,28 +1558,19 @@
         label: "Short",
         min_chars: 0,
         max_chars: 32,
-        range_hint: "0-32 characters",
-        structure: "2-5 words. Verb + noun/object. No filler.",
-        use_cases: ["Primary buttons", "Badges/chips", "Toast titles"],
-        notes: "Still state the action clearly.",
+        range_hint: "0-32 characters"
       },
       medium: {
         label: "Medium",
         min_chars: 33,
         max_chars: 72,
-        range_hint: "33-72 characters",
-        structure: "1 sentence. Verb + benefit + helper clause.",
-        use_cases: ["Push notifications", "Modals", "List tiles"],
-        notes: "Add context first, then action. Avoid small talk.",
+        range_hint: "33-72 characters"
       },
       long: {
         label: "Long",
         min_chars: 73,
         max_chars: 140,
-        range_hint: "73-140 characters",
-        structure: "1-2 sentences. Outcome first, action second.",
-        use_cases: ["Empty states", "Education cards", "Tooltips"],
-        notes: "Max two sentences so it stays scannable.",
+        range_hint: "73-140 characters"
       },
     },
   };
@@ -1607,24 +1598,13 @@
       const minChars = toNumberOrUndefined(spec.min_chars);
       const maxChars = toNumberOrUndefined(spec.max_chars);
       const rangeLabel = formatRangeLabel(minChars, maxChars, spec.range_hint);
-      const structure = cleanString(spec.structure);
-      const useCases = Array.isArray(spec.use_cases)
-        ? spec.use_cases
-            .map((entry) => cleanString(entry))
-            .filter(Boolean)
-        : [];
-      const useCasesText = useCases.length ? `Use for: ${useCases.join(", ")}.` : "";
-      const notes = cleanString(spec.notes);
-      const summaryParts = [structure, useCasesText, notes].filter(Boolean);
+      const summaryParts = [rangeLabel].filter(Boolean);
       options.push({
         id,
         label,
         minChars,
         maxChars,
         rangeLabel,
-        structure,
-        useCasesText,
-        notes,
         summary: summaryParts.join(" "),
       });
     });
@@ -1887,10 +1867,12 @@
         validationSource.avoid_phrases = mergeKeywordLists(validationSource.avoid_phrases, manualAvoid);
       }
       payload.validation = validationSource;
-      payload.manualConstraints = {
-        required: manualRequired,
-        avoid: manualAvoid,
-      };
+      const manualConstraints = payload.manualConstraints && typeof payload.manualConstraints === "object"
+        ? { ...payload.manualConstraints }
+        : {};
+      manualConstraints.required = mergeKeywordLists(manualConstraints.required, manualRequired);
+      manualConstraints.avoid = mergeKeywordLists(manualConstraints.avoid, manualAvoid);
+      payload.manualConstraints = manualConstraints;
     }
     const activeLengthPreset = selectedLengthId ? getLengthPresetById(selectedLengthId) : null;
     if (activeLengthPreset) {
@@ -1898,8 +1880,6 @@
         id: activeLengthPreset.id,
         label: activeLengthPreset.label,
         range_hint: activeLengthPreset.rangeLabel,
-        structure: activeLengthPreset.structure,
-        description: activeLengthPreset.summary,
       };
       if (typeof activeLengthPreset.minChars === "number") {
         lengthPreference.min_chars = activeLengthPreset.minChars;
