@@ -1,6 +1,14 @@
 // src/code.ts — single Gemini handler, UI loaded from manifest
 import guidelineReference from "./guideline.json";
 
+type ApiProvider = "gemini" | "openrouter";
+const STORAGE_KEYS = {
+  gemini: "gemini_api_key",
+  openrouter: "openrouter_api_key",
+  active: "active_api_provider",
+  openrouterModel: "openrouter_model",
+} as const;
+
 const describeError = (err: any) =>
   err && err.message ? String(err.message) : String(err);
 let toneCycleIndex = 0;
@@ -1996,6 +2004,12 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
 };
 
 const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
+  const provider: ApiProvider = msg.provider === "openrouter" ? "openrouter" : "gemini";
+  const selectedModelRaw = typeof msg.model === "string" ? msg.model : "";
+  const selectedModel =
+    provider === "openrouter" && selectedModelRaw.trim().length
+      ? selectedModelRaw.trim()
+      : "openrouter/auto";
   const key: string = String(msg.key || "");
   const text: string = sanitisePromptText(String(msg.text || ""));
   const guideline = msg.guideline || guidelineReference || {};
@@ -2005,18 +2019,60 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
   const TOKEN_APPROX_DIVISOR = 4;
   const PROMPT_CHAR_LIMIT = PROMPT_TOKEN_LIMIT * TOKEN_APPROX_DIVISOR;
   const cycleVersion = deriveGuideVersion(guideline);
-  const cycleSignature = buildCycleSignature(text, cycleVersion);
+  const cycleSignature = buildCycleSignature(text, `${cycleVersion}::${provider}::${selectedModel}`);
   if (resetCycle || cycleSignature !== toneCycleSignature) {
     toneCycleSignature = cycleSignature;
     toneCycleIndex = 0;
     toneCycleCompleted = false;
   }
 
-  const endpoint =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" +
-    encodeURIComponent(key);
-
   const callModel = async (prompt: string) => {
+    if (provider === "openrouter") {
+      const body = {
+        model: selectedModel,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.45,
+        top_p: 0.9,
+        max_tokens: 512,
+      };
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://www.figma.com",
+          "X-Title": "Check My Copy",
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        throw new Error("API error " + res.status + ": " + (await res.text()));
+      }
+      const data = await res.json();
+      const choice = Array.isArray(data?.choices) ? data.choices[0] : null;
+      let textOut = "";
+      const messageContent = choice?.message?.content;
+      if (typeof messageContent === "string") {
+        textOut = messageContent;
+      } else if (Array.isArray(messageContent)) {
+        textOut = messageContent
+          .map((part: any) => (typeof part === "string" ? part : part?.text || ""))
+          .filter(Boolean)
+          .join(" ");
+      } else if (typeof choice?.text === "string") {
+        textOut = choice.text;
+      }
+      return textOut ? textOut.trim() : "No response.";
+    }
+
+    const endpoint =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" +
+      encodeURIComponent(key);
     const body = {
       contents: [
         {
@@ -2405,29 +2461,90 @@ figma.on("run", () => {
 
       // SETTINGS: Save key
       if (msg.type === "save-key") {
-        const keyToSave = String(msg.key || "");
+        const keys =
+          msg && typeof msg.keys === "object" && msg.keys !== null ? msg.keys : {};
+        const models =
+          msg && typeof msg.models === "object" && msg.models !== null ? msg.models : {};
+        const geminiKeyToSave = String(
+          typeof keys.gemini === "string" ? keys.gemini : msg.key || ""
+        );
+        const openrouterKeyToSave = String(
+          typeof keys.openrouter === "string" ? keys.openrouter : ""
+        );
+        const openrouterModelToSave = String(
+          typeof models.openrouter === "string" ? models.openrouter : msg.model || ""
+        );
+        const activeProviderToSave: ApiProvider | "" =
+          msg.provider === "openrouter" || msg.provider === "gemini" ? msg.provider : "";
         try {
-          await figma.clientStorage.setAsync("gemini_api_key", keyToSave);
-          figma.ui.postMessage({ type: "key-saved", key: keyToSave });
+          await figma.clientStorage.setAsync(STORAGE_KEYS.gemini, geminiKeyToSave);
+          await figma.clientStorage.setAsync(STORAGE_KEYS.openrouter, openrouterKeyToSave);
+          await figma.clientStorage.setAsync(STORAGE_KEYS.openrouterModel, openrouterModelToSave);
+          await figma.clientStorage.setAsync(STORAGE_KEYS.active, activeProviderToSave);
+          figma.ui.postMessage({
+            type: "key-saved",
+            keys: { gemini: geminiKeyToSave, openrouter: openrouterKeyToSave },
+            models: { openrouter: openrouterModelToSave },
+            activeProvider: activeProviderToSave,
+          });
         } catch (e: any) {
             figma.ui.postMessage({
               type: "key-saved",
-              key: keyToSave,
+              keys: { gemini: geminiKeyToSave, openrouter: openrouterKeyToSave },
+              models: { openrouter: openrouterModelToSave },
+              activeProvider: activeProviderToSave,
               error: describeError(e),
             });
         }
         return;
       }
 
+      if (msg.type === "set-active-provider") {
+        const provider: ApiProvider | "" =
+          msg.provider === "openrouter" || msg.provider === "gemini" ? msg.provider : "";
+        try {
+          await figma.clientStorage.setAsync(STORAGE_KEYS.active, provider);
+        } catch (err) {
+          console.warn("Failed to persist active provider:", err);
+        }
+        return;
+      }
+
       // SETTINGS: Load key
       if (msg.type === "load-key") {
+        const provider: ApiProvider | "all" =
+          msg.provider === "openrouter" ? "openrouter" : msg.provider === "gemini" ? "gemini" : "all";
         try {
-          const saved = (await figma.clientStorage.getAsync("gemini_api_key")) || "";
-          figma.ui.postMessage({ type: "key-loaded", key: String(saved) });
+          const [geminiKey, openrouterKey, openrouterModel, activeProvider] = await Promise.all([
+            figma.clientStorage.getAsync(STORAGE_KEYS.gemini),
+            figma.clientStorage.getAsync(STORAGE_KEYS.openrouter),
+            figma.clientStorage.getAsync(STORAGE_KEYS.openrouterModel),
+            figma.clientStorage.getAsync(STORAGE_KEYS.active),
+          ]);
+          figma.ui.postMessage({
+            type: "key-loaded",
+            provider,
+            key:
+              provider === "openrouter"
+                ? String(openrouterKey || "")
+                : provider === "gemini"
+                ? String(geminiKey || "")
+                : "",
+            keys: {
+              gemini: String(geminiKey || ""),
+              openrouter: String(openrouterKey || ""),
+            },
+            models: { openrouter: String(openrouterModel || "") },
+            activeProvider: typeof activeProvider === "string" ? activeProvider : "",
+          });
         } catch (e: any) {
             figma.ui.postMessage({
               type: "key-loaded",
               key: "",
+              provider,
+              keys: { gemini: "", openrouter: "" },
+              models: { openrouter: "" },
+              activeProvider: "",
               error: describeError(e),
             });
         }

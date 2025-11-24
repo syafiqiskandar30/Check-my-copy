@@ -475,15 +475,120 @@
     height: 8px;
     border-radius: 999px;
     background: #d1d5db;
+    position: relative;
   }
   .guideline-status.loaded .status-dot {
     background: #34d399;
+    animation: status-pulse 1.6s ease-in-out infinite;
   }
   .guideline-status.fallback .status-dot {
     background: #fbbf24;
   }
   .guideline-status.error .status-dot {
     background: #f87171;
+  }
+  .api-keys-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin: 12px 0;
+  }
+  .api-card {
+    border: 1px solid #eceef1;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .api-card.active {
+    border-color: #00b0ff;
+    transform: translateY(-2px);
+  }
+  .api-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .api-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .api-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .switch {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  .switch-slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    top: 4px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    transition: transform 0.2s ease;
+  }
+  .switch input:checked + .switch-slider {
+    background: #00b0ff;
+  }
+  .switch input:checked + .switch-slider::before {
+    transform: translateX(16px);
+  }
+  .api-field-label {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 13px;
+  }
+  .api-status {
+    min-height: 16px;
+    color: #6b7280;
+    font-size: 12px;
+  }
+  .api-dual-note {
+    margin-top: 8px;
+    color: #555;
+    font-size: 12px;
+  }
+  @keyframes status-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.35);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    }
   }
   .copy-field {
     position: relative;
@@ -1134,13 +1239,46 @@
     <span class="status-dot"></span>
     <span class="guideline-text">Loading style guide…</span>
   </div>
-  <label>API key (Gemini)</label>
-  <input id="apikey" type="text" placeholder="AIza..." />
-  <div class="row">
-    <button id="saveKey">Save key</button>
-    <button id="loadKey">Load key</button>
+  <div class="api-keys-grid">
+    <div id="geminiCard" class="api-card">
+      <div class="api-card-header">
+        <div class="api-meta">
+          <div class="api-title">Gemini</div>
+        </div>
+        <label class="switch">
+          <input id="geminiToggle" type="checkbox" checked />
+          <span class="switch-slider" aria-hidden="true"></span>
+          <span class="sr-only">Use Gemini</span>
+        </label>
+      </div>
+      <label class="api-field-label" for="apikey">API key (Gemini)</label>
+      <input id="apikey" type="text" placeholder="AIza..." autocomplete="off" />
+      <div class="api-status" id="geminiStatus"></div>
+    </div>
+    <div id="openrouterCard" class="api-card">
+      <div class="api-card-header">
+        <div class="api-meta">
+          <div class="api-title">OpenRouter</div>
+        </div>
+        <label class="switch">
+          <input id="openrouterToggle" type="checkbox" />
+          <span class="switch-slider" aria-hidden="true"></span>
+          <span class="sr-only">Use OpenRouter</span>
+        </label>
+      </div>
+      <label class="api-field-label" for="openrouterKey">API key (OpenRouter)</label>
+      <input id="openrouterKey" type="text" placeholder="sk-or-v1..." autocomplete="off" />
+      <label class="api-field-label" for="openrouterModel">Model (OpenRouter)</label>
+      <input
+        id="openrouterModel"
+        type="text"
+        placeholder="openai/gpt-4o-mini or openrouter/auto"
+        autocomplete="off"
+      />
+      <div class="api-status" id="openrouterStatus"></div>
+    </div>
   </div>
-  <div id="saveStatus" style="margin-top:8px;color:#555;"></div>
+  <div id="saveStatus" class="api-dual-note"></div>
 </div>
 
 <script>
@@ -1294,9 +1432,114 @@
   };
 
   const geminiKeyInput = document.getElementById("apikey");
-  const saveKeyBtn = document.getElementById("saveKey");
-  const loadKeyBtn = document.getElementById("loadKey");
+  const openrouterKeyInput = document.getElementById("openrouterKey");
+  const openrouterModelInput = document.getElementById("openrouterModel");
+  const providerToggles = {
+    gemini: document.getElementById("geminiToggle"),
+    openrouter: document.getElementById("openrouterToggle"),
+  };
+  const providerCards = {
+    gemini: document.getElementById("geminiCard"),
+    openrouter: document.getElementById("openrouterCard"),
+  };
+  const providerStatusEls = {
+    gemini: document.getElementById("geminiStatus"),
+    openrouter: document.getElementById("openrouterStatus"),
+  };
+  const providerLabels = {
+    gemini: "Gemini",
+    openrouter: "OpenRouter",
+  };
+  let activeProvider = "gemini";
+  const getProviderLabel = (provider) => providerLabels[provider] || "API";
+  const syncProviderUI = () => {
+    Object.entries(providerToggles).forEach(([provider, toggle]) => {
+      if (toggle) {
+        toggle.checked = provider === activeProvider;
+      }
+    });
+    Object.entries(providerCards).forEach(([provider, card]) => {
+      if (card) {
+        card.classList.toggle("active", provider === activeProvider);
+      }
+    });
+  };
+  const persistActiveProvider = () => {
+    postToPlugin({ type: "set-active-provider", provider: activeProvider || "" });
+  };
+  const setActiveProvider = (provider, options = {}) => {
+    activeProvider = provider || null;
+    syncProviderUI();
+    if (!options.silent) {
+      persistActiveProvider();
+    }
+  };
+  const handleProviderToggleChange = (provider, isOn) => {
+    if (isOn) {
+      setActiveProvider(provider);
+      return;
+    }
+    if (activeProvider === provider) {
+      setActiveProvider(null);
+    } else {
+      syncProviderUI();
+    }
+  };
+  Object.entries(providerToggles).forEach(([provider, toggle]) => {
+    toggle?.addEventListener("change", (event) => {
+      const target = event?.target;
+      handleProviderToggleChange(provider, Boolean(target?.checked));
+    });
+  });
+  syncProviderUI();
   const saveStatus = document.getElementById("saveStatus");
+  let autoSaveTimer = null;
+  const updateSaveStatus = (text) => {
+    if (saveStatus) {
+      saveStatus.textContent = text || "";
+    }
+  };
+  const setProviderStatus = (provider, text) => {
+    const target = providerStatusEls[provider];
+    if (target) {
+      target.textContent = text || "";
+    }
+  };
+  const collectKeysPayload = () => ({
+    type: "save-key",
+    keys: {
+      gemini: (geminiKeyInput?.value || "").trim(),
+      openrouter: (openrouterKeyInput?.value || "").trim(),
+    },
+    models: {
+      openrouter: (openrouterModelInput?.value || "").trim(),
+    },
+    provider: activeProvider || "",
+  });
+  const autoSaveKeys = () => {
+    postToPlugin(collectKeysPayload());
+  };
+  const scheduleAutoSave = () => {
+    updateSaveStatus("Saving…");
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+    autoSaveTimer = setTimeout(autoSaveKeys, 350);
+  };
+  const attachAutoSave = (input, provider) => {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      setProviderStatus(provider, "Saving key…");
+      scheduleAutoSave();
+    });
+    input.addEventListener("blur", () => {
+      scheduleAutoSave();
+    });
+  };
+  attachAutoSave(geminiKeyInput, "gemini");
+  attachAutoSave(openrouterKeyInput, "openrouter");
+  attachAutoSave(openrouterModelInput, "openrouter");
+  updateSaveStatus("Keys save automatically.");
   const guidelineStatus = document.getElementById("guidelineStatus");
   const guidelineStatusText = guidelineStatus?.querySelector(".guideline-text");
   const requiredKeywordInput = document.getElementById("requiredKeywordInput");
@@ -1988,6 +2231,44 @@
     suggestionBody.innerHTML = `<p>${text || "Something went wrong. Try again in a bit."}</p>`;
   };
 
+  const getKeyForProvider = (provider) => {
+    if (provider === "openrouter") {
+      return (openrouterKeyInput?.value || "").trim();
+    }
+    return (geminiKeyInput?.value || "").trim();
+  };
+  const getModelForProvider = (provider) => {
+    if (provider === "openrouter") {
+      const model = (openrouterModelInput?.value || "").trim();
+      return model || "openrouter/auto";
+    }
+    return "";
+  };
+  const requestStoredKey = (provider) => {
+    postToPlugin({ type: "load-key", provider });
+    renderLoading("Loading saved key…");
+  };
+  const setPendingRequest = (provider, text, guideline, mode) => {
+    window.__pendingText = text;
+    window.__pendingGuideline = guideline;
+    window.__pendingMode = mode;
+    window.__pendingProvider = provider;
+  };
+  const clearPendingRequest = () => {
+    delete window.__pendingText;
+    delete window.__pendingGuideline;
+    delete window.__pendingMode;
+    delete window.__pendingProvider;
+  };
+  const ensureActiveProvider = () => {
+    if (activeProvider) return activeProvider;
+    setRewriteLoadingState(false);
+    openSuggestionsTab();
+    renderStatus("Turn on Gemini or OpenRouter in Settings to generate copy.");
+    activate("settings");
+    return null;
+  };
+
   const renderSuggestions = (items) => {
     if (!items.length) {
       renderStatus("No response.");
@@ -2115,55 +2396,64 @@
       alert("Please enter some text.");
       return;
     }
+    const provider = ensureActiveProvider();
+    if (!provider) return;
     const mode = generationMode;
     const guidelinePayload = buildGuidelinePayload();
     lastRewriteRequest = {
       text,
       guideline: guidelinePayload,
       mode,
+      provider,
     };
     updateCycleButtonState();
     setRewriteLoadingState(true);
     renderLoading();
 
-    const key = geminiKeyInput ? geminiKeyInput.value.trim() : "";
+    const key = getKeyForProvider(provider);
+    const model = getModelForProvider(provider);
     if (!key) {
-      postToPlugin({ type: "load-key" });
-      renderLoading("Loading saved key…");
-      window.__pendingText = text;
-      window.__pendingGuideline = guidelinePayload;
-      window.__pendingMode = mode;
+      requestStoredKey(provider);
+      setPendingRequest(provider, text, guidelinePayload, mode);
       return;
     }
 
-    delete window.__pendingGuideline;
-    delete window.__pendingMode;
-      postToPlugin({
-        type: "rewrite",
-        key,
-        text,
-        guideline: guidelinePayload,
-        mode,
-      });
-    };
+    clearPendingRequest();
+    postToPlugin({
+      type: "rewrite",
+      provider,
+      key,
+      model,
+      text,
+      guideline: guidelinePayload,
+      mode,
+    });
+  };
 
   btnCycleTone?.addEventListener("click", () => {
     if (!lastRewriteRequest) return;
     commitAllManualKeywords();
-    const key = geminiKeyInput ? geminiKeyInput.value.trim() : "";
+    const provider = ensureActiveProvider();
+    if (!provider) return;
+    const key = getKeyForProvider(provider);
+    const model = getModelForProvider(provider);
     if (!key) {
-      postToPlugin({ type: "load-key" });
-      renderLoading("Loading saved key…");
-      window.__pendingText = lastRewriteRequest.text;
-      window.__pendingGuideline = lastRewriteRequest.guideline;
-      window.__pendingMode = lastRewriteRequest.mode;
+      requestStoredKey(provider);
+      setPendingRequest(
+        provider,
+        lastRewriteRequest.text,
+        lastRewriteRequest.guideline,
+        lastRewriteRequest.mode
+      );
       return;
     }
     setRewriteLoadingState(true);
     renderLoading();
     postToPlugin({
       type: "cycle-tone",
+      provider,
       key,
+      model,
       text: lastRewriteRequest.text,
       guideline: lastRewriteRequest.guideline,
       mode: lastRewriteRequest.mode,
@@ -2179,16 +2469,10 @@
       renderEmptyState();
     }
   });
-
-  // settings save/load
-  saveKeyBtn.onclick = () => {
-    const key = geminiKeyInput.value.trim();
-    postToPlugin({ type: "save-key", key });
-    saveStatus.textContent = "Saving…";
-  };
-  loadKeyBtn.onclick = () => {
-    postToPlugin({ type: "load-key" });
-    saveStatus.textContent = "Loading…";
+  const requestAllKeys = () => {
+    ["gemini", "openrouter"].forEach((provider) => {
+      postToPlugin({ type: "load-key", provider });
+    });
   };
 
   // messages from main
@@ -2217,43 +2501,112 @@
     }
 
     if (msg?.type === "key-saved") {
-      saveStatus.textContent = msg.error ? ("Save failed: " + msg.error) : "Key saved.";
-      if (!msg.error && typeof msg.key === "string") {
-        geminiKeyInput.value = msg.key;
+      if (msg.error) {
+        updateSaveStatus("Save failed: " + msg.error);
+        return;
       }
+      const keys = msg && typeof msg.keys === "object" ? msg.keys || {} : {};
+      const models = msg && typeof msg.models === "object" ? msg.models || {} : {};
+      const savedGemini =
+        typeof keys.gemini === "string" ? keys.gemini : typeof msg.key === "string" ? msg.key : "";
+      const savedOpenRouter = typeof keys.openrouter === "string" ? keys.openrouter : "";
+      const savedOpenRouterModel =
+        typeof models.openrouter === "string" ? models.openrouter : msg.model || "";
+      if (geminiKeyInput && typeof savedGemini === "string") {
+        geminiKeyInput.value = savedGemini;
+      }
+      if (openrouterKeyInput && typeof savedOpenRouter === "string") {
+        openrouterKeyInput.value = savedOpenRouter;
+      }
+      if (openrouterModelInput && typeof savedOpenRouterModel === "string") {
+        openrouterModelInput.value = savedOpenRouterModel;
+      }
+      if (typeof msg.activeProvider === "string" && msg.activeProvider) {
+        setActiveProvider(msg.activeProvider, { silent: true });
+      }
+      syncProviderUI();
+      updateSaveStatus("Keys saved.");
       return;
     }
     if (msg?.type === "key-loaded") {
       if (msg.error) {
-        saveStatus.textContent = "Load failed: " + msg.error;
+        updateSaveStatus("Load failed: " + msg.error);
         setRewriteLoadingState(false);
         if (window.__pendingText) {
-    openSuggestionsTab();
-          renderStatus("Couldn't load your API key. Add it in Settings to try again.");
-          delete window.__pendingText;
-          delete window.__pendingGuideline;
+          openSuggestionsTab();
+          const providerLabel = getProviderLabel(window.__pendingProvider || "Gemini");
+          renderStatus(`Couldn't load your ${providerLabel} API key. Add it in Settings to try again.`);
+          clearPendingRequest();
           activate("settings");
         }
         return;
       }
 
-      const loadedKeyRaw = typeof msg.key === "string" ? msg.key : "";
-      const loadedKey = loadedKeyRaw.trim();
+      const keys = msg && typeof msg.keys === "object" ? msg.keys || {} : {};
+      const models = msg && typeof msg.models === "object" ? msg.models || {} : {};
+      const loadedGemini =
+        typeof keys.gemini === "string"
+          ? keys.gemini
+          : msg.provider === "gemini" && typeof msg.key === "string"
+          ? msg.key
+          : "";
+      const loadedOpenRouter =
+        typeof keys.openrouter === "string"
+          ? keys.openrouter
+          : msg.provider === "openrouter" && typeof msg.key === "string"
+          ? msg.key
+          : "";
+      const loadedOpenRouterModel =
+        typeof models.openrouter === "string"
+          ? models.openrouter
+          : msg.provider === "openrouter" && typeof msg.model === "string"
+          ? msg.model
+          : "";
 
-      geminiKeyInput.value = loadedKeyRaw;
-      saveStatus.textContent = loadedKey ? "Key loaded." : "No key saved yet.";
+      if (geminiKeyInput) {
+        geminiKeyInput.value = typeof loadedGemini === "string" ? loadedGemini : "";
+      }
+      if (openrouterKeyInput) {
+        openrouterKeyInput.value = typeof loadedOpenRouter === "string" ? loadedOpenRouter : "";
+      }
+      if (openrouterModelInput) {
+        openrouterModelInput.value =
+          typeof loadedOpenRouterModel === "string" ? loadedOpenRouterModel : "";
+      }
+      const activeFromMsg =
+        typeof msg.activeProvider === "string" && msg.activeProvider ? msg.activeProvider : "";
+      if (activeFromMsg) {
+        setActiveProvider(activeFromMsg, { silent: true });
+      } else if (!activeProvider && (loadedGemini || loadedOpenRouter)) {
+        setActiveProvider(loadedGemini ? "gemini" : "openrouter", { silent: true });
+      }
+      syncProviderUI();
+      setProviderStatus("gemini", loadedGemini ? "Gemini key loaded." : "Add your Gemini key.");
+      setProviderStatus(
+        "openrouter",
+        loadedOpenRouter ? "OpenRouter key loaded." : "Add your OpenRouter key."
+      );
+      updateSaveStatus(
+        loadedGemini || loadedOpenRouter ? "Keys loaded." : "No keys saved yet."
+      );
 
       if (window.__pendingText) {
-        if (loadedKey) {
+        const expectedProvider = window.__pendingProvider || msg.provider || activeProvider;
+        const keyForPending =
+          expectedProvider === "openrouter" ? loadedOpenRouter : loadedGemini;
+        const modelForPending =
+          expectedProvider === "openrouter" ? getModelForProvider("openrouter") : "";
+        if (keyForPending) {
           const text = window.__pendingText;
           const guide = window.__pendingGuideline || buildGuidelinePayload();
           const pendingMode = window.__pendingMode || generationMode;
-          delete window.__pendingText;
-          delete window.__pendingGuideline;
-          delete window.__pendingMode;
+          const providerToUse = expectedProvider || activeProvider || "gemini";
+          clearPendingRequest();
           postToPlugin({
             type: "rewrite",
-            key: loadedKey,
+            provider: providerToUse,
+            key: keyForPending,
+            model: modelForPending,
             text,
             guideline: guide,
             mode: pendingMode,
@@ -2263,10 +2616,11 @@
         } else {
           setRewriteLoadingState(false);
           openSuggestionsTab();
-          renderStatus("Add your Gemini API key in Settings to generate copy suggestions.");
-          delete window.__pendingText;
-          delete window.__pendingGuideline;
-          delete window.__pendingMode;
+          const providerLabel = getProviderLabel(expectedProvider || "Gemini");
+          renderStatus(
+            `Add your ${providerLabel} API key in Settings to generate copy suggestions.`
+          );
+          clearPendingRequest();
           activate("settings");
         }
       }
@@ -2325,8 +2679,8 @@
 
   // auto-load key when opening settings
   tabs.settings.tab.addEventListener("click", ()=> {
-    postToPlugin({ type: "load-key" });
-    saveStatus.textContent = "Loading…";
+    requestAllKeys();
+    updateSaveStatus("Loading…");
   });
 
   activate("rewrite");
