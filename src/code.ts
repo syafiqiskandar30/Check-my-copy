@@ -1314,7 +1314,7 @@ const deriveGuidePrompt = (guide: any) => {
 
   const overview =
     overviewParts.length > 0
-      ? `Rewrite the provided copy using Setel voice and guidelines: ${overviewParts.join(" ")}`
+      ? `Paraphrase the provided copy using Setel voice and guidelines: ${overviewParts.join(" ")}`
       : "";
 
   return { overview, requirements };
@@ -1367,7 +1367,7 @@ const buildTaskSpecBlock = (toneKey: string, lengthKey: TaskSpecLength): string 
   [
     "TASK_SPEC:",
     "  {",
-    '    "task": "rewrite",',
+    '    "task": "paraphrase",',
     `    "tone": "${toneKey || "unspecified"}",`,
     `    "length": "${lengthKey}"`,
     "  }",
@@ -1705,7 +1705,7 @@ const extractPlaintextVariantCandidates = (raw: string): string[] => {
     /^TASK_SPEC/i.test(value) ||
     /^Respond\s+with/i.test(value) ||
     /^Return each variant/i.test(value) ||
-    /^Rewrite the copy/i.test(value) ||
+    /^(Rewrite|Paraphrase) the copy/i.test(value) ||
     /^JSON_RESPONSE_TEMPLATE/i.test(value) ||
     /^Your variants array/i.test(value) ||
     /^Keep these exact source terms/i.test(value);
@@ -1763,7 +1763,7 @@ const extractPlaintextVariantCandidates = (raw: string): string[] => {
 
 const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): RewriteInstructionBundle => {
   const fallbackOverview =
-    "Rewrite provided copy for Setel, Malaysia’s all‑in‑one motoring app at PETRONAS, following every rule below.";
+    "Paraphrase provided copy for Setel, Malaysia’s all‑in‑one motoring app at PETRONAS, following every rule below.";
   if (!guide || typeof guide !== "object") {
     const lengthKey = determineTaskSpecLengthKey(null);
     const toneLabel = options?.targetToneKey || "neutral_helpful";
@@ -1838,7 +1838,7 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
 
   const overviewLine =
     overview && overview !== fallbackOverview
-      ? overview.replace(/^Rewrite the provided copy using\s*/i, "Core voice reminder—use ")
+      ? overview.replace(/^(Rewrite|Paraphrase) the provided copy using\s*/i, "Core voice reminder—use ")
       : "Core voice reminder—use Setel voice and stay on-brand.";
   addRoleVoice(overviewLine);
 
@@ -1848,12 +1848,12 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
     "For every JSON variant, keep the text value limited to the final UX copy only—no labels, intros, or commentary."
   );
   addOutputRule(
-    "Each JSON variant must contain exactly one rewrite; never include multiple options, bullet lists, or extra framing."
+    "Each JSON variant must contain exactly one paraphrase; never include multiple options, bullet lists, or extra framing."
   );
   addOutputRule("Never print standalone variant text outside the JSON response.");
 
   addCoreRule(
-    "Speak directly to the end-user; never mention rewrites, options, or that you're providing variations."
+    "Speak directly to the end-user; never mention paraphrases, options, or that you're providing variations."
   );
   addCoreRule(
     "Remove conversational framing or meta-commentary entirely—no phrases like “We understand…”, “Let’s…”, “Here’s…”, or anything that references the request; start immediately with the final UX copy."
@@ -1862,21 +1862,21 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
     "Skip pleasantries or commentary about what the reader is doing (e.g., “It's great you're looking…”); lead with the product benefit or action."
   );
   addCoreRule(
-    "Never mention missing source copy, assumed intent, or that you're inferring context—just deliver the final rewrite, even if the prompt feels incomplete."
+    "Never mention missing source copy, assumed intent, or that you're inferring context—just deliver the final paraphrase, even if the prompt feels incomplete."
   );
   addCoreRule("Preserve the meaning, required keywords, and pronoun pattern from the source.");
   addCoreRule(
     "Preserve sentence count and sentence type (statement, question, or command) while staying within the same length band."
   );
   addCoreRule(
-    "Rewrite with fresh wording and a different angle—never lift more than 2–3 consecutive words from the source unless they are required terms or product names."
+    "Paraphrase with fresh wording and a different angle—never lift more than 2–3 consecutive words from the source unless they are required terms or product names."
   );
   addCoreRule("Avoid repeating the same hero verb or key noun within a sentence; rotate vocabulary.");
   addCoreRule(
-    "Vary the opening words across variants so no two rewrites share the same opener or rhythm."
+    "Vary the opening words across variants so no two paraphrases share the same opener or rhythm."
   );
   addCoreRule(
-    "Within these constraints, choose fresh wording and a different angle so each variant feels like it was written by a different human, not just a paraphrase."
+    "Within these constraints, keep it a true paraphrase of the source while making each variant feel like it was written by a different human."
   );
   addCoreRule(
     "Stay inside the banned terms, required keywords, pronoun rules, and length limits while picking new verbs, benefits, and entry points."
@@ -1889,7 +1889,7 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
       "Create original UX copy that fulfils the user brief; treat their text as instructions, not content to restate."
     );
   } else {
-    addCoreRule("Rewrite the provided copy so it keeps the same intent and facts while following every rule above.");
+    addCoreRule("Paraphrase the provided copy so it keeps the same intent and facts while following every rule above.");
   }
   if (forcedTone) {
     addToneGuidance(
@@ -1915,11 +1915,11 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
     .filter((phrase) => phrase && !isVoiceDescriptorWord(phrase));
   if (cleanedManualAvoid.length === 1) {
     priorityRules.push(
-      `Do not use the word or phrase "${cleanedManualAvoid[0]}" anywhere in your rewrite.`
+      `Do not use the word or phrase "${cleanedManualAvoid[0]}" anywhere in your paraphrase.`
     );
   } else if (cleanedManualAvoid.length > 1) {
     priorityRules.push(
-      `Avoid using any of these words or phrases in your rewrite: ${cleanedManualAvoid.join(", ")}.`
+      `Avoid using any of these words or phrases in your paraphrase: ${cleanedManualAvoid.join(", ")}.`
     );
   }
 
@@ -1945,7 +1945,7 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
 
   if (trimmedSourceText && !sourceHasPronoun) {
     addCoreRule(
-      "If the source copy avoids first- and second-person pronouns, keep your rewrite pronoun-free unless the same pronouns appear in the prompt."
+      "If the source copy avoids first- and second-person pronouns, keep your paraphrase pronoun-free unless the same pronouns appear in the prompt."
     );
   }
   if (structureReminder) {
@@ -1961,7 +1961,7 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
   const preservedTerms = collectSourceKeywords(trimmedSourceText);
   if (preservedTerms.length) {
     addCoreRule(
-      `Keep these exact source terms (and their casing) in every rewrite: ${preservedTerms.join(", ")}.`
+      `Keep these exact source terms (and their casing) in every paraphrase: ${preservedTerms.join(", ")}.`
     );
   }
   guardrailRequirements.unshift(...priorityRules);
@@ -1976,10 +1976,10 @@ const buildRewriteInstructions = (guide: any, options?: BuildRewriteOptions): Re
   const instructionHeader =
     intent === "prompt"
       ? "Create original UX copy using Setel’s UX guidelines and the rules below."
-      : "Rewrite the copy below using Setel’s UX guidelines and the rules below.";
+      : "Paraphrase the copy below using Setel’s UX guidelines and the rules below.";
   const sections = [
     formatSection("Role & core voice", roleVoiceRules),
-    formatSection("Core rewrite rules", coreRewriteRules),
+    formatSection("Core paraphrase rules", coreRewriteRules),
     formatSection("Tone application", toneGuidance),
     formatSection("Structural targets", structuralGuidance),
     formatSection("Language, formatting, and brand guardrails", guardrailRequirements),
@@ -2028,46 +2028,88 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
 
   const callModel = async (prompt: string) => {
     if (provider === "openrouter") {
-      const body = {
-        model: selectedModel,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.45,
-        top_p: 0.9,
-        max_tokens: 512,
+      const OPENROUTER_TIMEOUT_MS = 6000;
+      const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number) => {
+        if (typeof AbortController === "undefined") {
+          return await Promise.race([
+            fetch(url, Object.assign({}, options || {})),
+            new Promise<Response>((_, reject) =>
+              setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+            ),
+          ]);
+        }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const mergedOptions = Object.assign({}, options || {}, { signal: controller.signal });
+        try {
+          return await fetch(url, mergedOptions);
+        } finally {
+          clearTimeout(timer);
+        }
       };
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://www.figma.com",
-          "X-Title": "Check My Copy",
-        },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        throw new Error("API error " + res.status + ": " + (await res.text()));
+      const callOnce = async () => {
+        const body = {
+          model: selectedModel,
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.45,
+          top_p: 0.9,
+          max_tokens: 512,
+        };
+        const res = await fetchWithTimeout(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${key}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://www.figma.com",
+              "X-Title": "Check My Copy",
+            },
+            body: JSON.stringify(body),
+          },
+          OPENROUTER_TIMEOUT_MS
+        );
+        if (!res.ok) {
+          throw new Error("API error " + res.status + ": " + (await res.text()));
+        }
+        const data = await res.json();
+        const choice = Array.isArray(data?.choices) ? data.choices[0] : null;
+        let textOut = "";
+        const messageContent = choice?.message?.content;
+        if (typeof messageContent === "string") {
+          textOut = messageContent;
+        } else if (Array.isArray(messageContent)) {
+          textOut = messageContent
+            .map((part: any) => (typeof part === "string" ? part : part?.text || ""))
+            .filter(Boolean)
+            .join(" ");
+        } else if (typeof choice?.text === "string") {
+          textOut = choice.text;
+        }
+        if (!textOut.trim()) {
+          throw new Error("OpenRouter returned an empty response.");
+        }
+        return textOut.trim();
+      };
+
+      let lastError: any = null;
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          return await callOnce();
+        } catch (err: any) {
+          lastError = err;
+          const isAbort = err && typeof err.name === "string" && err.name === "AbortError";
+          if (attempt < 2 && (isAbort || /empty response/i.test(String(err)))) {
+            continue;
+          }
+        }
       }
-      const data = await res.json();
-      const choice = Array.isArray(data?.choices) ? data.choices[0] : null;
-      let textOut = "";
-      const messageContent = choice?.message?.content;
-      if (typeof messageContent === "string") {
-        textOut = messageContent;
-      } else if (Array.isArray(messageContent)) {
-        textOut = messageContent
-          .map((part: any) => (typeof part === "string" ? part : part?.text || ""))
-          .filter(Boolean)
-          .join(" ");
-      } else if (typeof choice?.text === "string") {
-        textOut = choice.text;
-      }
-      return textOut ? textOut.trim() : "No response.";
+      throw lastError || new Error("OpenRouter request failed.");
     }
 
     const endpoint =
@@ -2203,7 +2245,7 @@ const runRewriteCycle = async (msg: any, resetCycle: boolean) => {
       "Respond with valid JSON exactly matching JSON_RESPONSE_TEMPLATE.",
       "Your variants array must contain one entry per task above, in the same order.",
       "Each entry must include the tone and length from its TASK_SPEC block.",
-      "Every variant must sound distinct—rewrite it if any two openings or phrasings feel similar.",
+      "Every variant must sound distinct—revise and paraphrase again if any two openings or phrasings feel similar.",
       "Let each tone's traits dictate different verbs, cadence, and punctuation so the emotional energy clearly shifts between variants.",
     ].join(" ");
 

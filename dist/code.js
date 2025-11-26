@@ -4,7 +4,7 @@
   var guideline_default = {
     meta: {
       version: "3.0",
-      purpose: "Lean Setel UX writing rules for LLM rewrites",
+      purpose: "Lean Setel UX writing rules for LLM paraphrase",
       last_updated: "2025-01-15"
     },
     company_profile: {
@@ -12,7 +12,7 @@
     },
     core_identity: {
       voice: "Warm, Friendly, Caring",
-      golden_rule: "If your rewrite feels cold, corporate, or robotic, you've failed. Core voice always wins.",
+      golden_rule: "If your paraphrase feels cold, corporate, or robotic, you've failed. Core voice always wins.",
       north_star: "Write like you're helping a friend, not completing a transaction.",
       critical_truth: "You are not writing marketing copy. If it sounds like a billboard, TV ad, or corporate website, start over."
     },
@@ -20,10 +20,10 @@
       core_instructions: [
         "You are a senior UX writer for Setel-warm, friendly, caring, and human. Avoid corporate or marketing jargon.",
         "Understand the intent, not just the source words. Preserve meaning, required keywords, pronoun pattern, and the same sentence count/type and length band.",
-        "Rewrite with fresh wording and a different angle; do not lift more than 2-3 consecutive words unless they are required terms or product names.",
+        "Paraphrase with fresh wording and a different angle; do not lift more than 2-3 consecutive words unless they are required terms or product names.",
         "Avoid marketing formulas and corporate buzzwords. Never sound like a billboard or TV ad.",
         'Never blame the user. Use "we" to own issues caused by the product.',
-        "Never mention that you're rewriting or generating copy."
+        "Never mention that you're paraphrasing or generating copy."
       ],
       must: [
         "Stay within the selected length band and keep sentences tight.",
@@ -1073,7 +1073,7 @@
         requirements.push(tonePalette.how_to_use.trim());
       }
     }
-    const overview = overviewParts.length > 0 ? `Rewrite the provided copy using Setel voice and guidelines: ${overviewParts.join(" ")}` : "";
+    const overview = overviewParts.length > 0 ? `Paraphrase the provided copy using Setel voice and guidelines: ${overviewParts.join(" ")}` : "";
     return { overview, requirements };
   };
   var getToneSequence = (guide) => {
@@ -1103,7 +1103,7 @@
   var buildTaskSpecBlock = (toneKey, lengthKey) => [
     "TASK_SPEC:",
     "  {",
-    '    "task": "rewrite",',
+    '    "task": "paraphrase",',
     `    "tone": "${toneKey || "unspecified"}",`,
     `    "length": "${lengthKey}"`,
     "  }",
@@ -1389,7 +1389,7 @@
     if (blocks.length === 1) {
       blocks = expanded.split(/\n+/);
     }
-    const isInstructionalBlock = (value) => /^###\s+VARIANT/i.test(value) || /^TASK_SPEC/i.test(value) || /^Respond\s+with/i.test(value) || /^Return each variant/i.test(value) || /^Rewrite the copy/i.test(value) || /^JSON_RESPONSE_TEMPLATE/i.test(value) || /^Your variants array/i.test(value) || /^Keep these exact source terms/i.test(value);
+    const isInstructionalBlock = (value) => /^###\s+VARIANT/i.test(value) || /^TASK_SPEC/i.test(value) || /^Respond\s+with/i.test(value) || /^Return each variant/i.test(value) || /^(Rewrite|Paraphrase) the copy/i.test(value) || /^JSON_RESPONSE_TEMPLATE/i.test(value) || /^Your variants array/i.test(value) || /^Keep these exact source terms/i.test(value);
     const isLikelyCopyLine = (value) => value.length >= 15 && /\s/.test(value);
     const isMetaComment = (value) => {
       const lower = value.toLowerCase();
@@ -1423,7 +1423,7 @@
     });
   };
   var buildRewriteInstructions = (guide, options) => {
-    const fallbackOverview = "Rewrite provided copy for Setel, Malaysia\u2019s all\u2011in\u2011one motoring app at PETRONAS, following every rule below.";
+    const fallbackOverview = "Paraphrase provided copy for Setel, Malaysia\u2019s all\u2011in\u2011one motoring app at PETRONAS, following every rule below.";
     if (!guide || typeof guide !== "object") {
       const lengthKey2 = determineTaskSpecLengthKey(null);
       const toneLabel = (options == null ? void 0 : options.targetToneKey) || "neutral_helpful";
@@ -1483,7 +1483,7 @@
       const trimmed = typeof value === "string" ? value.trim() : "";
       if (trimmed) outputFormatRules.push(trimmed);
     };
-    const overviewLine = overview && overview !== fallbackOverview ? overview.replace(/^Rewrite the provided copy using\s*/i, "Core voice reminder\u2014use ") : "Core voice reminder\u2014use Setel voice and stay on-brand.";
+    const overviewLine = overview && overview !== fallbackOverview ? overview.replace(/^(Rewrite|Paraphrase) the provided copy using\s*/i, "Core voice reminder\u2014use ") : "Core voice reminder\u2014use Setel voice and stay on-brand.";
     addRoleVoice(overviewLine);
     addOutputRule(TASK_SPEC_REMINDER);
     addOutputRule(JSON_RESPONSE_TEMPLATE);
@@ -1491,11 +1491,11 @@
       "For every JSON variant, keep the text value limited to the final UX copy only\u2014no labels, intros, or commentary."
     );
     addOutputRule(
-      "Each JSON variant must contain exactly one rewrite; never include multiple options, bullet lists, or extra framing."
+      "Each JSON variant must contain exactly one paraphrase; never include multiple options, bullet lists, or extra framing."
     );
     addOutputRule("Never print standalone variant text outside the JSON response.");
     addCoreRule(
-      "Speak directly to the end-user; never mention rewrites, options, or that you're providing variations."
+      "Speak directly to the end-user; never mention paraphrases, options, or that you're providing variations."
     );
     addCoreRule(
       "Remove conversational framing or meta-commentary entirely\u2014no phrases like \u201CWe understand\u2026\u201D, \u201CLet\u2019s\u2026\u201D, \u201CHere\u2019s\u2026\u201D, or anything that references the request; start immediately with the final UX copy."
@@ -1504,21 +1504,21 @@
       "Skip pleasantries or commentary about what the reader is doing (e.g., \u201CIt's great you're looking\u2026\u201D); lead with the product benefit or action."
     );
     addCoreRule(
-      "Never mention missing source copy, assumed intent, or that you're inferring context\u2014just deliver the final rewrite, even if the prompt feels incomplete."
+      "Never mention missing source copy, assumed intent, or that you're inferring context\u2014just deliver the final paraphrase, even if the prompt feels incomplete."
     );
     addCoreRule("Preserve the meaning, required keywords, and pronoun pattern from the source.");
     addCoreRule(
       "Preserve sentence count and sentence type (statement, question, or command) while staying within the same length band."
     );
     addCoreRule(
-      "Rewrite with fresh wording and a different angle\u2014never lift more than 2\u20133 consecutive words from the source unless they are required terms or product names."
+      "Paraphrase with fresh wording and a different angle\u2014never lift more than 2\u20133 consecutive words from the source unless they are required terms or product names."
     );
     addCoreRule("Avoid repeating the same hero verb or key noun within a sentence; rotate vocabulary.");
     addCoreRule(
-      "Vary the opening words across variants so no two rewrites share the same opener or rhythm."
+      "Vary the opening words across variants so no two paraphrases share the same opener or rhythm."
     );
     addCoreRule(
-      "Within these constraints, choose fresh wording and a different angle so each variant feels like it was written by a different human, not just a paraphrase."
+      "Within these constraints, keep it a true paraphrase of the source while making each variant feel like it was written by a different human."
     );
     addCoreRule(
       "Stay inside the banned terms, required keywords, pronoun rules, and length limits while picking new verbs, benefits, and entry points."
@@ -1531,7 +1531,7 @@
         "Create original UX copy that fulfils the user brief; treat their text as instructions, not content to restate."
       );
     } else {
-      addCoreRule("Rewrite the provided copy so it keeps the same intent and facts while following every rule above.");
+      addCoreRule("Paraphrase the provided copy so it keeps the same intent and facts while following every rule above.");
     }
     if (forcedTone) {
       addToneGuidance(
@@ -1554,11 +1554,11 @@
     const cleanedManualAvoid = manualAvoidPhrases.map((phrase) => phrase.trim()).filter((phrase) => phrase && !isVoiceDescriptorWord(phrase));
     if (cleanedManualAvoid.length === 1) {
       priorityRules.push(
-        `Do not use the word or phrase "${cleanedManualAvoid[0]}" anywhere in your rewrite.`
+        `Do not use the word or phrase "${cleanedManualAvoid[0]}" anywhere in your paraphrase.`
       );
     } else if (cleanedManualAvoid.length > 1) {
       priorityRules.push(
-        `Avoid using any of these words or phrases in your rewrite: ${cleanedManualAvoid.join(", ")}.`
+        `Avoid using any of these words or phrases in your paraphrase: ${cleanedManualAvoid.join(", ")}.`
       );
     }
     const selectedLength = getLengthPreference(guide);
@@ -1577,7 +1577,7 @@
     const structureReminder = trimmedSourceText ? "Preserve pronoun pattern, sentence count, sentence type, and the same length band as the source, but feel free to change clause order and phrasing." : "";
     if (trimmedSourceText && !sourceHasPronoun) {
       addCoreRule(
-        "If the source copy avoids first- and second-person pronouns, keep your rewrite pronoun-free unless the same pronouns appear in the prompt."
+        "If the source copy avoids first- and second-person pronouns, keep your paraphrase pronoun-free unless the same pronouns appear in the prompt."
       );
     }
     if (structureReminder) {
@@ -1593,7 +1593,7 @@
     const preservedTerms = collectSourceKeywords(trimmedSourceText);
     if (preservedTerms.length) {
       addCoreRule(
-        `Keep these exact source terms (and their casing) in every rewrite: ${preservedTerms.join(", ")}.`
+        `Keep these exact source terms (and their casing) in every paraphrase: ${preservedTerms.join(", ")}.`
       );
     }
     guardrailRequirements.unshift(...priorityRules);
@@ -1603,10 +1603,10 @@ ${items.map((item) => "- " + item).join("\n")}
 ` : "";
     const lengthKey = determineTaskSpecLengthKey(selectedLength);
     const specBlock = buildTaskSpecBlock(toneSpecKey, lengthKey);
-    const instructionHeader = intent === "prompt" ? "Create original UX copy using Setel\u2019s UX guidelines and the rules below." : "Rewrite the copy below using Setel\u2019s UX guidelines and the rules below.";
+    const instructionHeader = intent === "prompt" ? "Create original UX copy using Setel\u2019s UX guidelines and the rules below." : "Paraphrase the copy below using Setel\u2019s UX guidelines and the rules below.";
     const sections = [
       formatSection("Role & core voice", roleVoiceRules),
-      formatSection("Core rewrite rules", coreRewriteRules),
+      formatSection("Core paraphrase rules", coreRewriteRules),
       formatSection("Tone application", toneGuidance),
       formatSection("Structural targets", structuralGuidance),
       formatSection("Language, formatting, and brand guardrails", guardrailRequirements),
@@ -1650,45 +1650,86 @@ ${sections}`;
       toneCycleCompleted = false;
     }
     const callModel = async (prompt) => {
-      var _a2;
       if (provider === "openrouter") {
-        const body2 = {
-          model: selectedModel,
-          messages: [
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          temperature: 0.45,
-          top_p: 0.9,
-          max_tokens: 512
+        const OPENROUTER_TIMEOUT_MS = 6e3;
+        const fetchWithTimeout = async (url, options, timeoutMs) => {
+          if (typeof AbortController === "undefined") {
+            return await Promise.race([
+              fetch(url, Object.assign({}, options || {})),
+              new Promise(
+                (_, reject) => setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+              )
+            ]);
+          }
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+          const mergedOptions = Object.assign({}, options || {}, { signal: controller.signal });
+          try {
+            return await fetch(url, mergedOptions);
+          } finally {
+            clearTimeout(timer);
+          }
         };
-        const res2 = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${key}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://www.figma.com",
-            "X-Title": "Check My Copy"
-          },
-          body: JSON.stringify(body2)
-        });
-        if (!res2.ok) {
-          throw new Error("API error " + res2.status + ": " + await res2.text());
+        const callOnce = async () => {
+          var _a2;
+          const body2 = {
+            model: selectedModel,
+            messages: [
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+            temperature: 0.45,
+            top_p: 0.9,
+            max_tokens: 512
+          };
+          const res2 = await fetchWithTimeout(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${key}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://www.figma.com",
+                "X-Title": "Check My Copy"
+              },
+              body: JSON.stringify(body2)
+            },
+            OPENROUTER_TIMEOUT_MS
+          );
+          if (!res2.ok) {
+            throw new Error("API error " + res2.status + ": " + await res2.text());
+          }
+          const data2 = await res2.json();
+          const choice = Array.isArray(data2 == null ? void 0 : data2.choices) ? data2.choices[0] : null;
+          let textOut2 = "";
+          const messageContent = (_a2 = choice == null ? void 0 : choice.message) == null ? void 0 : _a2.content;
+          if (typeof messageContent === "string") {
+            textOut2 = messageContent;
+          } else if (Array.isArray(messageContent)) {
+            textOut2 = messageContent.map((part) => typeof part === "string" ? part : (part == null ? void 0 : part.text) || "").filter(Boolean).join(" ");
+          } else if (typeof (choice == null ? void 0 : choice.text) === "string") {
+            textOut2 = choice.text;
+          }
+          if (!textOut2.trim()) {
+            throw new Error("OpenRouter returned an empty response.");
+          }
+          return textOut2.trim();
+        };
+        let lastError = null;
+        for (let attempt = 1; attempt <= 2; attempt += 1) {
+          try {
+            return await callOnce();
+          } catch (err) {
+            lastError = err;
+            const isAbort = err && typeof err.name === "string" && err.name === "AbortError";
+            if (attempt < 2 && (isAbort || /empty response/i.test(String(err)))) {
+              continue;
+            }
+          }
         }
-        const data2 = await res2.json();
-        const choice = Array.isArray(data2 == null ? void 0 : data2.choices) ? data2.choices[0] : null;
-        let textOut2 = "";
-        const messageContent = (_a2 = choice == null ? void 0 : choice.message) == null ? void 0 : _a2.content;
-        if (typeof messageContent === "string") {
-          textOut2 = messageContent;
-        } else if (Array.isArray(messageContent)) {
-          textOut2 = messageContent.map((part) => typeof part === "string" ? part : (part == null ? void 0 : part.text) || "").filter(Boolean).join(" ");
-        } else if (typeof (choice == null ? void 0 : choice.text) === "string") {
-          textOut2 = choice.text;
-        }
-        return textOut2 ? textOut2.trim() : "No response.";
+        throw lastError || new Error("OpenRouter request failed.");
       }
       const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" + encodeURIComponent(key);
       const body = {
@@ -1787,7 +1828,7 @@ ${sections}`;
         "Respond with valid JSON exactly matching JSON_RESPONSE_TEMPLATE.",
         "Your variants array must contain one entry per task above, in the same order.",
         "Each entry must include the tone and length from its TASK_SPEC block.",
-        "Every variant must sound distinct\u2014rewrite it if any two openings or phrasings feel similar.",
+        "Every variant must sound distinct\u2014revise and paraphrase again if any two openings or phrasings feel similar.",
         "Let each tone's traits dictate different verbs, cadence, and punctuation so the emotional energy clearly shifts between variants."
       ].join(" ");
       const buildPromptSegments = (tasks, useCoreText = false) => {

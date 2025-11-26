@@ -566,8 +566,11 @@
   }
   .api-field-label {
     font-weight: 600;
-    color: #0f172a;
-    font-size: 13px;
+    color: #788494;
+    font-size: 12px;
+    line-height: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
   .api-status {
     min-height: 16px;
@@ -1251,7 +1254,7 @@
           <span class="sr-only">Use Gemini</span>
         </label>
       </div>
-      <label class="api-field-label" for="apikey">API key (Gemini)</label>
+      <label class="api-field-label" for="apikey">API key</label>
       <input id="apikey" type="text" placeholder="AIza..." autocomplete="off" />
       <div class="api-status" id="geminiStatus"></div>
     </div>
@@ -1266,9 +1269,9 @@
           <span class="sr-only">Use OpenRouter</span>
         </label>
       </div>
-      <label class="api-field-label" for="openrouterKey">API key (OpenRouter)</label>
+      <label class="api-field-label" for="openrouterKey">API key</label>
       <input id="openrouterKey" type="text" placeholder="sk-or-v1..." autocomplete="off" />
-      <label class="api-field-label" for="openrouterModel">Model (OpenRouter)</label>
+      <label class="api-field-label" for="openrouterModel">Model</label>
       <input
         id="openrouterModel"
         type="text"
@@ -1380,7 +1383,7 @@
     label: "Enter copy",
     placeholder: "Select a text layer in figma, type your copy, add instructions.",
     buttonLabel: "Rewrite",
-    loadingText: "Crafting copy…",
+    loadingText: "Crafting…",
   };
   const getModeConfig = () => MODE_CONFIG;
   const updateModeUI = () => {
